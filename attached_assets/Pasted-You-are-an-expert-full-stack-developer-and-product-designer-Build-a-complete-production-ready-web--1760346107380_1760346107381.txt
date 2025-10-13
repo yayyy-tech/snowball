@@ -1,0 +1,130 @@
+You are an expert full-stack developer and product designer. Build a complete, production-ready web application called Snowball – Your Retirement Planner. This app helps Indian users (aged 25–40) plan their retirement by collecting their financial profile and generating a personalized roadmap with recommended mutual funds, corporate bonds, and gold ETFs. Do not include or recommend direct stocks or Sovereign Gold Bonds (SGB).
+🏗️ TECH STACK
+•	Frontend: Next.js + React + TailwindCSS + shadcn/ui
+•	Backend: Supabase (auth, database, storage)
+•	API layer: Serverless functions using Next.js API routes
+•	Data: Mock + API integration for:
+•	Mutual funds (AMFI data or ETMoney public JSON)
+•	Corporate Bonds (scrape or API hook for Wint Wealth active listings)
+•	Gold ETFs (AMFI or static list)
+•	Hosting: Vercel
+•	SEO optimized landing page (title, description, OG tags)
+________________________________________
+🎨 UI/UX REQUIREMENTS
+Design Aesthetic: Clean, minimal, modern fintech style (use subtle gradients and soft shadows).
+Primary Colors: #1A73E8 (blue) + off-white background + subtle gray text.
+Font: Inter or Poppins.
+Brand Tone: Trustworthy, educational, calm, data-backed.
+Buttons: Rounded-xl, animated hover, clear CTAs.
+Layout: Grid system for sections, with large cards and iconography for investment types.
+________________________________________
+🖥️ PAGES & COMPONENTS
+1️⃣ Landing Page (/)
+•	Hero section:
+•	Headline: “Because your golden years deserve a snowball effect.”
+•	Subtext: “Build your personalized retirement roadmap in minutes.”
+•	CTA: “Start Planning” → leads to /onboarding
+•	Key Features section:
+•	“Personalized Retirement Roadmap”
+•	“Smart Mutual Fund & Bond Suggestions”
+•	“Secure and Private Data”
+•	How It Works section (3 steps with icons):
+1.	Tell us about yourself
+2.	Get your investment roadmap
+3.	Track your progress
+•	Testimonials carousel (mock)
+•	Footer with disclaimer + contact
+2️⃣ Onboarding / Questionnaire (/onboarding)
+•	Step-by-step form with progress bar
+•	Collect user data:
+•	Name, Age, Gender
+•	Income, Debts, Existing Investments
+•	Monthly savings, Retirement age target
+•	Risk appetite (low / moderate / high)
+•	Preferred investment style (hands-on / passive)
+•	Validation, state saving, “Continue” & “Back” buttons
+•	Submit → generates user profile in Supabase DB
+3️⃣ Dashboard (/dashboard)
+•	Personalized greeting: “Hi, {{name}}! Here’s your Retirement Roadmap.”
+•	Show Allocation Summary (pie chart):
+•	Equity %, Hybrid %, Debt %, Gold %
+•	Sections with Cards:
+•	Mutual Fund Recommendations
+•	Corporate Bonds (from Wint Wealth listings)
+•	Gold ETFs
+•	Each card should show:
+•	Fund/Bond Name
+•	Category
+•	Reason for inclusion
+•	Source (e.g. AMFI / Wint Wealth / ETMoney)
+•	“View Details” → expands info (AUM, risk level, coupon rate)
+•	Action buttons:
+•	“Recalculate Plan”
+•	“Export Report (PDF)”
+•	“Compare Plans”
+•	Disclaimer at bottom:
+“This is educational guidance only and not regulated investment advice. Verify instrument availability & suitability before investing.”
+4️⃣ Admin / Data Refresh Panel (/admin)
+•	Secure (Supabase Auth)
+•	Manually refresh:
+•	Mutual Fund dataset (from AMFI JSON)
+•	Wint Wealth bonds (active listings)
+•	Gold ETF list
+•	Logs last update timestamp
+________________________________________
+⚙️ BACKEND LOGIC
+1.	Profile Processing API (/api/processProfile)
+•	Input: User profile JSON
+•	Output: JSON roadmap containing:
+•	Asset allocation
+•	Recommended funds/bonds/ETFs with metadata
+•	Logic:
+•	If age < 30 → higher equity allocation (70%)
+•	If moderate risk → equity 50%, hybrid 20%, debt 25%, gold 5%
+•	If conservative → equity 30%, debt 60%, gold 10%
+•	Picks relevant funds from mock datasets (or API if available).
+2.	Recommendations API (/api/recommendations)
+•	Fetch:
+•	Mutual funds: AMFI or static curated JSON
+•	Corporate bonds: scrape Wint Wealth’s active listings (fields: name, coupon, maturity, rating)
+•	Gold ETFs: static JSON (HDFC, Nippon, SBI, ICICI)
+•	Returns curated list per user profile.
+3.	Report Generation API (/api/exportReport)
+•	Converts roadmap to downloadable PDF using pdfkit.
+•	Includes logo, allocation chart, recommendations, disclaimer.
+________________________________________
+🗂️ DATABASE SCHEMA (Supabase)
+users
+•	id, name, email, password, created_at
+profiles
+•	id, user_id, income, debts, risk_appetite, savings, retirement_age, investment_style, created_at
+roadmaps
+•	id, user_id, allocation JSON, recommendations JSON, created_at
+logs
+•	id, dataset_name, last_updated, status
+________________________________________
+🧠 FUNCTIONAL FLOWS
+•	User signs up → fills questionnaire → /api/processProfile → saves roadmap → shows on /dashboard
+•	User clicks “Recalculate Plan” → updates roadmap
+•	Admin refreshes datasets from AMFI/Wint Wealth
+•	“Export Report” generates downloadable PDF roadmap
+________________________________________
+🛡️ COMPLIANCE & DISCLAIMERS
+Always display:
+“This platform provides educational financial insights. We are not a SEBI-registered advisor. Recommendations are for informational purposes only. Mutual fund and bond data sourced from public APIs (AMFI, Wint Wealth, ETMoney). Verify all instruments before investing.”
+No direct stock recommendations.
+No SGB recommendations (discontinued).
+Gold allocation = ETFs only.
+________________________________________
+✨ FINAL OUTPUT EXPECTATION
+Deliver:
+•	Responsive UI for desktop & mobile
+•	Full CRUD + API logic + connected database
+•	Seed mock data for initial recommendations
+•	Ready for Vercel deployment
+•	Dark mode toggle
+•	Animated charts (Recharts or Chart.js)
+•	Polished UX transitions via Framer Motion
+Name the project: Snowball – Your Retirement Planner
+(i have attached a document which contains the questions to be asked to the user)
+
