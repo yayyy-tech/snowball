@@ -460,13 +460,30 @@ export default function Onboarding() {
                 <div>
                   <p className="text-sm text-muted-foreground mb-1">Total Assets</p>
                   <p className="text-3xl font-bold text-primary">
-                    ₹{formData.totalAssets ? (parseInt(formData.totalAssets) / 100000).toFixed(2) : '0.00'}L
+                    ₹{(() => {
+                      const total = (parseInt(formData.realEstateValue || '0') +
+                        parseInt(formData.stocksValue || '0') +
+                        parseInt(formData.mutualFundsValue || '0') +
+                        parseInt(formData.ppfEpfNps || '0') +
+                        parseInt(formData.bankDeposits || '0') +
+                        parseInt(formData.goldAssets || '0'));
+                      return (total / 100000).toFixed(2);
+                    })()}L
                   </p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground mb-1">Net Assets</p>
                   <p className="text-3xl font-bold text-chart-2">
-                    ₹{formData.netAssets ? (parseInt(formData.netAssets) / 100000).toFixed(2) : '0.00'}L
+                    ₹{(() => {
+                      const total = (parseInt(formData.realEstateValue || '0') +
+                        parseInt(formData.stocksValue || '0') +
+                        parseInt(formData.mutualFundsValue || '0') +
+                        parseInt(formData.ppfEpfNps || '0') +
+                        parseInt(formData.bankDeposits || '0') +
+                        parseInt(formData.goldAssets || '0'));
+                      const liabilities = parseInt(formData.creditCardDebt || '0');
+                      return ((total - liabilities) / 100000).toFixed(2);
+                    })()}L
                   </p>
                 </div>
               </div>
@@ -795,7 +812,9 @@ export default function Onboarding() {
                     onClick={() => setFormData({ ...formData, preferredAssetMix: 'safety' })}
                     data-testid="card-safety"
                   >
-                    <RadioGroupItem value="safety" id="safety" className="mx-auto mb-3" />
+                    <div className="mx-auto mb-3 w-4 h-4 rounded-full border-2 border-primary flex items-center justify-center">
+                      {formData.preferredAssetMix === 'safety' && <div className="w-2 h-2 rounded-full bg-primary" />}
+                    </div>
                     <Label htmlFor="safety" className="font-semibold cursor-pointer block">Safety First</Label>
                     <p className="text-xs text-muted-foreground mt-2">More debt and fixed deposits</p>
                   </Card>
@@ -805,7 +824,9 @@ export default function Onboarding() {
                     onClick={() => setFormData({ ...formData, preferredAssetMix: 'balanced-growth' })}
                     data-testid="card-balanced-growth"
                   >
-                    <RadioGroupItem value="balanced-growth" id="balanced-growth" className="mx-auto mb-3" />
+                    <div className="mx-auto mb-3 w-4 h-4 rounded-full border-2 border-primary flex items-center justify-center">
+                      {formData.preferredAssetMix === 'balanced-growth' && <div className="w-2 h-2 rounded-full bg-primary" />}
+                    </div>
                     <Label htmlFor="balanced-growth" className="font-semibold cursor-pointer block">Balanced Growth</Label>
                     <p className="text-xs text-muted-foreground mt-2">Equal focus on growth and stability</p>
                   </Card>
@@ -815,7 +836,9 @@ export default function Onboarding() {
                     onClick={() => setFormData({ ...formData, preferredAssetMix: 'growth' })}
                     data-testid="card-growth"
                   >
-                    <RadioGroupItem value="growth" id="growth" className="mx-auto mb-3" />
+                    <div className="mx-auto mb-3 w-4 h-4 rounded-full border-2 border-primary flex items-center justify-center">
+                      {formData.preferredAssetMix === 'growth' && <div className="w-2 h-2 rounded-full bg-primary" />}
+                    </div>
                     <Label htmlFor="growth" className="font-semibold cursor-pointer block">Growth Focused</Label>
                     <p className="text-xs text-muted-foreground mt-2">Higher equity for maximum returns</p>
                   </Card>

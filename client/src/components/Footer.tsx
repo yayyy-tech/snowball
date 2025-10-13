@@ -1,7 +1,9 @@
 import { Snowflake } from "lucide-react";
-import { Link } from "wouter";
+import { useLocation } from "wouter";
 
 export function Footer() {
+  const [, setLocation] = useLocation();
+
   return (
     <footer className="border-t bg-muted/30 py-12">
       <div className="container mx-auto px-4 md:px-8">
@@ -19,24 +21,38 @@ export function Footer() {
           <div>
             <h3 className="font-semibold mb-4">Product</h3>
             <ul className="space-y-2 text-sm">
-              <li><Link href="/#features"><a className="text-muted-foreground hover:text-foreground transition-colors">Features</a></Link></li>
-              <li><Link href="/#how-it-works"><a className="text-muted-foreground hover:text-foreground transition-colors">How It Works</a></Link></li>
+              <li>
+                <button 
+                  onClick={() => setLocation("/#features")} 
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Features
+                </button>
+              </li>
+              <li>
+                <button 
+                  onClick={() => setLocation("/#how-it-works")} 
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  How It Works
+                </button>
+              </li>
             </ul>
           </div>
 
           <div>
             <h3 className="font-semibold mb-4">Company</h3>
             <ul className="space-y-2 text-sm">
-              <li><a href="#" className="text-muted-foreground hover:text-foreground transition-colors">About</a></li>
-              <li><a href="#" className="text-muted-foreground hover:text-foreground transition-colors">Contact</a></li>
+              <li><button className="text-muted-foreground hover:text-foreground transition-colors">About</button></li>
+              <li><button className="text-muted-foreground hover:text-foreground transition-colors">Contact</button></li>
             </ul>
           </div>
 
           <div>
             <h3 className="font-semibold mb-4">Legal</h3>
             <ul className="space-y-2 text-sm">
-              <li><a href="#" className="text-muted-foreground hover:text-foreground transition-colors">Privacy</a></li>
-              <li><a href="#" className="text-muted-foreground hover:text-foreground transition-colors">Terms</a></li>
+              <li><button className="text-muted-foreground hover:text-foreground transition-colors">Privacy</button></li>
+              <li><button className="text-muted-foreground hover:text-foreground transition-colors">Terms</button></li>
             </ul>
           </div>
         </div>
