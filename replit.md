@@ -14,7 +14,7 @@ Snowball is a retirement planning web application designed for Indian users aged
 5. **Onboarding Step Reordering**: Changed questionnaire step order from "Personal → Income → Liabilities → Assets → Goals → Risk → Tax" to "Personal → Income → Assets → Liabilities → Goals → Risk → Tax" (moved Assets before Liabilities for better logical flow)
 6. **Indian Number Formatting**: Added formatIndianNumber/parseIndianNumber utilities to display all monetary inputs with Indian comma grouping (e.g., 15,00,000) while keeping Age fields as plain numbers
 7. **Dashboard Cleanup**: Removed AI-Powered Insights section and fund expansion controls to streamline the dashboard interface
-8. **Exit-Intent Modal**: Added exit-intent detection that shows a retention message when users try to leave the website. The modal displays "Don't exit now. You'd be walking away from decades of compounding that could secure your golden years." when users move their cursor to the top of the viewport or attempt to close/refresh the tab
+8. **Exit-Intent Popup**: Added beforeunload event handler that shows a browser confirmation dialog when users try to close or refresh the tab, with the message "Don't exit now. You'd be walking away from decades of compounding that could secure your golden years." (Note: Modern browsers may show a generic message instead of the custom text for security reasons)
 
 ## User Preferences
 
