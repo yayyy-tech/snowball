@@ -4,6 +4,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { ExitIntentModal } from "@/components/ExitIntentModal";
 import Landing from "@/pages/Landing";
 import Onboarding from "@/pages/Onboarding";
 import Dashboard from "@/pages/Dashboard";
@@ -26,6 +27,7 @@ function App() {
       <ThemeProvider>
         <TooltipProvider>
           <Toaster />
+          <ExitIntentModal />
           <Router />
         </TooltipProvider>
       </ThemeProvider>
