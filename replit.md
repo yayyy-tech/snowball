@@ -11,6 +11,9 @@ Snowball is a retirement planning web application designed for Indian users aged
 2. **Personalized Fund Reasoning**: Enhanced fund recommendation engine to receive full user context (age, retirementAge, lifestyle, monthlyExpenses) so each fund recommendation includes personalized reasoning mentioning user-specific factors like "young investor", "long investment horizon", "comfortable lifestyle", etc.
 3. **Session Cookie Security**: Made session cookie settings environment-aware (secure: false in development/testing, secure: true in production) to support OIDC testing while maintaining production security
 4. **Test Coverage**: End-to-end testing validates full authentication flow, onboarding completion, plan creation, and personalized reasoning display
+5. **Onboarding Step Reordering**: Changed questionnaire step order from "Personal → Income → Liabilities → Assets → Goals → Risk → Tax" to "Personal → Income → Assets → Liabilities → Goals → Risk → Tax" (moved Assets before Liabilities for better logical flow)
+6. **Indian Number Formatting**: Added formatIndianNumber/parseIndianNumber utilities to display all monetary inputs with Indian comma grouping (e.g., 15,00,000) while keeping Age fields as plain numbers
+7. **Dashboard Cleanup**: Removed AI-Powered Insights section and fund expansion controls to streamline the dashboard interface
 
 ## User Preferences
 
@@ -22,7 +25,7 @@ Preferred communication style: Simple, everyday language.
 - **Framework**: React with TypeScript, using Vite as the build tool
 - **Routing**: Wouter for client-side routing with three main routes:
   - `/` - Landing page with marketing content and Google login
-  - `/onboarding` - Streamlined 7-step questionnaire (Personal, Income, Liabilities, Assets, Goals, Risk, Tax)
+  - `/onboarding` - Streamlined 7-step questionnaire (Personal, Income, Assets, Liabilities, Goals, Risk, Tax)
   - `/dashboard` - Personalized retirement plan visualization with fund recommendations
 - **Authentication**: useAuth hook for checking authentication status, login/logout functionality
 - **State Management**: TanStack Query (React Query) for server state management

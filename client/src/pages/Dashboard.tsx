@@ -3,105 +3,11 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
-import { TrendingUp, Download, RefreshCw, AlertTriangle, ChevronDown, ChevronUp, Wallet, Calculator, Target, TrendingDown, Sparkles, Lightbulb, CheckCircle2 } from "lucide-react";
-import { useState } from "react";
+import { TrendingUp, Download, RefreshCw, AlertTriangle, Wallet, Calculator, Target, TrendingDown } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import type { RetirementPlan, GPTRecommendation } from "@shared/schema";
-
-function GPTInsights({ planId }: { planId: string }) {
-  const { data: gptRecs, isLoading, error } = useQuery<GPTRecommendation>({
-    queryKey: [`/api/gpt-recommendations/${planId}`],
-    enabled: !!planId,
-  });
-
-  if (isLoading) {
-    return (
-      <Card className="p-6 mb-8 bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-950/20 dark:to-blue-950/20 border-purple-200 dark:border-purple-800">
-        <div className="flex items-center gap-3 mb-4">
-          <Sparkles className="h-6 w-6 text-purple-600 dark:text-purple-400 animate-pulse" />
-          <h2 className="text-2xl font-semibold">AI-Powered Insights</h2>
-        </div>
-        <p className="text-muted-foreground">Analyzing your retirement plan with GPT...</p>
-      </Card>
-    );
-  }
-
-  if (error || !gptRecs) {
-    return null;
-  }
-
-  return (
-    <Card className="p-6 mb-8 bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-950/20 dark:to-blue-950/20 border-purple-200 dark:border-purple-800">
-      <div className="flex items-center gap-3 mb-4">
-        <Sparkles className="h-6 w-6 text-purple-600 dark:text-purple-400" />
-        <h2 className="text-2xl font-semibold">AI-Powered Insights</h2>
-        <Badge variant="secondary" className="ml-auto">Powered by GPT-5</Badge>
-      </div>
-
-      <div className="space-y-6">
-        <div>
-          <h3 className="text-lg font-semibold mb-2">Overview</h3>
-          <p className="text-sm text-muted-foreground">{gptRecs.overview}</p>
-        </div>
-
-        <div>
-          <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
-            <Lightbulb className="h-5 w-5 text-amber-500" />
-            Key Insights
-          </h3>
-          <ul className="space-y-2">
-            {gptRecs.keyInsights.map((insight, idx) => (
-              <li key={idx} className="flex items-start gap-2 text-sm">
-                <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" />
-                <span>{insight}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        <div>
-          <h3 className="text-lg font-semibold mb-3">Personalized Recommendations</h3>
-          <div className="grid gap-3">
-            {gptRecs.recommendations.map((rec, idx) => (
-              <div key={idx} className="bg-background/60 rounded-lg p-4 border">
-                <div className="flex items-start justify-between mb-2">
-                  <h4 className="font-semibold text-sm">{rec.title}</h4>
-                  <Badge 
-                    variant={rec.priority === "high" ? "destructive" : rec.priority === "medium" ? "default" : "secondary"}
-                    className="text-xs"
-                  >
-                    {rec.priority}
-                  </Badge>
-                </div>
-                <p className="text-xs text-muted-foreground">{rec.description}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div>
-          <h3 className="text-lg font-semibold mb-2">Risk Analysis</h3>
-          <p className="text-sm text-muted-foreground">{gptRecs.riskAnalysis}</p>
-        </div>
-
-        <div>
-          <h3 className="text-lg font-semibold mb-3">Next Steps</h3>
-          <ol className="space-y-2">
-            {gptRecs.nextSteps.map((step, idx) => (
-              <li key={idx} className="flex items-start gap-2 text-sm">
-                <span className="font-semibold text-purple-600 dark:text-purple-400 flex-shrink-0">{idx + 1}.</span>
-                <span>{step}</span>
-              </li>
-            ))}
-          </ol>
-        </div>
-      </div>
-    </Card>
-  );
-}
+import type { RetirementPlan } from "@shared/schema";
 
 export default function Dashboard() {
-  const [expandedFund, setExpandedFund] = useState<number | null>(null);
   
   // Get planId from query parameters
   const params = new URLSearchParams(window.location.search);
@@ -426,9 +332,6 @@ export default function Dashboard() {
           </div>
         </Card>
 
-        {/* AI-Powered Insights */}
-        <GPTInsights planId={planId} />
-
         {/* Recommended Investments */}
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-6">
@@ -470,21 +373,6 @@ export default function Dashboard() {
                     <p className="text-xs text-muted-foreground">
                       {fund.reason}
                     </p>
-
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="w-full mt-3"
-                      onClick={() => setExpandedFund(expandedFund === index ? null : index)}
-                  data-testid={`button-fund-details-${index}`}
-                >
-                  More Details
-                  {expandedFund === index ? (
-                    <ChevronUp className="h-4 w-4 ml-2" />
-                  ) : (
-                    <ChevronDown className="h-4 w-4 ml-2" />
-                  )}
-                </Button>
               </Card>
             ))}
           </div>
