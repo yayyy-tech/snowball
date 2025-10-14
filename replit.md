@@ -15,6 +15,9 @@ Snowball is a retirement planning web application designed for Indian users aged
 6. **Indian Number Formatting**: Added formatIndianNumber/parseIndianNumber utilities to display all monetary inputs with Indian comma grouping (e.g., 15,00,000) while keeping Age fields as plain numbers
 7. **Dashboard Cleanup**: Removed AI-Powered Insights section and fund expansion controls to streamline the dashboard interface
 8. **Exit-Intent Popup**: Added beforeunload event handler that shows a browser confirmation dialog when users try to close or refresh the tab, with the message "Don't exit now. You'd be walking away from decades of compounding that could secure your golden years." (Note: Modern browsers may show a generic message instead of the custom text for security reasons)
+9. **Sample Roadmap Preview**: Added preview section on landing page displaying sample dashboard screenshots (asset allocation chart and recommended investments) with "Sample Roadmap" heading, positioned between Features and How It Works sections
+10. **Enhanced How It Works Content**: Expanded How It Works section with detailed 6-step journey explaining the complete Snowball process from initial questionnaire to ongoing progress tracking, with personalized explanations for each step
+11. **About Us Section**: Added comprehensive About Us section to landing page with company philosophy, vision, team background, and promises. Added "About Us" navigation link in header for easy access
 
 ## User Preferences
 

@@ -30,6 +30,13 @@ export function Header() {
           >
             How It Works
           </button>
+          <button 
+            onClick={() => setLocation("/#about-us")}
+            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+            data-testid="nav-about-us"
+          >
+            About Us
+          </button>
         </nav>
 
         <div className="flex items-center gap-3">
