@@ -1,26 +1,10 @@
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "./ThemeToggle";
-import { Link, useLocation } from "wouter";
-import { Snowflake, LogOut } from "lucide-react";
-import { useAuth } from "@/hooks/useAuth";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useLocation } from "wouter";
+import { Snowflake } from "lucide-react";
 
 export function Header() {
   const [location, setLocation] = useLocation();
-  const { user, isAuthenticated, isLoading } = useAuth();
-
-  const handleLogin = (returnTo?: string) => {
-    const returnPath = returnTo || window.location.pathname;
-    window.location.href = `/api/login?returnTo=${encodeURIComponent(returnPath)}`;
-  };
-
-  const handleGetStarted = () => {
-    window.location.href = `/api/login?returnTo=${encodeURIComponent('/onboarding')}`;
-  };
-
-  const handleLogout = () => {
-    window.location.href = "/api/logout";
-  };
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-lg">
@@ -50,49 +34,12 @@ export function Header() {
 
         <div className="flex items-center gap-3">
           <ThemeToggle />
-          
-          {!isLoading && !isAuthenticated && (
-            <>
-              <Button 
-                variant="ghost" 
-                onClick={handleLogin}
-                data-testid="button-login"
-              >
-                Log In
-              </Button>
-              <Button 
-                onClick={handleGetStarted} 
-                data-testid="button-start-planning"
-              >
-                Get Started
-              </Button>
-            </>
-          )}
-
-          {isAuthenticated && user && (
-            <>
-              <Button onClick={() => setLocation("/onboarding")} data-testid="button-start-planning">
-                Start Planning
-              </Button>
-              <div className="flex items-center gap-2">
-                <Avatar className="h-8 w-8">
-                  <AvatarImage src={user.profileImageUrl || undefined} alt={user.email || "User"} />
-                  <AvatarFallback>
-                    {user.email?.charAt(0).toUpperCase() || "U"}
-                  </AvatarFallback>
-                </Avatar>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={handleLogout}
-                  data-testid="button-logout"
-                  title="Logout"
-                >
-                  <LogOut className="h-4 w-4" />
-                </Button>
-              </div>
-            </>
-          )}
+          <Button 
+            onClick={() => setLocation("/onboarding")} 
+            data-testid="button-start-planning"
+          >
+            Get Started
+          </Button>
         </div>
       </div>
     </header>
