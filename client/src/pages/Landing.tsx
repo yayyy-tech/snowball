@@ -1,6 +1,7 @@
 import { Header } from "@/components/Header";
 import { HeroSection } from "@/components/HeroSection";
 import { FeaturesSection } from "@/components/FeaturesSection";
+import { PreviewSection } from "@/components/PreviewSection";
 import { HowItWorksSection } from "@/components/HowItWorksSection";
 import { TestimonialsSection } from "@/components/TestimonialsSection";
 import { CTASection } from "@/components/CTASection";
@@ -13,6 +14,7 @@ export default function Landing() {
       <main>
         <HeroSection />
         <FeaturesSection />
+        <PreviewSection />
         <HowItWorksSection />
         <TestimonialsSection />
         <CTASection />
