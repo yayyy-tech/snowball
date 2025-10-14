@@ -87,12 +87,6 @@ export default function Dashboard() {
       value: `₹${(calc.sipAmount / 1000).toFixed(0)}K`, 
       suffix: "with 7% step-up" 
     },
-    { 
-      icon: Calculator, 
-      label: "Projected Corpus", 
-      value: `₹${(calc.projectedSipValue / 10000000).toFixed(2)}Cr`, 
-      suffix: `at age ${plan.retirementAge}` 
-    },
   ];
 
   // Create allocation data from real calculations
@@ -131,7 +125,7 @@ export default function Dashboard() {
         </div>
 
         {/* Summary Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
           {summaryCards.map((card, index) => (
             <Card key={index} className="p-4">
               <div className="flex items-center justify-between mb-2">

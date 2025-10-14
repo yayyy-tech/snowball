@@ -174,20 +174,26 @@ export function calculateRetirementPlan(plan: RetirementPlan): CalculatedPlan {
   const annualStepUp = SIP_STEP_UP;
   
   // Calculate initial SIP amount using step-up SIP formula
-  // FV = P * [((1+r)^n - (1+g)^n) / (r-g)] where P is initial SIP
+  // Future value of growing annuity: FV = P * [((1+r)^n - (1+g)^n) / (r-g)]
+  // Solving for P: P = FV / [((1+r)^n - (1+g)^n) / (r-g)]
   let sipAmount;
   if (gapToFill <= 0) {
     sipAmount = 1000; // Minimum SIP
   } else {
     const totalMonths = yearsToRetirement * 12;
     const stepUpMonthlyRate = Math.pow(1 + annualStepUp, 1/12) - 1;
+    const r = monthlyRate;
+    const g = stepUpMonthlyRate;
     
-    if (Math.abs(monthlyRate - stepUpMonthlyRate) < 0.0001) {
-      sipAmount = gapToFill / (totalMonths * Math.pow(1 + monthlyRate, totalMonths/2));
+    if (Math.abs(r - g) < 0.0001) {
+      // When r ≈ g, use limiting form: FV = P * n * (1+r)^(n/2)
+      sipAmount = gapToFill / (totalMonths * Math.pow(1 + r, totalMonths / 2));
     } else {
-      const numerator = Math.pow(1 + monthlyRate, totalMonths) - Math.pow(1 + stepUpMonthlyRate, totalMonths);
-      const denominator = (monthlyRate - stepUpMonthlyRate) * Math.pow(1 + monthlyRate, totalMonths);
-      sipAmount = gapToFill / (numerator / denominator);
+      // Standard formula: FV = P * [((1+r)^n - (1+g)^n) / (r-g)]
+      const numerator = Math.pow(1 + r, totalMonths) - Math.pow(1 + g, totalMonths);
+      const denominator = r - g;
+      const factor = numerator / denominator;
+      sipAmount = gapToFill / factor;
     }
     
     // Ensure SIP is reasonable
