@@ -3,8 +3,25 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertRetirementPlanSchema } from "@shared/schema";
 import { calculateRetirementPlan } from "./calculations";
+import { generateFundRecommendations, generateCompleteRecommendations, type RecommendationInput } from "./fundRecommendations";
+import { setupAuth, isAuthenticated } from "./replitAuth";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Setup authentication (Google login, GitHub, etc.)
+  await setupAuth(app);
+
+  // Auth routes
+  app.get("/api/auth/user", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      res.json(user);
+    } catch (error) {
+      console.error("Error fetching user:", error);
+      res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+
   // Create a new retirement plan
   app.post("/api/retirement-plans", async (req, res) => {
     try {
@@ -74,6 +91,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       console.error("Error updating retirement plan:", error);
       res.status(400).json({ error: error.message || "Failed to update retirement plan" });
+    }
+  });
+
+  // Fund Recommendation API endpoints
+  app.post("/api/fund-recommendations", async (req, res) => {
+    try {
+      const { riskAppetite, totalAmount, growthPreference, fundType } = req.body as RecommendationInput;
+
+      if (!riskAppetite || !totalAmount || !growthPreference || !fundType) {
+        return res.status(400).json({ error: "Missing required fields: riskAppetite, totalAmount, growthPreference, fundType" });
+      }
+
+      if (!["conservative", "moderate", "aggressive"].includes(riskAppetite)) {
+        return res.status(400).json({ error: "Invalid riskAppetite. Must be: conservative, moderate, or aggressive" });
+      }
+
+      if (!["stable", "balanced", "high_growth"].includes(growthPreference)) {
+        return res.status(400).json({ error: "Invalid growthPreference. Must be: stable, balanced, or high_growth" });
+      }
+
+      if (!["equity", "debt"].includes(fundType)) {
+        return res.status(400).json({ error: "Invalid fundType. Must be: equity or debt" });
+      }
+
+      const recommendations = generateFundRecommendations({
+        riskAppetite,
+        totalAmount: Number(totalAmount),
+        growthPreference,
+        fundType
+      });
+
+      res.json(recommendations);
+    } catch (error: any) {
+      console.error("Error generating fund recommendations:", error);
+      res.status(500).json({ error: error.message || "Failed to generate fund recommendations" });
+    }
+  });
+
+  // Complete recommendations (both equity and debt)
+  app.post("/api/fund-recommendations/complete", async (req, res) => {
+    try {
+      const { riskAppetite, equityAmount, debtAmount, growthPreference } = req.body;
+
+      if (!riskAppetite || !equityAmount || !debtAmount || !growthPreference) {
+        return res.status(400).json({ 
+          error: "Missing required fields: riskAppetite, equityAmount, debtAmount, growthPreference" 
+        });
+      }
+
+      const recommendations = generateCompleteRecommendations(
+        riskAppetite,
+        Number(equityAmount),
+        Number(debtAmount),
+        growthPreference
+      );
+
+      res.json(recommendations);
+    } catch (error: any) {
+      console.error("Error generating complete recommendations:", error);
+      res.status(500).json({ error: error.message || "Failed to generate complete recommendations" });
     }
   });
 
