@@ -481,8 +481,7 @@ export default function Onboarding() {
                         parseInt(formData.ppfEpfNps || '0') +
                         parseInt(formData.bankDeposits || '0') +
                         parseInt(formData.goldAssets || '0'));
-                      const liabilities = parseInt(formData.creditCardDebt || '0');
-                      return ((total - liabilities) / 100000).toFixed(2);
+                      return (total / 100000).toFixed(2);
                     })()}L
                   </p>
                 </div>
@@ -561,21 +560,6 @@ export default function Onboarding() {
                     onChange={(e) => setFormData({ ...formData, goldAssets: e.target.value })}
                     placeholder="Physical gold, ETFs"
                     data-testid="input-gold-assets"
-                  />
-                </div>
-              </div>
-
-              <div className="pt-4 border-t">
-                <h3 className="font-semibold mb-4">Liabilities</h3>
-                <div>
-                  <Label htmlFor="creditCard">Credit Card Debt (₹)</Label>
-                  <Input
-                    id="creditCard"
-                    type="number"
-                    value={formData.creditCardDebt}
-                    onChange={(e) => setFormData({ ...formData, creditCardDebt: e.target.value })}
-                    placeholder="Current outstanding balance on all credit cards"
-                    data-testid="input-credit-card"
                   />
                 </div>
               </div>
