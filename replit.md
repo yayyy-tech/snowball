@@ -13,9 +13,10 @@ Preferred communication style: Simple, everyday language.
 ### Frontend Architecture
 - **Framework**: React with TypeScript, using Vite as the build tool
 - **Routing**: Wouter for client-side routing with three main routes:
-  - `/` - Landing page with marketing content
-  - `/onboarding` - Streamlined 6-step questionnaire (Personal, Income, Assets, Goals, Risk, Tax)
-  - `/dashboard` - Personalized retirement plan visualization
+  - `/` - Landing page with marketing content and Google login
+  - `/onboarding` - Streamlined 7-step questionnaire (Personal, Income, Liabilities, Assets, Goals, Risk, Tax)
+  - `/dashboard` - Personalized retirement plan visualization with fund recommendations
+- **Authentication**: useAuth hook for checking authentication status, login/logout functionality
 - **State Management**: TanStack Query (React Query) for server state management
 - **UI Components**: shadcn/ui component library built on Radix UI primitives
 - **Styling**: Tailwind CSS with custom design tokens for light/dark themes
@@ -23,7 +24,11 @@ Preferred communication style: Simple, everyday language.
 
 ### Backend Architecture
 - **Runtime**: Node.js with Express.js server
-- **API Pattern**: RESTful API with endpoints for retirement plan CRUD operations
+- **Authentication**: Replit Auth (OAuth) for Google login (also supports GitHub, X, Apple, email/password)
+- **API Pattern**: RESTful API with endpoints for:
+  - Retirement plan CRUD operations
+  - Fund recommendations (mutual funds and debt funds)
+  - User authentication status
 - **Development**: Vite middleware integration for hot module replacement in development
 - **Production**: Static file serving with pre-built client assets
 
@@ -31,7 +36,7 @@ Preferred communication style: Simple, everyday language.
 - **ORM**: Drizzle ORM with PostgreSQL dialect
 - **Database**: Neon PostgreSQL (serverless)
 - **Schema**: Two main entities:
-  - `users` - User authentication (username/password)
+  - `users` - OAuth user data (email, firstName, lastName, profileImageUrl)
   - `retirementPlans` - Comprehensive retirement plan data including:
     - Personal info with spouse details (name, age, working status) for married users
     - Income data (monthly income for primary earner, spouse income if married and working)
