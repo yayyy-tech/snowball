@@ -12,6 +12,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { useLocation } from "wouter";
 import { Plus, Trash2, Info, Heart } from "lucide-react";
+import { useMutation } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 const steps = ["Personal", "Income", "Assets", "Insurance", "Goals", "Risk", "Tax", "Emergency", "Health"];
 
@@ -19,6 +22,7 @@ export default function Onboarding() {
   const [, setLocation] = useLocation();
   const [currentStep, setCurrentStep] = useState(1);
   const totalSteps = 9;
+  const { toast } = useToast();
 
   // Form state
   const [formData, setFormData] = useState({
@@ -63,12 +67,78 @@ export default function Onboarding() {
     lifestyle: "",
   });
 
+  const createPlanMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const res = await apiRequest("POST", "/api/retirement-plans", data);
+      return res.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Success!",
+        description: "Your retirement plan has been created.",
+      });
+      setLocation(`/dashboard?planId=${data.id}`);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create retirement plan. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleNext = () => {
     if (currentStep < totalSteps) {
       setCurrentStep(currentStep + 1);
     } else {
-      console.log("Form submitted:", formData);
-      setLocation("/dashboard");
+      const planData = {
+        fullName: formData.fullName,
+        currentAge: parseInt(formData.age) || 0,
+        retirementAge: parseInt(formData.retirementAge) || 60,
+        gender: formData.maritalStatus === 'married' ? 'male' : 'male',
+        maritalStatus: formData.maritalStatus,
+        dependents: formData.dependents.length,
+        
+        monthlyIncome: Math.round((parseInt(formData.annualIncome) || 0) / 12),
+        employmentType: formData.occupation || 'salaried',
+        annualBonus: parseInt(formData.bonusIncome) || 0,
+        otherIncome: 0,
+        hasHomeLoan: formData.hasLoan && formData.loans.some(l => l.type === 'home'),
+        homeLoanEmi: formData.hasLoan ? parseInt(formData.loans.find(l => l.type === 'home')?.emi || '0') : 0,
+        homeLoanTenure: formData.hasLoan ? parseInt(formData.loans.find(l => l.type === 'home')?.tenure || '0') : 0,
+        
+        realEstateValue: parseInt(formData.realEstateValue) || 0,
+        stocksValue: parseInt(formData.stocksValue) || 0,
+        mutualFundsValue: parseInt(formData.mutualFundsValue) || 0,
+        ppfEpfNps: parseInt(formData.ppfEpfNps) || 0,
+        bankDeposits: parseInt(formData.bankDeposits) || 0,
+        goldAssets: parseInt(formData.goldAssets) || 0,
+        
+        healthInsurance: parseInt(formData.healthInsurance) || 0,
+        lifeInsurance: parseInt(formData.lifeInsurance) || 0,
+        
+        retirementLifestyle: formData.expectedLifestyle || 'comfortable',
+        postRetirementMonthlyExpense: parseInt(formData.expectedMonthlyExpense) || 0,
+        legacyGoal: 0,
+        majorExpenses: [],
+        
+        riskTolerance: formData.riskTolerance || 'moderate',
+        investmentExperience: 'intermediate',
+        preferredAssetMix: formData.preferredAssetMix || 'balanced-growth',
+        
+        taxRegime: formData.preferredTaxRegime || 'new',
+        section80CInvestment: 0,
+        
+        emergencyFundMonths: parseInt(formData.emergencyFund) || 6,
+        hasEmergencyFund: !!formData.emergencyFund,
+        currentEmergencyFund: 0,
+        
+        chronicConditions: formData.healthCondition ? [formData.healthCondition] : [],
+        healthcareExpectation: formData.lifestyle || 'moderate',
+      };
+      
+      createPlanMutation.mutate(planData);
     }
   };
 
@@ -967,8 +1037,12 @@ export default function Onboarding() {
             >
               Back
             </Button>
-            <Button onClick={handleNext} data-testid="button-next">
-              {currentStep === totalSteps ? "Complete & View Plan" : "Continue"}
+            <Button 
+              onClick={handleNext} 
+              data-testid="button-next"
+              disabled={createPlanMutation.isPending}
+            >
+              {createPlanMutation.isPending ? "Creating Plan..." : currentStep === totalSteps ? "Complete & View Plan" : "Continue"}
             </Button>
           </div>
         </Card>

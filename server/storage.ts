@@ -1,38 +1,47 @@
-import { type User, type InsertUser } from "@shared/schema";
-import { randomUUID } from "crypto";
-
-// modify the interface with any CRUD methods
-// you might need
+import { type User, type InsertUser, type RetirementPlan, type InsertRetirementPlan, users, retirementPlans } from "@shared/schema";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
 
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  
+  createRetirementPlan(plan: InsertRetirementPlan): Promise<RetirementPlan>;
+  getRetirementPlan(id: string): Promise<RetirementPlan | undefined>;
+  updateRetirementPlan(id: string, plan: Partial<InsertRetirementPlan>): Promise<RetirementPlan | undefined>;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<string, User>;
-
-  constructor() {
-    this.users = new Map();
-  }
-
+export class DbStorage implements IStorage {
   async getUser(id: string): Promise<User | undefined> {
-    return this.users.get(id);
+    const result = await db.select().from(users).where(eq(users.id, id)).limit(1);
+    return result[0];
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
+    const result = await db.select().from(users).where(eq(users.username, username)).limit(1);
+    return result[0];
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const id = randomUUID();
-    const user: User = { ...insertUser, id };
-    this.users.set(id, user);
-    return user;
+    const result = await db.insert(users).values(insertUser).returning();
+    return result[0];
+  }
+
+  async createRetirementPlan(plan: InsertRetirementPlan): Promise<RetirementPlan> {
+    const result = await db.insert(retirementPlans).values(plan).returning();
+    return result[0];
+  }
+
+  async getRetirementPlan(id: string): Promise<RetirementPlan | undefined> {
+    const result = await db.select().from(retirementPlans).where(eq(retirementPlans.id, id)).limit(1);
+    return result[0];
+  }
+
+  async updateRetirementPlan(id: string, plan: Partial<InsertRetirementPlan>): Promise<RetirementPlan | undefined> {
+    const result = await db.update(retirementPlans).set(plan).where(eq(retirementPlans.id, id)).returning();
+    return result[0];
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DbStorage();
