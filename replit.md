@@ -32,7 +32,12 @@ Preferred communication style: Simple, everyday language.
 - **Database**: Neon PostgreSQL (serverless)
 - **Schema**: Two main entities:
   - `users` - User authentication (username/password)
-  - `retirementPlans` - Comprehensive retirement plan data with 40+ fields covering personal info, income, assets, insurance, goals, and calculated projections
+  - `retirementPlans` - Comprehensive retirement plan data including:
+    - Personal info with spouse details (name, age, working status) for married users
+    - Income data (monthly income only, no bonus fields)
+    - Assets, insurance, goals, risk tolerance, tax preferences
+    - Emergency fund and health expectations
+    - Calculated projections and investment recommendations
 - **Data Validation**: Zod schemas for runtime validation with Drizzle integration
 
 ### Business Logic
