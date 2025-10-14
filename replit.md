@@ -37,12 +37,19 @@ Preferred communication style: Simple, everyday language.
 
 ### Business Logic
 - **Calculation Engine**: Server-side retirement planning calculations (`server/calculations.ts`) including:
-  - Corpus requirements with inflation adjustment
+  - Corpus requirements with inflation adjustment (6% fixed inflation, 12% buffer)
   - SIP projections with annual step-up (7%)
-  - Asset allocation recommendations (equity/debt/gold)
+  - Asset allocation recommendations (equity/debt/gold) based on age and risk profile
   - Tax calculations based on India's new tax regime
-  - SWP (Systematic Withdrawal Plan) projections
+  - SWP (Systematic Withdrawal Plan) projections with inflation-adjusted withdrawals
   - Loan impact analysis
+- **Personalized Investment Recommendations**: Multi-factor recommendation engine that selects specific mutual funds, bonds, and ETFs based on:
+  - **Age Groups**: Young (<35), Middle-aged (35-50), Near-retirement (50+)
+  - **Risk Tolerance**: Aggressive (small cap, midcap), Moderate (flexi cap, large cap), Conservative (index funds, hybrid)
+  - **Time Horizon**: Long (20+ years), Medium (10-20 years), Short (<10 years)
+  - **Investment Size**: Small (<₹10K), Medium, Large (₹50K+) investors get different fund options
+  - **Lifestyle Goals**: Each recommendation includes personalized reasoning referencing user's specific goals
+  - **Fund Variety**: 15+ different funds across equity, debt, and gold categories - NO static recommendations
 - **Storage Layer**: Abstract storage interface (`IStorage`) with database implementation for testability
 
 ### Design Philosophy
