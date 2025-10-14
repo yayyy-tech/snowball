@@ -344,7 +344,11 @@ function getDynamicInvestmentRecommendations(
     riskAppetite,
     equityAmount * yearsToRetirement * 12, // Total equity investment over period
     debtAmount * yearsToRetirement * 12, // Total debt investment over period
-    growthPreference
+    growthPreference,
+    currentAge,
+    retirementAge,
+    lifestyle,
+    monthlyExpenses
   );
 
   const recommendations = [];

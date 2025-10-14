@@ -826,11 +826,11 @@ export default function Onboarding() {
                     </div>
                   </Card>
 
-                  <Card className={`p-4 cursor-pointer transition-all ${formData.riskTolerance === 'balanced' ? 'ring-2 ring-primary' : ''}`}>
+                  <Card className={`p-4 cursor-pointer transition-all ${formData.riskTolerance === 'moderate' ? 'ring-2 ring-primary' : ''}`}>
                     <div className="flex items-start space-x-3">
-                      <RadioGroupItem value="balanced" id="balanced" data-testid="radio-balanced" className="mt-1" />
+                      <RadioGroupItem value="moderate" id="moderate" data-testid="radio-moderate" className="mt-1" />
                       <div className="flex-1">
-                        <Label htmlFor="balanced" className="font-semibold cursor-pointer">Balanced</Label>
+                        <Label htmlFor="moderate" className="font-semibold cursor-pointer">Balanced</Label>
                         <p className="text-sm text-muted-foreground mt-1">
                           I can handle some market ups and downs for potentially better returns.
                         </p>

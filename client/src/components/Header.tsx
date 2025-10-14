@@ -9,8 +9,13 @@ export function Header() {
   const [location, setLocation] = useLocation();
   const { user, isAuthenticated, isLoading } = useAuth();
 
-  const handleLogin = () => {
-    window.location.href = "/api/login";
+  const handleLogin = (returnTo?: string) => {
+    const returnPath = returnTo || window.location.pathname;
+    window.location.href = `/api/login?returnTo=${encodeURIComponent(returnPath)}`;
+  };
+
+  const handleGetStarted = () => {
+    window.location.href = `/api/login?returnTo=${encodeURIComponent('/onboarding')}`;
   };
 
   const handleLogout = () => {
@@ -56,7 +61,7 @@ export function Header() {
                 Log In
               </Button>
               <Button 
-                onClick={() => setLocation("/onboarding")} 
+                onClick={handleGetStarted} 
                 data-testid="button-start-planning"
               >
                 Get Started

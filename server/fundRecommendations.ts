@@ -265,20 +265,32 @@ export function generateCompleteRecommendations(
   riskAppetite: RiskAppetite,
   equityAmount: number,
   debtAmount: number,
-  growthPreference: GrowthPreference
+  growthPreference: GrowthPreference,
+  age?: number,
+  retirementAge?: number,
+  desiredLifestyle?: string,
+  monthlyExpenses?: number
 ): { equity: RecommendationOutput; debt: RecommendationOutput } {
   const equityRec = generateFundRecommendations({
     riskAppetite,
     totalAmount: equityAmount,
     growthPreference,
-    fundType: "equity"
+    fundType: "equity",
+    age,
+    retirementAge,
+    desiredLifestyle,
+    monthlyExpenses
   });
 
   const debtRec = generateFundRecommendations({
     riskAppetite,
     totalAmount: debtAmount,
     growthPreference,
-    fundType: "debt"
+    fundType: "debt",
+    age,
+    retirementAge,
+    desiredLifestyle,
+    monthlyExpenses
   });
 
   return { equity: equityRec, debt: debtRec };

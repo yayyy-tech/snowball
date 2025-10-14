@@ -2,7 +2,15 @@
 
 ## Overview
 
-Snowball is a retirement planning web application designed for Indian users aged 25-40. The platform helps users create personalized retirement roadmaps by collecting financial data through a streamlined 6-step onboarding questionnaire and generating detailed investment recommendations, corpus calculations, and asset allocation strategies. The application provides smart mutual fund, bond, and gold ETF suggestions tailored to individual risk profiles and financial goals, with calculations based on India's tax regime.
+Snowball is a retirement planning web application designed for Indian users aged 25-40. The platform helps users create personalized retirement roadmaps by collecting financial data through a streamlined 7-step onboarding questionnaire and generating detailed investment recommendations, corpus calculations, and asset allocation strategies. The application provides smart mutual fund, bond, and gold ETF suggestions tailored to individual risk profiles and financial goals, with calculations based on India's tax regime.
+
+## Recent Changes (October 2025)
+
+### Bug Fixes & Improvements
+1. **Risk Tolerance Validation**: Fixed frontend onboarding form to send "moderate" instead of "balanced" for the balanced risk option, matching backend validation that expects conservative/moderate/aggressive values
+2. **Personalized Fund Reasoning**: Enhanced fund recommendation engine to receive full user context (age, retirementAge, lifestyle, monthlyExpenses) so each fund recommendation includes personalized reasoning mentioning user-specific factors like "young investor", "long investment horizon", "comfortable lifestyle", etc.
+3. **Session Cookie Security**: Made session cookie settings environment-aware (secure: false in development/testing, secure: true in production) to support OIDC testing while maintaining production security
+4. **Test Coverage**: End-to-end testing validates full authentication flow, onboarding completion, plan creation, and personalized reasoning display
 
 ## User Preferences
 
