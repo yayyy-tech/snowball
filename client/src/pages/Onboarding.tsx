@@ -16,6 +16,36 @@ import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
+const formatIndianNumber = (value: string): string => {
+  if (!value) return "";
+  const num = value.replace(/,/g, "");
+  if (!/^\d+$/.test(num)) return value;
+  
+  const numStr = num;
+  const len = numStr.length;
+  
+  if (len <= 3) return numStr;
+  
+  let result = numStr.slice(-3);
+  let remaining = numStr.slice(0, -3);
+  
+  while (remaining.length > 0) {
+    if (remaining.length <= 2) {
+      result = remaining + "," + result;
+      remaining = "";
+    } else {
+      result = remaining.slice(-2) + "," + result;
+      remaining = remaining.slice(0, -2);
+    }
+  }
+  
+  return result;
+};
+
+const parseIndianNumber = (value: string): string => {
+  return value.replace(/,/g, "");
+};
+
 const steps = ["Personal", "Income", "Assets", "Liabilities", "Goals", "Risk", "Tax"];
 
 export default function Onboarding() {
@@ -380,23 +410,20 @@ export default function Onboarding() {
                 <Label htmlFor="annualIncome">Your Annual Income (₹) *</Label>
                 <Input
                   id="annualIncome"
-                  type="number"
-                  value={formData.annualIncome}
-                  onChange={(e) => setFormData({ ...formData, annualIncome: e.target.value })}
-                  placeholder="e.g., 1200000"
+                  value={formatIndianNumber(formData.annualIncome)}
+                  onChange={(e) => setFormData({ ...formData, annualIncome: parseIndianNumber(e.target.value) })}
+                  placeholder="e.g., 12,00,000"
                   data-testid="input-annual-income"
                 />
-                <p className="text-xs text-muted-foreground mt-1">₹{formData.annualIncome ? parseInt(formData.annualIncome).toLocaleString('en-IN') : '0'}</p>
               </div>
 
               <div>
                 <Label htmlFor="monthlyExpenses">Current Monthly Expenses (₹) *</Label>
                 <Input
                   id="monthlyExpenses"
-                  type="number"
-                  value={formData.monthlyExpenses}
-                  onChange={(e) => setFormData({ ...formData, monthlyExpenses: e.target.value })}
-                  placeholder="e.g., 50000"
+                  value={formatIndianNumber(formData.monthlyExpenses)}
+                  onChange={(e) => setFormData({ ...formData, monthlyExpenses: parseIndianNumber(e.target.value) })}
+                  placeholder="e.g., 50,000"
                   data-testid="input-monthly-expenses"
                 />
               </div>
@@ -412,15 +439,11 @@ export default function Onboarding() {
                     <Label htmlFor="spouseIncome">Spouse Annual Income (₹)</Label>
                     <Input
                       id="spouseIncome"
-                      type="number"
-                      value={formData.spouseIncome}
-                      onChange={(e) => setFormData({ ...formData, spouseIncome: e.target.value })}
-                      placeholder="e.g., 800000"
+                      value={formatIndianNumber(formData.spouseIncome)}
+                      onChange={(e) => setFormData({ ...formData, spouseIncome: parseIndianNumber(e.target.value) })}
+                      placeholder="e.g., 8,00,000"
                       data-testid="input-spouse-income"
                     />
-                    <p className="text-xs text-muted-foreground mt-1">
-                      ₹{formData.spouseIncome ? parseInt(formData.spouseIncome).toLocaleString('en-IN') : '0'}
-                    </p>
                   </div>
                 </div>
               )}
@@ -432,10 +455,9 @@ export default function Onboarding() {
                   <Label htmlFor="monthlyExpenses">Monthly Household Expenses (₹) *</Label>
                   <Input
                     id="monthlyExpenses"
-                    type="number"
-                    value={formData.monthlyExpenses}
-                    onChange={(e) => setFormData({ ...formData, monthlyExpenses: e.target.value })}
-                    placeholder="e.g., 45000"
+                    value={formatIndianNumber(formData.monthlyExpenses)}
+                    onChange={(e) => setFormData({ ...formData, monthlyExpenses: parseIndianNumber(e.target.value) })}
+                    placeholder="e.g., 45,000"
                     data-testid="input-monthly-expenses"
                   />
                 </div>
@@ -444,10 +466,9 @@ export default function Onboarding() {
                   <Label htmlFor="financialSupport">Financial Support to Relatives (₹/month)</Label>
                   <Input
                     id="financialSupport"
-                    type="number"
-                    value={formData.financialSupport}
-                    onChange={(e) => setFormData({ ...formData, financialSupport: e.target.value })}
-                    placeholder="Support to parents, siblings, etc."
+                    value={formatIndianNumber(formData.financialSupport)}
+                    onChange={(e) => setFormData({ ...formData, financialSupport: parseIndianNumber(e.target.value) })}
+                    placeholder="e.g., 10,000"
                     data-testid="input-financial-support"
                   />
                 </div>
@@ -456,10 +477,9 @@ export default function Onboarding() {
                   <Label htmlFor="familyEducationExpenses">Family Education Expenses (₹/month)</Label>
                   <Input
                     id="familyEducationExpenses"
-                    type="number"
-                    value={formData.familyEducationExpenses}
-                    onChange={(e) => setFormData({ ...formData, familyEducationExpenses: e.target.value })}
-                    placeholder="e.g., 15000"
+                    value={formatIndianNumber(formData.familyEducationExpenses)}
+                    onChange={(e) => setFormData({ ...formData, familyEducationExpenses: parseIndianNumber(e.target.value) })}
+                    placeholder="e.g., 15,000"
                     data-testid="input-education-expenses"
                   />
                 </div>
@@ -512,13 +532,9 @@ export default function Onboarding() {
                   <Label htmlFor="realEstate">Real Estate Value (₹)</Label>
                   <Input
                     id="realEstate"
-                    type="number"
-                    value={formData.realEstateValue}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      setFormData({ ...formData, realEstateValue: val });
-                    }}
-                    placeholder="Current market value"
+                    value={formatIndianNumber(formData.realEstateValue)}
+                    onChange={(e) => setFormData({ ...formData, realEstateValue: parseIndianNumber(e.target.value) })}
+                    placeholder="e.g., 50,00,000"
                     data-testid="input-real-estate"
                   />
                 </div>
@@ -527,10 +543,9 @@ export default function Onboarding() {
                   <Label htmlFor="stocks">Stocks Value (₹)</Label>
                   <Input
                     id="stocks"
-                    type="number"
-                    value={formData.stocksValue}
-                    onChange={(e) => setFormData({ ...formData, stocksValue: e.target.value })}
-                    placeholder="Current portfolio value"
+                    value={formatIndianNumber(formData.stocksValue)}
+                    onChange={(e) => setFormData({ ...formData, stocksValue: parseIndianNumber(e.target.value) })}
+                    placeholder="e.g., 5,00,000"
                     data-testid="input-stocks"
                   />
                 </div>
@@ -539,10 +554,9 @@ export default function Onboarding() {
                   <Label htmlFor="mutualFunds">Mutual Funds Value (₹)</Label>
                   <Input
                     id="mutualFunds"
-                    type="number"
-                    value={formData.mutualFundsValue}
-                    onChange={(e) => setFormData({ ...formData, mutualFundsValue: e.target.value })}
-                    placeholder="Current MF portfolio"
+                    value={formatIndianNumber(formData.mutualFundsValue)}
+                    onChange={(e) => setFormData({ ...formData, mutualFundsValue: parseIndianNumber(e.target.value) })}
+                    placeholder="e.g., 3,00,000"
                     data-testid="input-mutual-funds"
                   />
                 </div>
@@ -551,10 +565,9 @@ export default function Onboarding() {
                   <Label htmlFor="ppfEpfNps">PPF/EPF/NPS Balance (₹)</Label>
                   <Input
                     id="ppfEpfNps"
-                    type="number"
-                    value={formData.ppfEpfNps}
-                    onChange={(e) => setFormData({ ...formData, ppfEpfNps: e.target.value })}
-                    placeholder="Retirement funds"
+                    value={formatIndianNumber(formData.ppfEpfNps)}
+                    onChange={(e) => setFormData({ ...formData, ppfEpfNps: parseIndianNumber(e.target.value) })}
+                    placeholder="e.g., 2,00,000"
                     data-testid="input-ppf-epf"
                   />
                 </div>
@@ -563,10 +576,9 @@ export default function Onboarding() {
                   <Label htmlFor="bankDeposits">Bank Deposits (₹)</Label>
                   <Input
                     id="bankDeposits"
-                    type="number"
-                    value={formData.bankDeposits}
-                    onChange={(e) => setFormData({ ...formData, bankDeposits: e.target.value })}
-                    placeholder="FD, RD, etc."
+                    value={formatIndianNumber(formData.bankDeposits)}
+                    onChange={(e) => setFormData({ ...formData, bankDeposits: parseIndianNumber(e.target.value) })}
+                    placeholder="e.g., 1,00,000"
                     data-testid="input-bank-deposits"
                   />
                 </div>
@@ -575,10 +587,9 @@ export default function Onboarding() {
                   <Label htmlFor="goldAssets">Gold/Other Assets (₹)</Label>
                   <Input
                     id="goldAssets"
-                    type="number"
-                    value={formData.goldAssets}
-                    onChange={(e) => setFormData({ ...formData, goldAssets: e.target.value })}
-                    placeholder="Physical gold, ETFs"
+                    value={formatIndianNumber(formData.goldAssets)}
+                    onChange={(e) => setFormData({ ...formData, goldAssets: parseIndianNumber(e.target.value) })}
+                    placeholder="e.g., 50,000"
                     data-testid="input-gold-assets"
                   />
                 </div>
@@ -648,17 +659,15 @@ export default function Onboarding() {
                       </SelectContent>
                     </Select>
                     <Input
-                      type="number"
                       placeholder="Loan Amount (₹)"
-                      value={loan.amount}
-                      onChange={(e) => updateLoan(index, "amount", e.target.value)}
+                      value={formatIndianNumber(loan.amount)}
+                      onChange={(e) => updateLoan(index, "amount", parseIndianNumber(e.target.value))}
                       data-testid={`input-loan-amount-${index}`}
                     />
                     <Input
-                      type="number"
                       placeholder="Monthly EMI (₹)"
-                      value={loan.emi}
-                      onChange={(e) => updateLoan(index, "emi", e.target.value)}
+                      value={formatIndianNumber(loan.emi)}
+                      onChange={(e) => updateLoan(index, "emi", parseIndianNumber(e.target.value))}
                       data-testid={`input-loan-emi-${index}`}
                     />
                     <Input
@@ -730,10 +739,9 @@ export default function Onboarding() {
                 <Label htmlFor="expectedExpense">Expected Monthly Expense After Retirement (₹) *</Label>
                 <Input
                   id="expectedExpense"
-                  type="number"
-                  value={formData.expectedMonthlyExpense}
-                  onChange={(e) => setFormData({ ...formData, expectedMonthlyExpense: e.target.value })}
-                  placeholder="e.g., 75000"
+                  value={formatIndianNumber(formData.expectedMonthlyExpense)}
+                  onChange={(e) => setFormData({ ...formData, expectedMonthlyExpense: parseIndianNumber(e.target.value) })}
+                  placeholder="e.g., 75,000"
                   data-testid="input-expected-expense"
                 />
                 <p className="text-xs text-muted-foreground mt-1">
