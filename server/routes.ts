@@ -11,20 +11,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication (Google login, GitHub, etc.)
   await setupAuth(app);
 
-  // Auth routes
-  app.get("/api/auth/user", isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
-      res.json(user);
-    } catch (error) {
-      console.error("Error fetching user:", error);
-      res.status(500).json({ message: "Failed to fetch user" });
-    }
+  // Auth routes - disabled for now
+  app.get("/api/auth/user", async (req: any, res) => {
+    res.json({ id: "anonymous", email: null, firstName: "Guest", lastName: "User" });
   });
 
   // Create a new retirement plan
-  app.post("/api/retirement-plans", isAuthenticated, async (req, res) => {
+  app.post("/api/retirement-plans", async (req, res) => {
     try {
       const validatedData = insertRetirementPlanSchema.parse(req.body);
       
@@ -49,7 +42,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get a retirement plan by ID
-  app.get("/api/retirement-plans/:id", isAuthenticated, async (req, res) => {
+  app.get("/api/retirement-plans/:id", async (req, res) => {
     try {
       const plan = await storage.getRetirementPlan(req.params.id);
       
@@ -65,7 +58,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Update a retirement plan
-  app.put("/api/retirement-plans/:id", isAuthenticated, async (req, res) => {
+  app.put("/api/retirement-plans/:id", async (req, res) => {
     try {
       const validatedData = insertRetirementPlanSchema.partial().parse(req.body);
       
@@ -96,7 +89,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Fund Recommendation API endpoints
-  app.post("/api/fund-recommendations", isAuthenticated, async (req, res) => {
+  app.post("/api/fund-recommendations", async (req, res) => {
     try {
       const { riskAppetite, totalAmount, growthPreference, fundType } = req.body as RecommendationInput;
 
@@ -131,7 +124,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Complete recommendations (both equity and debt)
-  app.post("/api/fund-recommendations/complete", isAuthenticated, async (req, res) => {
+  app.post("/api/fund-recommendations/complete", async (req, res) => {
     try {
       const { riskAppetite, equityAmount, debtAmount, growthPreference } = req.body;
 
@@ -156,7 +149,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // GPT-powered AI recommendations
-  app.get("/api/gpt-recommendations/:planId", isAuthenticated, async (req, res) => {
+  app.get("/api/gpt-recommendations/:planId", async (req, res) => {
     try {
       const plan = await storage.getRetirementPlan(req.params.planId);
       
