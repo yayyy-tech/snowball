@@ -2,7 +2,7 @@
 
 ## Overview
 
-Snowball is a retirement planning web application designed for Indian users aged 25-40. The platform helps users create personalized retirement roadmaps by collecting financial data through a multi-step onboarding questionnaire and generating detailed investment recommendations, corpus calculations, and asset allocation strategies. The application provides smart mutual fund, bond, and gold ETF suggestions tailored to individual risk profiles and financial goals, with calculations based on India's tax regime.
+Snowball is a retirement planning web application designed for Indian users aged 25-40. The platform helps users create personalized retirement roadmaps by collecting financial data through a streamlined 6-step onboarding questionnaire and generating detailed investment recommendations, corpus calculations, and asset allocation strategies. The application provides smart mutual fund, bond, and gold ETF suggestions tailored to individual risk profiles and financial goals, with calculations based on India's tax regime.
 
 ## User Preferences
 
@@ -14,7 +14,7 @@ Preferred communication style: Simple, everyday language.
 - **Framework**: React with TypeScript, using Vite as the build tool
 - **Routing**: Wouter for client-side routing with three main routes:
   - `/` - Landing page with marketing content
-  - `/onboarding` - Multi-step questionnaire (9 steps)
+  - `/onboarding` - Streamlined 6-step questionnaire (Personal, Income, Assets, Goals, Risk, Tax)
   - `/dashboard` - Personalized retirement plan visualization
 - **State Management**: TanStack Query (React Query) for server state management
 - **UI Components**: shadcn/ui component library built on Radix UI primitives
@@ -35,9 +35,12 @@ Preferred communication style: Simple, everyday language.
   - `retirementPlans` - Comprehensive retirement plan data including:
     - Personal info with spouse details (name, age, working status) for married users
     - Income data (monthly income for primary earner, spouse income if married and working)
-    - Assets, insurance, goals, risk tolerance, tax preferences
-    - Emergency fund and health expectations
+    - Assets (real estate, stocks, mutual funds, PPF/EPF/NPS, bank deposits, gold)
+    - Retirement goals (desired age, lifestyle expectations, monthly expenses)
+    - Risk tolerance and preferred asset allocation
+    - Tax regime preference (new vs old)
     - Calculated projections and investment recommendations
+    - Note: Insurance, emergency fund, and health data fields have been removed as they don't affect calculations
 - **Data Validation**: Zod schemas for runtime validation with Drizzle integration
 
 ### Business Logic
