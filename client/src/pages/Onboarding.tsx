@@ -16,12 +16,12 @@ import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
-const steps = ["Personal", "Income", "Assets", "Insurance", "Goals", "Risk", "Tax", "Emergency", "Health"];
+const steps = ["Personal", "Income", "Assets", "Goals", "Risk", "Tax"];
 
 export default function Onboarding() {
   const [, setLocation] = useLocation();
   const [currentStep, setCurrentStep] = useState(1);
-  const totalSteps = 9;
+  const totalSteps = 6;
   const { toast } = useToast();
 
   // Form state
@@ -51,9 +51,6 @@ export default function Onboarding() {
     bankDeposits: "",
     goldAssets: "",
     creditCardDebt: "",
-    healthInsurance: "",
-    lifeInsurance: "",
-    hasTermInsurance: false,
     retirementAge: "",
     expensesPlannedAge: "",
     expectedMonthlyExpense: "",
@@ -63,9 +60,6 @@ export default function Onboarding() {
     preferredAssetMix: "",
     currentTaxSlab: "",
     preferredTaxRegime: "",
-    emergencyFund: "",
-    healthCondition: "",
-    lifestyle: "",
   });
 
   const createPlanMutation = useMutation({
@@ -118,9 +112,6 @@ export default function Onboarding() {
         bankDeposits: parseInt(formData.bankDeposits) || 0,
         goldAssets: parseInt(formData.goldAssets) || 0,
         
-        healthInsurance: parseInt(formData.healthInsurance) || 0,
-        lifeInsurance: parseInt(formData.lifeInsurance) || 0,
-        
         retirementLifestyle: formData.expectedLifestyle || 'comfortable',
         postRetirementMonthlyExpense: parseInt(formData.expectedMonthlyExpense) || 0,
         legacyGoal: 0,
@@ -132,13 +123,6 @@ export default function Onboarding() {
         
         taxRegime: formData.preferredTaxRegime || 'new',
         section80CInvestment: 0,
-        
-        emergencyFundMonths: parseInt(formData.emergencyFund) || 6,
-        hasEmergencyFund: !!formData.emergencyFund,
-        currentEmergencyFund: 0,
-        
-        chronicConditions: formData.healthCondition ? [formData.healthCondition] : [],
-        healthcareExpectation: formData.lifestyle || 'moderate',
       };
       
       createPlanMutation.mutate(planData);
@@ -683,60 +667,8 @@ export default function Onboarding() {
             </div>
           )}
 
-          {/* Step 4: Insurance */}
+          {/* Step 4: Goals */}
           {currentStep === 4 && (
-            <div className="space-y-6">
-              <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/40 rounded-lg p-4">
-                <h2 className="text-2xl font-semibold mb-1">Insurance</h2>
-                <p className="text-sm text-muted-foreground">Fill in the details below. All fields marked with * are required.</p>
-              </div>
-
-              <div className="grid md:grid-cols-2 gap-6">
-                <div>
-                  <Label htmlFor="healthInsurance">Health Insurance Coverage (₹)</Label>
-                  <Input
-                    id="healthInsurance"
-                    type="number"
-                    value={formData.healthInsurance}
-                    onChange={(e) => setFormData({ ...formData, healthInsurance: e.target.value })}
-                    placeholder="e.g., 500000"
-                    data-testid="input-health-insurance"
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="lifeInsurance">Life Insurance Sum Assured (₹)</Label>
-                  <Input
-                    id="lifeInsurance"
-                    type="number"
-                    value={formData.lifeInsurance}
-                    onChange={(e) => setFormData({ ...formData, lifeInsurance: e.target.value })}
-                    placeholder="Total life cover"
-                    data-testid="input-life-insurance"
-                  />
-                </div>
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="termInsurance"
-                  checked={formData.hasTermInsurance}
-                  onCheckedChange={(checked) => setFormData({ ...formData, hasTermInsurance: checked as boolean })}
-                  data-testid="checkbox-term-insurance"
-                />
-                <Label htmlFor="termInsurance" className="font-normal">I have a term insurance policy</Label>
-              </div>
-
-              <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/40 rounded-lg p-4">
-                <p className="text-sm text-blue-900 dark:text-blue-200">
-                  <strong>Recommendation:</strong> Ideally, your life insurance should be 10-15x your annual income, and health insurance should cover at least ₹10 lakhs per family member.
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* Step 5: Goals */}
-          {currentStep === 5 && (
             <div className="space-y-6">
               <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/40 rounded-lg p-4">
                 <h2 className="text-2xl font-semibold mb-1">Goals</h2>
@@ -843,8 +775,8 @@ export default function Onboarding() {
             </div>
           )}
 
-          {/* Step 6: Risk */}
-          {currentStep === 6 && (
+          {/* Step 5: Risk */}
+          {currentStep === 5 && (
             <div className="space-y-6">
               <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/40 rounded-lg p-4">
                 <h2 className="text-2xl font-semibold mb-1">Risk</h2>
@@ -948,8 +880,8 @@ export default function Onboarding() {
             </div>
           )}
 
-          {/* Step 7: Tax */}
-          {currentStep === 7 && (
+          {/* Step 6: Tax */}
+          {currentStep === 6 && (
             <div className="space-y-6">
               <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/40 rounded-lg p-4">
                 <h2 className="text-2xl font-semibold mb-1">Tax</h2>
@@ -993,82 +925,6 @@ export default function Onboarding() {
                 <p className="text-sm text-amber-900 dark:text-amber-200">
                   <Info className="inline h-4 w-4 mr-1" />
                   <strong>Tax Tip:</strong> If you're in the old regime, maximize deductions under Section 80C (₹1.5L), 80D for health insurance, and NPS (₹50k) to reduce tax liability.
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* Step 8: Emergency */}
-          {currentStep === 8 && (
-            <div className="space-y-6">
-              <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/40 rounded-lg p-4">
-                <h2 className="text-2xl font-semibold mb-1">Emergency</h2>
-                <p className="text-sm text-muted-foreground">Fill in the details below. All fields marked with * are required.</p>
-              </div>
-
-              <div>
-                <Label htmlFor="emergencyFund">Emergency Fund (in months of expenses) *</Label>
-                <Input
-                  id="emergencyFund"
-                  type="number"
-                  value={formData.emergencyFund}
-                  onChange={(e) => setFormData({ ...formData, emergencyFund: e.target.value })}
-                  placeholder="e.g., 12"
-                  data-testid="input-emergency-fund"
-                />
-                <p className="text-xs text-muted-foreground mt-2">
-                  Recommended: 6-12 months of household expenses
-                </p>
-              </div>
-
-              <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/40 rounded-lg p-4">
-                <h3 className="font-semibold text-blue-900 dark:text-blue-200 mb-2">Why it matters:</h3>
-                <p className="text-sm text-blue-800 dark:text-blue-300">
-                  An emergency fund protects you from dipping into long-term investments during unexpected situations like medical emergencies, job loss, or urgent home repairs.
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* Step 9: Health */}
-          {currentStep === 9 && (
-            <div className="space-y-6">
-              <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/40 rounded-lg p-4">
-                <h2 className="text-2xl font-semibold mb-1">Health</h2>
-                <p className="text-sm text-muted-foreground">Fill in the details below. All fields marked with * are required.</p>
-              </div>
-
-              <div>
-                <Label htmlFor="healthCondition">Current Health Condition</Label>
-                <Textarea
-                  id="healthCondition"
-                  value={formData.healthCondition}
-                  onChange={(e) => setFormData({ ...formData, healthCondition: e.target.value })}
-                  placeholder="e.g., Good health, no serious health conditions"
-                  rows={3}
-                  data-testid="textarea-health-condition"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="lifestyle">Lifestyle (Diet, Exercise, Smoking, Alcohol)</Label>
-                <Textarea
-                  id="lifestyle"
-                  value={formData.lifestyle}
-                  onChange={(e) => setFormData({ ...formData, lifestyle: e.target.value })}
-                  placeholder="e.g., Non-smoking, no alcohol, eats well everyday, balanced diet"
-                  rows={3}
-                  data-testid="textarea-lifestyle"
-                />
-              </div>
-
-              <div className="bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-900/40 rounded-lg p-4">
-                <h3 className="font-semibold text-green-900 dark:text-green-200 mb-2 flex items-center gap-2">
-                  <Heart className="h-5 w-5" />
-                  Planning for longevity
-                </h3>
-                <p className="text-sm text-green-800 dark:text-green-300">
-                  With increasing life expectancy, we'll plan your corpus to last until age {formData.expensesPlannedAge || "85-90"} so you never run out of funds.
                 </p>
               </div>
             </div>
