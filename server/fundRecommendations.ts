@@ -9,6 +9,10 @@ export interface RecommendationInput {
   totalAmount: number;
   growthPreference: GrowthPreference;
   fundType: FundType;
+  age?: number;
+  retirementAge?: number;
+  desiredLifestyle?: string;
+  monthlyExpenses?: number;
 }
 
 export interface FundRecommendation {
@@ -148,13 +152,12 @@ function selectFunds(
 // Generate reasoning for fund selection
 function generateReasoning(
   fund: FundData,
-  riskAppetite: RiskAppetite,
-  growthPreference: GrowthPreference,
-  fundType: FundType
+  input: RecommendationInput
 ): string {
   const reasons: string[] = [];
+  const timeHorizon = input.retirementAge && input.age ? input.retirementAge - input.age : 0;
 
-  if (fundType === "debt") {
+  if (input.fundType === "debt") {
     reasons.push("Corporate bond fund for stable returns");
     if (fund.returns5Y && fund.returns5Y > 7.5) {
       reasons.push(`Strong ${fund.returns5Y}% 5Y returns`);
@@ -183,9 +186,28 @@ function generateReasoning(
     }
   }
 
-  if (riskAppetite === "conservative") {
+  // Add personalized reasoning based on user profile
+  if (input.age && input.age < 35) {
+    reasons.push("Suitable for young investors with long investment horizon");
+  } else if (input.age && input.age >= 50) {
+    reasons.push("Appropriate for near-retirement balanced approach");
+  }
+
+  if (timeHorizon > 20) {
+    reasons.push("Well-suited for your 20+ year investment timeline");
+  } else if (timeHorizon > 10) {
+    reasons.push("Matches your medium-term retirement goals");
+  } else if (timeHorizon > 0) {
+    reasons.push("Aligned with your shorter time horizon");
+  }
+
+  if (input.desiredLifestyle === "luxury" || input.desiredLifestyle === "comfortable") {
+    reasons.push(`Supports your ${input.desiredLifestyle} retirement lifestyle goals`);
+  }
+
+  if (input.riskAppetite === "conservative") {
     reasons.push("Suitable for your conservative risk profile");
-  } else if (riskAppetite === "aggressive") {
+  } else if (input.riskAppetite === "aggressive") {
     reasons.push("Aligned with your aggressive growth goals");
   }
 
@@ -220,7 +242,7 @@ export function generateFundRecommendations(input: RecommendationInput): Recomme
     aum: formatIndianCurrency(fund.aum * 10000),
     allocation: formatIndianCurrency(allocations[index]),
     allocationAmount: allocations[index],
-    reasoning: generateReasoning(fund, input.riskAppetite, input.growthPreference, input.fundType)
+    reasoning: generateReasoning(fund, input)
   }));
 
   // Calculate allocation summary

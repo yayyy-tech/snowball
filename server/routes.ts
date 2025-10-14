@@ -23,7 +23,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Create a new retirement plan
-  app.post("/api/retirement-plans", async (req, res) => {
+  app.post("/api/retirement-plans", isAuthenticated, async (req, res) => {
     try {
       const validatedData = insertRetirementPlanSchema.parse(req.body);
       
@@ -48,7 +48,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get a retirement plan by ID
-  app.get("/api/retirement-plans/:id", async (req, res) => {
+  app.get("/api/retirement-plans/:id", isAuthenticated, async (req, res) => {
     try {
       const plan = await storage.getRetirementPlan(req.params.id);
       
@@ -64,7 +64,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Update a retirement plan
-  app.put("/api/retirement-plans/:id", async (req, res) => {
+  app.put("/api/retirement-plans/:id", isAuthenticated, async (req, res) => {
     try {
       const validatedData = insertRetirementPlanSchema.partial().parse(req.body);
       
@@ -95,7 +95,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Fund Recommendation API endpoints
-  app.post("/api/fund-recommendations", async (req, res) => {
+  app.post("/api/fund-recommendations", isAuthenticated, async (req, res) => {
     try {
       const { riskAppetite, totalAmount, growthPreference, fundType } = req.body as RecommendationInput;
 
@@ -130,7 +130,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Complete recommendations (both equity and debt)
-  app.post("/api/fund-recommendations/complete", async (req, res) => {
+  app.post("/api/fund-recommendations/complete", isAuthenticated, async (req, res) => {
     try {
       const { riskAppetite, equityAmount, debtAmount, growthPreference } = req.body;
 

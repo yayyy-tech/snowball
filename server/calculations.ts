@@ -1,4 +1,5 @@
 import { type RetirementPlan } from "@shared/schema";
+import { generateCompleteRecommendations, type RiskAppetite, type GrowthPreference } from "./fundRecommendations";
 
 interface CalculatedPlan {
   // Basic info
@@ -252,14 +253,16 @@ export function calculateRetirementPlan(plan: RetirementPlan): CalculatedPlan {
     if (retirementCorpus <= 0) break;
   }
   
-  // Investment recommendations
-  const investmentRecommendations = getInvestmentRecommendations(
+  // Investment recommendations using dynamic fund engine
+  const investmentRecommendations = getDynamicInvestmentRecommendations(
     assetAllocation, 
     plan.riskTolerance,
     plan.currentAge,
     yearsToRetirement,
     sipAmount,
-    plan.retirementLifestyle
+    plan.retirementLifestyle,
+    plan.retirementAge,
+    plan.postRetirementMonthlyExpense
   );
   
   return {
@@ -286,6 +289,138 @@ export function calculateRetirementPlan(plan: RetirementPlan): CalculatedPlan {
   };
 }
 
+// New dynamic investment recommendations using fund engine
+function getDynamicInvestmentRecommendations(
+  allocation: { equity: number; debt: number; gold: number},
+  riskTolerance: string,
+  currentAge: number,
+  yearsToRetirement: number,
+  sipAmount: number,
+  lifestyle: string,
+  retirementAge: number,
+  monthlyExpenses: number
+) {
+  // Validate and map risk tolerance to RiskAppetite type
+  const validRiskValues = ["conservative", "moderate", "aggressive"];
+  const normalizedRisk = riskTolerance.toLowerCase();
+  if (!validRiskValues.includes(normalizedRisk)) {
+    throw new Error(`Invalid risk tolerance: ${riskTolerance}. Must be conservative, moderate, or aggressive.`);
+  }
+  const riskAppetite = normalizedRisk as RiskAppetite;
+
+  // Determine growth preference based on ALL factors
+  let growthPreference: GrowthPreference = "balanced";
+  
+  // Factor in lifestyle (fixing luxury vs luxurious inconsistency)
+  if (lifestyle === "luxury" || lifestyle === "luxurious" || lifestyle === "comfortable") {
+    growthPreference = "high_growth";
+  } else if (lifestyle === "basic") {
+    growthPreference = "stable";
+  }
+  
+  // Factor in age and time horizon
+  if (currentAge >= 50 || yearsToRetirement < 10) {
+    growthPreference = "stable"; // Override for near-retirement
+  } else if (currentAge < 35 && yearsToRetirement > 20) {
+    growthPreference = "high_growth"; // Young with long horizon
+  }
+  
+  // Factor in monthly expenses relative to SIP (investment capacity)
+  if (monthlyExpenses && sipAmount) {
+    const savingsRate = sipAmount / (monthlyExpenses + sipAmount);
+    if (savingsRate > 0.5) {
+      // High savings rate - can afford more growth
+      if (growthPreference !== "stable") growthPreference = "high_growth";
+    }
+  }
+
+  // Calculate equity and debt amounts based on SIP and allocation
+  const monthlyInvestment = sipAmount;
+  const equityAmount = monthlyInvestment * (allocation.equity / 100);
+  const debtAmount = monthlyInvestment * (allocation.debt / 100);
+
+  // Generate fund recommendations using our dynamic engine with full context
+  const fundRecs = generateCompleteRecommendations(
+    riskAppetite,
+    equityAmount * yearsToRetirement * 12, // Total equity investment over period
+    debtAmount * yearsToRetirement * 12, // Total debt investment over period
+    growthPreference
+  );
+
+  const recommendations = [];
+
+  // Map equity recommendations - distribute allocation among funds
+  if (allocation.equity > 0 && fundRecs.equity.recommendedFunds.length > 0) {
+    const equityFunds = fundRecs.equity.recommendedFunds;
+    const totalEquityAllocation = allocation.equity;
+    
+    recommendations.push({
+      category: "Equity Mutual Funds",
+      instruments: equityFunds.map((fund, index) => {
+        // Calculate individual fund allocation as percentage of total equity
+        const fundAllocationPct = (fund.allocationAmount / equityFunds.reduce((sum, f) => sum + f.allocationAmount, 0)) * totalEquityAllocation;
+        
+        return {
+          name: fund.fundName,
+          type: fund.category,
+          allocation: Math.round(fundAllocationPct * 100) / 100, // Round to 2 decimals
+          returns: fund.returns5Y,
+          risk: fund.risk,
+          reason: fund.reasoning
+        };
+      })
+    });
+  }
+
+  // Map debt recommendations - distribute allocation among funds
+  if (allocation.debt > 0 && fundRecs.debt.recommendedFunds.length > 0) {
+    const debtFunds = fundRecs.debt.recommendedFunds;
+    const totalDebtAllocation = allocation.debt;
+    
+    recommendations.push({
+      category: "Debt Funds & Bonds",
+      instruments: debtFunds.map((fund, index) => {
+        // Calculate individual fund allocation as percentage of total debt
+        const fundAllocationPct = (fund.allocationAmount / debtFunds.reduce((sum, f) => sum + f.allocationAmount, 0)) * totalDebtAllocation;
+        
+        return {
+          name: fund.fundName,
+          type: fund.category,
+          allocation: Math.round(fundAllocationPct * 100) / 100, // Round to 2 decimals
+          returns: fund.returns5Y,
+          risk: fund.risk,
+          reason: fund.reasoning
+        };
+      })
+    });
+  }
+
+  // Add gold recommendations
+  if (allocation.gold > 0) {
+    recommendations.push({
+      category: "Gold & Alternative Assets",
+      instruments: [{
+        name: "Nippon India Gold Savings Fund",
+        type: "Gold Fund",
+        allocation: Math.round(allocation.gold * 0.60),
+        returns: "8-10%",
+        risk: 'Medium',
+        reason: "Portfolio insurance against market volatility and inflation"
+      }, {
+        name: "HDFC Gold Fund",
+        type: "Gold Fund",
+        allocation: Math.round(allocation.gold * 0.40),
+        returns: "8-10%",
+        risk: 'Medium',
+        reason: "Diversified gold exposure for rupee depreciation hedge"
+      }]
+    });
+  }
+
+  return recommendations;
+}
+
+// Legacy hardcoded recommendations (kept for reference)
 function getInvestmentRecommendations(
   allocation: { equity: number; debt: number; gold: number }, 
   riskTolerance: string,
