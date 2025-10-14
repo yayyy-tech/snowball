@@ -5,6 +5,7 @@ import { insertRetirementPlanSchema } from "@shared/schema";
 import { calculateRetirementPlan } from "./calculations";
 import { generateFundRecommendations, generateCompleteRecommendations, type RecommendationInput } from "./fundRecommendations";
 import { setupAuth, isAuthenticated } from "./replitAuth";
+import { generateGPTRecommendations } from "./gptRecommendations";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication (Google login, GitHub, etc.)
@@ -151,6 +152,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       console.error("Error generating complete recommendations:", error);
       res.status(500).json({ error: error.message || "Failed to generate complete recommendations" });
+    }
+  });
+
+  // GPT-powered AI recommendations
+  app.get("/api/gpt-recommendations/:planId", isAuthenticated, async (req, res) => {
+    try {
+      const plan = await storage.getRetirementPlan(req.params.planId);
+      
+      if (!plan) {
+        return res.status(404).json({ error: "Retirement plan not found" });
+      }
+      
+      const gptRecommendations = await generateGPTRecommendations(plan);
+      
+      res.json(gptRecommendations);
+    } catch (error: any) {
+      console.error("Error generating GPT recommendations:", error);
+      res.status(500).json({ error: error.message || "Failed to generate AI recommendations" });
     }
   });
 
