@@ -16,12 +16,12 @@ import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
-const steps = ["Personal", "Income", "Assets", "Goals", "Risk", "Tax"];
+const steps = ["Personal", "Income", "Liabilities", "Assets", "Goals", "Risk", "Tax"];
 
 export default function Onboarding() {
   const [, setLocation] = useLocation();
   const [currentStep, setCurrentStep] = useState(1);
-  const totalSteps = 6;
+  const totalSteps = 7;
   const { toast } = useToast();
 
   // Form state
@@ -465,92 +465,113 @@ export default function Onboarding() {
                 </div>
               </div>
 
-              <div className="pt-4 border-t">
-                <div className="flex items-center space-x-2 mb-4">
-                  <Checkbox
-                    id="hasLoan"
-                    checked={formData.hasLoan}
-                    onCheckedChange={(checked) => setFormData({ ...formData, hasLoan: checked as boolean })}
-                    data-testid="checkbox-has-loan"
-                  />
-                  <Label htmlFor="hasLoan" className="font-normal">I own my house (No rent payment needed post-retirement)</Label>
-                </div>
-
-                <div className="flex justify-between items-center mb-3">
-                  <Label>Loan Details</Label>
-                  <Button variant="outline" size="sm" onClick={addLoan} data-testid="button-add-loan">
-                    <Plus className="h-4 w-4 mr-1" />
-                    Add Loan
-                  </Button>
-                </div>
-                <p className="text-xs text-muted-foreground mb-4">
-                  We'll calculate when your loan will end and adjust your savings accordingly.
-                </p>
-
-                {formData.loans.map((loan, index) => (
-                  <Card key={index} className="p-4 mb-3">
-                    <div className="flex justify-between items-center mb-3">
-                      <h4 className="font-semibold text-sm">Loan #{index + 1}</h4>
-                      <Button variant="ghost" size="icon" onClick={() => removeLoan(index)} data-testid={`button-remove-loan-${index}`}>
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <Select value={loan.type} onValueChange={(value) => updateLoan(index, "type", value)}>
-                        <SelectTrigger data-testid={`select-loan-type-${index}`}>
-                          <SelectValue placeholder="Loan Type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="home">Home Loan</SelectItem>
-                          <SelectItem value="car">Car Loan</SelectItem>
-                          <SelectItem value="personal">Personal Loan</SelectItem>
-                          <SelectItem value="education">Education Loan</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <Input
-                        type="number"
-                        placeholder="Loan Amount (₹)"
-                        value={loan.amount}
-                        onChange={(e) => updateLoan(index, "amount", e.target.value)}
-                        data-testid={`input-loan-amount-${index}`}
-                      />
-                      <Input
-                        type="number"
-                        placeholder="Monthly EMI (₹)"
-                        value={loan.emi}
-                        onChange={(e) => updateLoan(index, "emi", e.target.value)}
-                        data-testid={`input-loan-emi-${index}`}
-                      />
-                      <Input
-                        type="number"
-                        placeholder="Tenure (months)"
-                        value={loan.tenure}
-                        onChange={(e) => updateLoan(index, "tenure", e.target.value)}
-                        data-testid={`input-loan-tenure-${index}`}
-                      />
-                      <Input
-                        type="date"
-                        placeholder="Start Date"
-                        value={loan.startDate}
-                        onChange={(e) => updateLoan(index, "startDate", e.target.value)}
-                        data-testid={`input-loan-start-${index}`}
-                      />
-                      <Input
-                        type="number"
-                        placeholder="Interest Rate (%)"
-                        value={loan.interestRate}
-                        onChange={(e) => updateLoan(index, "interestRate", e.target.value)}
-                        data-testid={`input-loan-rate-${index}`}
-                      />
-                    </div>
-                  </Card>
-                ))}
-              </div>
             </div>
           )}
 
-          {/* Step 3: Assets */}
+          {/* Step 3: Liabilities */}
           {currentStep === 3 && (
+            <div className="space-y-6">
+              <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/40 rounded-lg p-4">
+                <h2 className="text-2xl font-semibold mb-1">Liabilities</h2>
+                <p className="text-sm text-muted-foreground">Fill in the details below. All fields marked with * are required.</p>
+              </div>
+
+              <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/40 rounded-lg p-4">
+                <p className="text-sm text-amber-900 dark:text-amber-200">
+                  <Info className="inline h-4 w-4 mr-1" />
+                  Add all your current loans and EMIs. We'll calculate when they'll end and adjust your savings plan accordingly.
+                </p>
+              </div>
+
+              <div className="flex items-center space-x-2 mb-4">
+                <Checkbox
+                  id="hasLoan"
+                  checked={formData.hasLoan}
+                  onCheckedChange={(checked) => setFormData({ ...formData, hasLoan: checked as boolean })}
+                  data-testid="checkbox-has-loan"
+                />
+                <Label htmlFor="hasLoan" className="font-normal">I own my house (No rent payment needed post-retirement)</Label>
+              </div>
+
+              <div className="flex justify-between items-center mb-3">
+                <Label className="text-base font-semibold">Your Loans</Label>
+                <Button variant="outline" size="sm" onClick={addLoan} data-testid="button-add-loan">
+                  <Plus className="h-4 w-4 mr-1" />
+                  Add Loan
+                </Button>
+              </div>
+
+              {formData.loans.length === 0 && (
+                <Card className="p-6 text-center">
+                  <p className="text-sm text-muted-foreground">
+                    No loans added yet. Click "Add Loan" to include your liabilities.
+                  </p>
+                </Card>
+              )}
+
+              {formData.loans.map((loan, index) => (
+                <Card key={index} className="p-4 mb-3">
+                  <div className="flex justify-between items-center mb-3">
+                    <h4 className="font-semibold text-sm">Loan #{index + 1}</h4>
+                    <Button variant="ghost" size="icon" onClick={() => removeLoan(index)} data-testid={`button-remove-loan-${index}`}>
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <Select value={loan.type} onValueChange={(value) => updateLoan(index, "type", value)}>
+                      <SelectTrigger data-testid={`select-loan-type-${index}`}>
+                        <SelectValue placeholder="Loan Type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="home">Home Loan</SelectItem>
+                        <SelectItem value="car">Car Loan</SelectItem>
+                        <SelectItem value="personal">Personal Loan</SelectItem>
+                        <SelectItem value="education">Education Loan</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Input
+                      type="number"
+                      placeholder="Loan Amount (₹)"
+                      value={loan.amount}
+                      onChange={(e) => updateLoan(index, "amount", e.target.value)}
+                      data-testid={`input-loan-amount-${index}`}
+                    />
+                    <Input
+                      type="number"
+                      placeholder="Monthly EMI (₹)"
+                      value={loan.emi}
+                      onChange={(e) => updateLoan(index, "emi", e.target.value)}
+                      data-testid={`input-loan-emi-${index}`}
+                    />
+                    <Input
+                      type="number"
+                      placeholder="Tenure (months)"
+                      value={loan.tenure}
+                      onChange={(e) => updateLoan(index, "tenure", e.target.value)}
+                      data-testid={`input-loan-tenure-${index}`}
+                    />
+                    <Input
+                      type="date"
+                      placeholder="Start Date"
+                      value={loan.startDate}
+                      onChange={(e) => updateLoan(index, "startDate", e.target.value)}
+                      data-testid={`input-loan-start-${index}`}
+                    />
+                    <Input
+                      type="number"
+                      placeholder="Interest Rate (%)"
+                      value={loan.interestRate}
+                      onChange={(e) => updateLoan(index, "interestRate", e.target.value)}
+                      data-testid={`input-loan-rate-${index}`}
+                    />
+                  </div>
+                </Card>
+              ))}
+            </div>
+          )}
+
+          {/* Step 4: Assets */}
+          {currentStep === 4 && (
             <div className="space-y-6">
               <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/40 rounded-lg p-4">
                 <h2 className="text-2xl font-semibold mb-1">Assets</h2>
@@ -667,8 +688,8 @@ export default function Onboarding() {
             </div>
           )}
 
-          {/* Step 4: Goals */}
-          {currentStep === 4 && (
+          {/* Step 5: Goals */}
+          {currentStep === 5 && (
             <div className="space-y-6">
               <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/40 rounded-lg p-4">
                 <h2 className="text-2xl font-semibold mb-1">Goals</h2>
@@ -775,8 +796,8 @@ export default function Onboarding() {
             </div>
           )}
 
-          {/* Step 5: Risk */}
-          {currentStep === 5 && (
+          {/* Step 6: Risk */}
+          {currentStep === 6 && (
             <div className="space-y-6">
               <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/40 rounded-lg p-4">
                 <h2 className="text-2xl font-semibold mb-1">Risk</h2>
@@ -880,8 +901,8 @@ export default function Onboarding() {
             </div>
           )}
 
-          {/* Step 6: Tax */}
-          {currentStep === 6 && (
+          {/* Step 7: Tax */}
+          {currentStep === 7 && (
             <div className="space-y-6">
               <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/40 rounded-lg p-4">
                 <h2 className="text-2xl font-semibold mb-1">Tax</h2>
