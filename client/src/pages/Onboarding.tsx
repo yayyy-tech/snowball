@@ -31,11 +31,11 @@ export default function Onboarding() {
     maritalStatus: "",
     planningChildren: false,
     dependents: [] as { name: string; relationship: string; age: string }[],
-    currentCity: "",
-    retirementLocation: "",
+    spouseName: "",
+    spouseAge: "",
+    spouseWorking: false,
     occupation: "",
     annualIncome: "",
-    bonusIncome: "",
     monthlyExpenses: "",
     financialSupport: "",
     familyEducationExpenses: "",
@@ -102,8 +102,9 @@ export default function Onboarding() {
         
         monthlyIncome: Math.round((parseInt(formData.annualIncome) || 0) / 12),
         employmentType: formData.occupation || 'salaried',
-        annualBonus: parseInt(formData.bonusIncome) || 0,
-        otherIncome: 0,
+        spouseName: formData.spouseName || null,
+        spouseAge: formData.spouseAge ? parseInt(formData.spouseAge) : null,
+        spouseWorking: formData.spouseWorking,
         hasHomeLoan: formData.hasLoan && formData.loans.some(l => l.type === 'home'),
         homeLoanEmi: formData.hasLoan ? parseInt(formData.loans.find(l => l.type === 'home')?.emi || '0') : 0,
         homeLoanTenure: formData.hasLoan ? parseInt(formData.loans.find(l => l.type === 'home')?.tenure || '0') : 0,
@@ -324,29 +325,49 @@ export default function Onboarding() {
                 ))}
               </div>
 
-              <div className="grid md:grid-cols-2 gap-6">
-                <div>
-                  <Label htmlFor="currentCity">Current City of Residence *</Label>
-                  <Input
-                    id="currentCity"
-                    value={formData.currentCity}
-                    onChange={(e) => setFormData({ ...formData, currentCity: e.target.value })}
-                    placeholder="e.g., Mumbai"
-                    data-testid="input-current-city"
-                  />
-                </div>
+              {formData.maritalStatus === "married" && (
+                <div className="border border-border rounded-lg p-4 space-y-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Heart className="h-4 w-4 text-primary" />
+                    <Label className="text-base font-semibold">Spouse Details</Label>
+                  </div>
+                  
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="spouseName">Spouse Name</Label>
+                      <Input
+                        id="spouseName"
+                        value={formData.spouseName}
+                        onChange={(e) => setFormData({ ...formData, spouseName: e.target.value })}
+                        placeholder="Enter spouse name"
+                        data-testid="input-spouse-name"
+                      />
+                    </div>
 
-                <div>
-                  <Label htmlFor="retirementLocation">Preferred Retirement Location</Label>
-                  <Input
-                    id="retirementLocation"
-                    value={formData.retirementLocation}
-                    onChange={(e) => setFormData({ ...formData, retirementLocation: e.target.value })}
-                    placeholder="e.g., Goa"
-                    data-testid="input-retirement-location"
-                  />
+                    <div>
+                      <Label htmlFor="spouseAge">Spouse Age</Label>
+                      <Input
+                        id="spouseAge"
+                        type="number"
+                        value={formData.spouseAge}
+                        onChange={(e) => setFormData({ ...formData, spouseAge: e.target.value })}
+                        placeholder="Enter spouse age"
+                        data-testid="input-spouse-age"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="spouseWorking"
+                      checked={formData.spouseWorking}
+                      onCheckedChange={(checked) => setFormData({ ...formData, spouseWorking: checked as boolean })}
+                      data-testid="checkbox-spouse-working"
+                    />
+                    <Label htmlFor="spouseWorking" className="font-normal">Spouse is currently working</Label>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           )}
 
@@ -383,14 +404,14 @@ export default function Onboarding() {
               </div>
 
               <div>
-                <Label htmlFor="bonusIncome">Bonuses/Incentives/Side Income (₹/year)</Label>
+                <Label htmlFor="monthlyExpenses">Current Monthly Expenses (₹) *</Label>
                 <Input
-                  id="bonusIncome"
+                  id="monthlyExpenses"
                   type="number"
-                  value={formData.bonusIncome}
-                  onChange={(e) => setFormData({ ...formData, bonusIncome: e.target.value })}
-                  placeholder="Additional income per year"
-                  data-testid="input-bonus-income"
+                  value={formData.monthlyExpenses}
+                  onChange={(e) => setFormData({ ...formData, monthlyExpenses: e.target.value })}
+                  placeholder="e.g., 50000"
+                  data-testid="input-monthly-expenses"
                 />
               </div>
 

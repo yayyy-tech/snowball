@@ -149,7 +149,7 @@ export function calculateRetirementPlan(plan: RetirementPlan): CalculatedPlan {
   const projectedAssetValue = totalAssets * Math.pow(1 + blendedReturns, yearsToRetirement);
   
   // Calculate monthly savings
-  const annualIncome = plan.monthlyIncome * 12 + (plan.annualBonus || 0) + (plan.otherIncome || 0);
+  const annualIncome = plan.monthlyIncome * 12;
   const annualExpense = plan.postRetirementMonthlyExpense * 12; // Assuming current expense same as retirement
   const annualTax = calculateTax(annualIncome);
   const savingsBeforeLoan = annualIncome - annualExpense - annualTax;

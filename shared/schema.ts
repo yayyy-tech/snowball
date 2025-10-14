@@ -20,12 +20,13 @@ export const retirementPlans = pgTable("retirement_plans", {
   gender: text("gender").notNull(),
   maritalStatus: text("marital_status").notNull(),
   dependents: integer("dependents").notNull(),
+  spouseName: text("spouse_name"),
+  spouseAge: integer("spouse_age"),
+  spouseWorking: boolean("spouse_working"),
   
   // Step 2: Income
   monthlyIncome: integer("monthly_income").notNull(),
   employmentType: text("employment_type").notNull(),
-  annualBonus: integer("annual_bonus"),
-  otherIncome: integer("other_income"),
   hasHomeLoan: boolean("has_home_loan"),
   homeLoanEmi: integer("home_loan_emi"),
   homeLoanTenure: integer("home_loan_tenure"),
