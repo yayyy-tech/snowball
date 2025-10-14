@@ -1,0 +1,154 @@
+{
+  "app_name": "SnowBall",
+  "design_philosophy": {
+    "theme": "Compounding Momentum / The Golden Effect",
+    "vibe": "Futuristic, Aspirational, Professional, High-Engagement",
+    "core_goal": "Maximize completion of the 7-step process by treating it as a seamless, visually-rewarding journey (Mission Control Dashboard style)."
+  },
+  "color_palette": {
+    "primary_base_deep_momentum": {
+      "hex": "#0C101A",
+      "usage": "Main background (90% coverage)."
+    },
+    "accent_1_golden_accent": {
+      "hex": "#FFC72C",
+      "usage": "Completed steps, calculated results, positive reinforcement animations, key data visualization."
+    },
+    "accent_2_teal_clarity": {
+      "hex": "#00C4CC",
+      "usage": "Active step indicators, primary CTA buttons, input focus states."
+    },
+    "neutral_light_stellar_white": {
+      "hex": "#F0F4F8",
+      "usage": "Primary text, form input text, card content background."
+    },
+    "neutral_dark_nebula_grey": {
+      "hex": "#343A40",
+      "usage": "Secondary text, pending/disabled states, input borders, subtle dividers."
+    }
+  },
+  "typography": {
+    "headlines_font": {
+      "family": "Sora",
+      "weights": ["Bold", "ExtraBold"],
+      "usage": "Tagline, step titles, main headings (H1, H2)."
+    },
+    "body_ui_font": {
+      "family": "Inter",
+      "weights": ["Medium", "Regular"],
+      "usage": "Sub-headlines, form labels, input text, body copy."
+    },
+    "font_sizing": {
+      "tagline_desktop": "4.5rem",
+      "sub_headline": "1.25rem"
+    }
+  },
+  "landing_page_hero": {
+    "layout": "Full viewport height (100vh), centered content.",
+    "tagline": {
+      "text": "Because your golden years deserve a golden effect.",
+      "style": "Sora ExtraBold, Stellar White"
+    },
+    "sub_headline": {
+      "text": "The 7-Step Planner designed to turn today's savings into tomorrow's wealth. Watch your future compound.",
+      "style": "Inter Regular, Nebula Grey"
+    },
+    "background_animation": {
+      "type": "CSS/SVG Drifting Particles",
+      "colors": ["Teal Clarity", "Golden Accent"],
+      "opacity": "0.05 (ambient)",
+      "z_index": 0
+    },
+    "cta_button": {
+      "text": "Start the SnowBall Effect →",
+      "design": "Solid Teal Clarity background, Stellar White text.",
+      "hover_effect": "Background transitions to #00A3A8; arrow translates right by 5 pixels (transform: translateX(5px)).",
+      "z_index": 2
+    }
+  },
+  "step_by_step_ui": {
+    "structure": {
+      "transition_in": "UI structure slides up from bottom; Landing page elements fade-out/fade-in.",
+      "background": "Deep Momentum (#0C101A) full screen.",
+      "progress_navigator_panel": {
+        "width": "25%",
+        "position": "Fixed",
+        "border": "1px solid Nebula Grey on the right edge."
+      },
+      "main_input_panel": {
+        "width": "70%",
+        "design": "Glassmorphism (semi-transparent, blurred backdrop).",
+        "background_rgba": "rgba(240, 244, 248, 0.05)",
+        "blur_effect": "backdrop-filter: blur(20px)",
+        "border_glow_rgba": "1px subtle glow in rgba(255, 199, 44, 0.2)",
+        "padding": "40px (Generous)"
+      }
+    },
+    "steps_list": [
+      {
+        "id": 1,
+        "category": "Personal details",
+        "title": "The Launchpad: Personal Profile",
+        "active_state_design": "Text Stellar White; Indicator pulsing filled circle in Teal Clarity."
+      },
+      {
+        "id": 2,
+        "category": "income details",
+        "title": "Fueling the Engine: Earning Power",
+        "pending_state_design": "Text Nebula Grey; Indicator outlined circle in Nebula Grey."
+      },
+      {
+        "id": 3,
+        "category": "assets details",
+        "title": "Current Inventory: Assets & Wealth",
+        "pending_state_design": "Text Nebula Grey; Indicator outlined circle in Nebula Grey."
+      },
+      {
+        "id": 4,
+        "category": "liabilities details",
+        "title": "Clearing the Path: Debts & Liabilities",
+        "pending_state_design": "Text Nebula Grey; Indicator outlined circle in Nebula Grey."
+      },
+      {
+        "id": 5,
+        "category": "financial goals",
+        "title": "The Target: Defining Your Ambition",
+        "pending_state_design": "Text Nebula Grey; Indicator outlined circle in Nebula Grey."
+      },
+      {
+        "id": 6,
+        "category": "risk capacity",
+        "title": "Risk Velocity: Your Tolerance Gauge",
+        "pending_state_design": "Text Nebula Grey; Indicator outlined circle in Nebula Grey."
+      },
+      {
+        "id": 7,
+        "category": "Tax slabs",
+        "title": "The Efficiency Engine: Tax Optimization",
+        "pending_state_design": "Text Nebula Grey; Indicator outlined circle in Nebula Grey."
+      }
+    ],
+    "input_fields_details": {
+      "standard_inputs_style": "Transparent background, 1px bottom border in Nebula Grey.",
+      "focus_state": "Bottom border transitions smoothly to 3px solid Teal Clarity.",
+      "key_input_target_age": {
+        "type": "Custom Slider",
+        "track_color": "Nebula Grey",
+        "handle_color": "Golden Accent",
+        "visual_feedback": "Golden Accent bar extends on a timeline visualization above the slider as value changes."
+      },
+      "validation_animation": "Quick, faint ripple of Golden Accent outwards upon successful field completion."
+    },
+    "transition_mechanics": {
+      "next_button_label_step_1": "Ready for Earning Power →",
+      "next_button_design": "Teal Clarity background, Stellar White text (same as Hero CTA).",
+      "animation_duration": "300ms (All card and position transitions)",
+      "step_completion_sequence": [
+        "Current Card (Step N) slides left & fades out.",
+        "Sidebar N Indicator: snaps to solid Golden Accent & shows checkmark.",
+        "Sidebar N+1 Indicator: starts pulsing Teal Clarity.",
+        "New Card (Step N+1) slides in from the right."
+      ]
+    }
+  }
+}
