@@ -9,14 +9,23 @@ export function CTASection() {
         <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary to-primary/80 p-12 md:p-16">
           <div className="absolute inset-0 bg-grid-white/10" />
           
-          <div className="relative z-10 max-w-5xl mx-auto">
-            <div className="flex justify-center mb-8">
-              <img 
-                src={ctaImage} 
-                alt="Because your golden years deserve a snowball effect" 
-                className="max-w-full h-auto"
-              />
-            </div>
+          <div className="relative z-10 max-w-5xl mx-auto text-center">
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+              Ready to Plan Your Dream Retirement?
+            </h2>
+            <p className="text-lg md:text-xl text-white/90 mb-8 max-w-2xl mx-auto">
+              Get your personalized retirement roadmap in just 9 simple steps
+            </p>
+            <Link href="/onboarding">
+              <Button 
+                size="lg" 
+                variant="secondary" 
+                className="text-lg px-8 py-6 h-auto"
+                data-testid="button-start-planning"
+              >
+                Start Planning
+              </Button>
+            </Link>
           </div>
         </div>
       </div>
