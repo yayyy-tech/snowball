@@ -1,24 +1,12 @@
 import { openai } from "./openai";
-import type { RetirementPlan } from "@shared/schema";
-
-interface GPTRecommendationResult {
-  overview: string;
-  keyInsights: string[];
-  recommendations: {
-    title: string;
-    description: string;
-    priority: "high" | "medium" | "low";
-  }[];
-  riskAnalysis: string;
-  nextSteps: string[];
-}
+import type { RetirementPlan, GPTRecommendation, CalculatedPlan } from "@shared/schema";
 
 export async function generateGPTRecommendations(
   plan: RetirementPlan
-): Promise<GPTRecommendationResult> {
+): Promise<GPTRecommendation> {
   const currentAge = plan.currentAge;
   const yearsToRetirement = plan.retirementAge - currentAge;
-  const calculatedPlan = plan.calculatedPlan as any;
+  const calculatedPlan = plan.calculatedPlan as CalculatedPlan | null;
 
   const prompt = `You are an expert retirement planning advisor for Indian investors. Analyze this user's retirement plan and provide personalized investment recommendations.
 
@@ -45,9 +33,9 @@ ${plan.maritalStatus === "married" && plan.spouseWorking ? `- Spouse Monthly Inc
 - Tax Regime: ${plan.taxRegime}
 
 CALCULATED RETIREMENT PLAN:
-- Required Retirement Corpus: ₹${calculatedPlan?.corpusRequired?.toLocaleString("en-IN") || "N/A"}
+- Required Retirement Corpus: ₹${calculatedPlan?.totalCorpusNeeded?.toLocaleString("en-IN") || "N/A"}
 - Recommended Monthly SIP: ₹${calculatedPlan?.sipAmount?.toLocaleString("en-IN") || "N/A"}
-- Asset Allocation: ${calculatedPlan?.allocation ? `${calculatedPlan.allocation.equity}% Equity, ${calculatedPlan.allocation.debt}% Debt, ${calculatedPlan.allocation.gold}% Gold` : "N/A"}
+- Asset Allocation: ${calculatedPlan?.assetAllocation ? `${calculatedPlan.assetAllocation.equity}% Equity, ${calculatedPlan.assetAllocation.debt}% Debt, ${calculatedPlan.assetAllocation.gold}% Gold` : "N/A"}
 
 INSTRUCTIONS:
 1. Provide a brief overview of the user's retirement readiness (2-3 sentences)
@@ -101,7 +89,7 @@ Return your analysis as JSON with this structure:
       throw new Error("No response from GPT");
     }
 
-    const result = JSON.parse(content) as GPTRecommendationResult;
+    const result = JSON.parse(content) as GPTRecommendation;
     return result;
   } catch (error: any) {
     console.error("Error generating GPT recommendations:", error);

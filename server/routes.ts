@@ -28,7 +28,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Update plan with calculations
       await storage.updateRetirementPlan(plan.id, {
-        calculatedPlan: calculatedPlan as any,
+        calculatedPlan: calculatedPlan,
       });
       
       // Fetch the updated plan with calculations
@@ -75,7 +75,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const calculatedPlan = calculateRetirementPlan(updatedPlan);
       
       await storage.updateRetirementPlan(req.params.id, {
-        calculatedPlan: calculatedPlan as any,
+        calculatedPlan: calculatedPlan,
       });
       
       // Fetch the final plan with calculations

@@ -6,9 +6,10 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import { TrendingUp, Download, RefreshCw, AlertTriangle, ChevronDown, ChevronUp, Wallet, Calculator, Target, TrendingDown, Sparkles, Lightbulb, CheckCircle2 } from "lucide-react";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import type { RetirementPlan, GPTRecommendation } from "@shared/schema";
 
 function GPTInsights({ planId }: { planId: string }) {
-  const { data: gptRecs, isLoading, error } = useQuery<any>({
+  const { data: gptRecs, isLoading, error } = useQuery<GPTRecommendation>({
     queryKey: [`/api/gpt-recommendations/${planId}`],
     enabled: !!planId,
   });
@@ -49,7 +50,7 @@ function GPTInsights({ planId }: { planId: string }) {
             Key Insights
           </h3>
           <ul className="space-y-2">
-            {gptRecs.keyInsights.map((insight: string, idx: number) => (
+            {gptRecs.keyInsights.map((insight, idx) => (
               <li key={idx} className="flex items-start gap-2 text-sm">
                 <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" />
                 <span>{insight}</span>
@@ -61,7 +62,7 @@ function GPTInsights({ planId }: { planId: string }) {
         <div>
           <h3 className="text-lg font-semibold mb-3">Personalized Recommendations</h3>
           <div className="grid gap-3">
-            {gptRecs.recommendations.map((rec: any, idx: number) => (
+            {gptRecs.recommendations.map((rec, idx) => (
               <div key={idx} className="bg-background/60 rounded-lg p-4 border">
                 <div className="flex items-start justify-between mb-2">
                   <h4 className="font-semibold text-sm">{rec.title}</h4>
@@ -86,7 +87,7 @@ function GPTInsights({ planId }: { planId: string }) {
         <div>
           <h3 className="text-lg font-semibold mb-3">Next Steps</h3>
           <ol className="space-y-2">
-            {gptRecs.nextSteps.map((step: string, idx: number) => (
+            {gptRecs.nextSteps.map((step, idx) => (
               <li key={idx} className="flex items-start gap-2 text-sm">
                 <span className="font-semibold text-purple-600 dark:text-purple-400 flex-shrink-0">{idx + 1}.</span>
                 <span>{step}</span>
@@ -107,7 +108,7 @@ export default function Dashboard() {
   const planId = params.get('planId') || '';
 
   // Fetch retirement plan data
-  const { data: plan, isLoading, error } = useQuery<any>({
+  const { data: plan, isLoading, error } = useQuery<RetirementPlan>({
     queryKey: [`/api/retirement-plans/${planId}`],
     enabled: !!planId,
   });

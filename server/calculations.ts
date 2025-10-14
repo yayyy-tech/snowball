@@ -1,54 +1,5 @@
-import { type RetirementPlan } from "@shared/schema";
+import { type RetirementPlan, type CalculatedPlan } from "@shared/schema";
 import { generateCompleteRecommendations, type RiskAppetite, type GrowthPreference } from "./fundRecommendations";
-
-interface CalculatedPlan {
-  // Basic info
-  yearsToRetirement: number;
-  yearsInRetirement: number;
-  
-  // Corpus calculations
-  monthlyExpenseAtRetirement: number;
-  baseCorpusNeeded: number;
-  bufferAmount: number; // 12% buffer for unexpected expenses
-  totalCorpusNeeded: number;
-  
-  // Current assets
-  totalAssets: number;
-  projectedAssetValue: number;
-  
-  // SIP calculations
-  monthlySavings: number;
-  sipAmount: number;
-  projectedSipValue: number;
-  
-  // Accumulation phase
-  accumulationYears: { year: number; sipAmount: number; yearEndValue: number }[];
-  
-  // Tax calculations
-  annualTax: number;
-  monthlySavingsAfterTax: number;
-  
-  // Withdrawal phase
-  swpMonthlyWithdrawal: number;
-  withdrawalYears: { year: number; withdrawal: number; balance: number }[];
-  
-  // Loan handling
-  loanEndYear?: number;
-  additionalSavingsAfterLoan?: number;
-  
-  // Recommendations
-  assetAllocation: { equity: number; debt: number; gold: number };
-  investmentRecommendations: {
-    category: string;
-    instruments: {
-      name: string;
-      type: string;
-      allocation: number;
-      returns: string;
-      risk: string;
-    }[];
-  }[];
-}
 
 const INFLATION_RATE = 0.06; // Fixed 6% inflation
 const SIP_STEP_UP = 0.07; // 7% annual step-up

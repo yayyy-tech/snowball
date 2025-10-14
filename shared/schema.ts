@@ -104,3 +104,47 @@ export type UpsertUser = z.infer<typeof upsertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type InsertRetirementPlan = z.infer<typeof insertRetirementPlanSchema>;
 export type RetirementPlan = typeof retirementPlans.$inferSelect;
+
+export interface GPTRecommendation {
+  overview: string;
+  keyInsights: string[];
+  recommendations: {
+    title: string;
+    description: string;
+    priority: "high" | "medium" | "low";
+  }[];
+  riskAnalysis: string;
+  nextSteps: string[];
+}
+
+export interface CalculatedPlan {
+  yearsToRetirement: number;
+  yearsInRetirement: number;
+  monthlyExpenseAtRetirement: number;
+  baseCorpusNeeded: number;
+  bufferAmount: number;
+  totalCorpusNeeded: number;
+  totalAssets: number;
+  projectedAssetValue: number;
+  monthlySavings: number;
+  sipAmount: number;
+  projectedSipValue: number;
+  accumulationYears: { year: number; sipAmount: number; yearEndValue: number }[];
+  annualTax: number;
+  monthlySavingsAfterTax: number;
+  swpMonthlyWithdrawal: number;
+  withdrawalYears: { year: number; withdrawal: number; balance: number }[];
+  loanEndYear?: number;
+  additionalSavingsAfterLoan?: number;
+  assetAllocation: { equity: number; debt: number; gold: number };
+  investmentRecommendations: {
+    category: string;
+    instruments: {
+      name: string;
+      type: string;
+      allocation: number;
+      returns: string;
+      risk: string;
+    }[];
+  }[];
+}
