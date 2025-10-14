@@ -23,6 +23,7 @@ export const retirementPlans = pgTable("retirement_plans", {
   spouseName: text("spouse_name"),
   spouseAge: integer("spouse_age"),
   spouseWorking: boolean("spouse_working"),
+  spouseIncome: integer("spouse_income"),
   
   // Step 2: Income
   monthlyIncome: integer("monthly_income").notNull(),

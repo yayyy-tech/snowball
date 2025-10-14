@@ -34,7 +34,7 @@ Preferred communication style: Simple, everyday language.
   - `users` - User authentication (username/password)
   - `retirementPlans` - Comprehensive retirement plan data including:
     - Personal info with spouse details (name, age, working status) for married users
-    - Income data (monthly income only, no bonus fields)
+    - Income data (monthly income for primary earner, spouse income if married and working)
     - Assets, insurance, goals, risk tolerance, tax preferences
     - Emergency fund and health expectations
     - Calculated projections and investment recommendations

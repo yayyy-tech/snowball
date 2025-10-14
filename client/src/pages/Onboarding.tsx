@@ -34,6 +34,7 @@ export default function Onboarding() {
     spouseName: "",
     spouseAge: "",
     spouseWorking: false,
+    spouseIncome: "",
     occupation: "",
     annualIncome: "",
     monthlyExpenses: "",
@@ -105,6 +106,7 @@ export default function Onboarding() {
         spouseName: formData.spouseName || null,
         spouseAge: formData.spouseAge ? parseInt(formData.spouseAge) : null,
         spouseWorking: formData.spouseWorking,
+        spouseIncome: formData.spouseIncome ? parseInt(formData.spouseIncome) : null,
         hasHomeLoan: formData.hasLoan && formData.loans.some(l => l.type === 'home'),
         homeLoanEmi: formData.hasLoan ? parseInt(formData.loans.find(l => l.type === 'home')?.emi || '0') : 0,
         homeLoanTenure: formData.hasLoan ? parseInt(formData.loans.find(l => l.type === 'home')?.tenure || '0') : 0,
@@ -414,6 +416,30 @@ export default function Onboarding() {
                   data-testid="input-monthly-expenses"
                 />
               </div>
+
+              {formData.maritalStatus === "married" && formData.spouseWorking && (
+                <div className="border border-border rounded-lg p-4 space-y-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Heart className="h-4 w-4 text-primary" />
+                    <Label className="text-base font-semibold">Spouse Income</Label>
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="spouseIncome">Spouse Annual Income (₹)</Label>
+                    <Input
+                      id="spouseIncome"
+                      type="number"
+                      value={formData.spouseIncome}
+                      onChange={(e) => setFormData({ ...formData, spouseIncome: e.target.value })}
+                      placeholder="e.g., 800000"
+                      data-testid="input-spouse-income"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      ₹{formData.spouseIncome ? parseInt(formData.spouseIncome).toLocaleString('en-IN') : '0'}
+                    </p>
+                  </div>
+                </div>
+              )}
 
               <div className="space-y-4 pt-4 border-t">
                 <h3 className="font-semibold">Monthly Expenses</h3>
