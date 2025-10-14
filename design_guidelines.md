@@ -1,218 +1,196 @@
 # Snowball Retirement Planner - Design Guidelines
 
-## Design Philosophy
+## Design Approach
+**Hybrid Approach**: Reference-based for marketing pages (inspired by fintech leaders like Wealthfront, Vanguard, Zerodha) + Design System foundation (Material Design) for dashboard/app functionality.
 
-**Theme**: Compounding Momentum / The Golden Effect  
-**Vibe**: Futuristic, Aspirational, Professional, High-Engagement  
-**Core Goal**: Maximize completion of the 7-step process by treating it as a seamless, visually-rewarding journey (Mission Control Dashboard style)
+**Design Principles**:
+- Trust through simplicity: Clean layouts that inspire confidence in financial decisions
+- Data visualization clarity: Charts and numbers presented with hierarchy and breathing room
+- Progressive disclosure: Complex financial data revealed in digestible layers
+- Indian context awareness: Culturally relevant iconography and messaging
 
-## Color Palette
+---
 
-### Primary Colors
+## Core Design Elements
 
-- **Deep Momentum** (`#0C101A`) - Main background (90% coverage)
-  - Use for: Page backgrounds, card backgrounds in dark mode
-  - CSS Variable: `--deep-momentum`
+### A. Color Palette
 
-- **Golden Accent** (`#FFC72C`) - Completed steps, positive reinforcement
-  - Use for: Completed step indicators, calculated results, success states, key data visualization
-  - CSS Variable: `--golden-accent`
+**Light Mode**:
+- Primary: `217 83% 53%` (#1A73E8 - Trust blue)
+- Background: `0 0% 98%` (Off-white)
+- Surface: `0 0% 100%` (Pure white cards)
+- Text Primary: `220 13% 18%` (Charcoal gray)
+- Text Secondary: `220 9% 46%` (Medium gray)
+- Success: `142 76% 36%` (Wealth green)
+- Warning: `38 92% 50%` (Alert amber)
+- Chart Colors: `217 83% 53%`, `142 76% 36%`, `280 67% 48%`, `24 90% 53%`
 
-- **Teal Clarity** (`#00C4CC`) - Active states and primary actions
-  - Use for: Active step indicators, primary CTA buttons, input focus states
-  - CSS Variable: `--teal-clarity`
+**Dark Mode**:
+- Primary: `217 83% 63%` (Lighter blue)
+- Background: `220 13% 9%` (Deep charcoal)
+- Surface: `220 13% 13%` (Elevated cards)
+- Text Primary: `0 0% 95%` (Near white)
+- Text Secondary: `220 9% 70%` (Light gray)
 
-### Neutral Colors
+### B. Typography
 
-- **Stellar White** (`#F0F4F8`) - Primary text and content
-  - Use for: Primary text, form input text, card content backgrounds
-  - CSS Variable: `--stellar-white`
+**Font Families**: Inter (primary), Poppins (headings alternate)
 
-- **Nebula Grey** (`#343A40`) - Secondary elements
-  - Use for: Secondary text, pending/disabled states, input borders, subtle dividers
-  - CSS Variable: `--nebula-grey`
+**Scale**:
+- Hero Heading: text-5xl md:text-6xl lg:text-7xl, font-bold, tracking-tight
+- Section Heading: text-3xl md:text-4xl, font-semibold
+- Card Title: text-xl md:text-2xl, font-semibold
+- Body Large: text-lg, font-normal
+- Body: text-base, font-normal
+- Caption: text-sm, text-muted-foreground
+- Financial Data: text-2xl md:text-3xl, font-bold, tabular-nums
 
-## Typography
+### C. Layout System
 
-### Font Families
+**Spacing Primitives**: Use Tailwind units of 2, 4, 6, 8, 12, 16, 20, 24
+- Component padding: p-6 md:p-8
+- Section spacing: py-16 md:py-24
+- Card gaps: gap-6 md:gap-8
+- Container: max-w-7xl mx-auto px-4 md:px-8
 
-- **Headlines**: Sora (Bold, ExtraBold)
-  - Use for: Tagline, step titles, main headings (H1, H2)
-  
-- **Body & UI**: Inter (Medium, Regular)
-  - Use for: Sub-headlines, form labels, input text, body copy
+**Grid System**:
+- Landing sections: Single column on mobile, 2-3 columns on desktop
+- Dashboard cards: grid-cols-1 md:grid-cols-2 lg:grid-cols-3
+- Feature showcase: grid-cols-1 md:grid-cols-3
 
-### Font Sizing
+### D. Component Library
 
-- **Tagline (Desktop)**: 4.5rem (72px)
-- **H1**: 3rem (48px)
-- **H2**: 2rem (32px)
-- **Sub-headline**: 1.25rem (20px)
-- **Body**: 1rem (16px)
-- **Small**: 0.875rem (14px)
+**Navigation**:
+- Sticky header with backdrop-blur-lg bg-white/80 dark:bg-gray-900/80
+- Logo left, nav center, CTA button right
+- Mobile: Hamburger menu with slide-in drawer
 
-## Landing Page Hero
+**Cards**:
+- Base: rounded-2xl border bg-card p-6 shadow-sm hover:shadow-md transition
+- Investment Cards: Include icon, title, subtitle, metrics row, "View Details" button
+- Stat Cards: Large number display with trend indicator and sparkline
 
-### Layout
-- Full viewport height (100vh)
-- Centered content with Z-layering
+**Buttons**:
+- Primary: rounded-xl bg-primary text-white px-6 py-3 font-semibold hover:bg-primary/90
+- Secondary: rounded-xl border border-primary text-primary px-6 py-3 hover:bg-primary/5
+- On Image: rounded-xl bg-white/10 backdrop-blur-md border border-white/20 text-white px-6 py-3
 
-### Elements
+**Forms**:
+- Input fields: rounded-lg border bg-background px-4 py-3 focus:ring-2 focus:ring-primary
+- Progress bar: Multi-step with filled circles and connecting lines
+- Radio/Checkbox: Custom styled with primary color accent
 
-1. **Background Animation**
-   - Drifting particles (CSS/SVG)
-   - Colors: Teal Clarity and Golden Accent
-   - Opacity: 0.05 (ambient)
-   - Z-index: 0
+**Charts** (Recharts):
+- Pie Chart: Allocation with custom colors, center label showing total
+- Line Chart: Projection timeline with gradient fill
+- Bar Chart: Comparative returns with hover tooltips
 
-2. **Tagline**
-   - Text: "Because your golden years deserve a golden effect."
-   - Font: Sora ExtraBold, Stellar White
-   - Size: 4.5rem (desktop)
+**Data Display**:
+- Tables: Striped rows, sticky headers, sortable columns
+- Metrics Grid: 2x2 or 3x3 grid of key numbers with icons
+- Comparison Cards: Side-by-side fund comparison with highlighting
 
-3. **Sub-headline**
-   - Text: "The 7-Step Planner designed to turn today's savings into tomorrow's wealth. Watch your future compound."
-   - Font: Inter Regular, Nebula Grey
-   - Size: 1.25rem
+---
 
-4. **CTA Button**
-   - Text: "Start the SnowBall Effect →"
-   - Background: Teal Clarity
-   - Text: Stellar White
-   - Hover: Background to #00A3A8, arrow translates right 5px
-   - Z-index: 2
+## Page-Specific Guidelines
 
-## Step-by-Step Onboarding UI
+### Landing Page
 
-### Structure
+**Hero Section** (h-screen):
+- Large hero image (right 50%): Indian family/couple planning together, warm lighting, aspirational
+- Left 50%: Headline + subtext + dual CTAs ("Start Planning" primary, "Learn More" secondary)
+- Floating trust indicators: "Trusted by 10,000+ users" badge
 
-- **Background**: Deep Momentum (#0C101A) full screen
-- **Layout**: Side-by-side panels
+**Features Section** (py-20):
+- 3-column grid with icon-title-description cards
+- Icons: Custom financial illustrations (calculator, roadmap, shield)
+- Background: Subtle gradient mesh
 
-#### Progress Navigator Panel (Left)
-- Width: 25%
-- Position: Fixed
-- Border: 1px solid Nebula Grey on right edge
-- Contains: Step list with indicators
+**How It Works** (py-24):
+- Horizontal timeline (desktop) / vertical (mobile)
+- Step numbers in large circles, connected by dotted lines
+- Each step: Icon + heading + description + micro-illustration
 
-#### Main Input Panel (Right)
-- Width: 70%
-- Design: Glassmorphism
-  - Background: `rgba(240, 244, 248, 0.05)`
-  - Backdrop filter: `blur(20px)`
-  - Border: `1px subtle glow in rgba(255, 199, 44, 0.2)`
-  - Padding: 40px (generous)
+**Testimonials** (py-20):
+- Carousel with 2 cards visible (desktop), 1 (mobile)
+- User photo, name, age, quote, star rating
+- Auto-rotate every 5 seconds
 
-### Step States
+**Final CTA Section** (py-24):
+- Centered design with gradient background
+- Calculator illustration
+- "Start Your Journey" primary CTA + "No credit card required" subtext
 
-1. **Active Step**
-   - Text: Stellar White
-   - Indicator: Pulsing filled circle in Teal Clarity
+### Onboarding Questionnaire
 
-2. **Pending Step**
-   - Text: Nebula Grey
-   - Indicator: Outlined circle in Nebula Grey
+**Layout**:
+- Centered form card (max-w-2xl) with progress indicator at top
+- Question title (text-2xl), helper text (text-muted-foreground)
+- Input fields with validation states (error red, success green)
+- Navigation: "Back" ghost button left, "Continue" primary right
 
-3. **Completed Step**
-   - Text: Stellar White
-   - Indicator: Solid Golden Accent with checkmark
+**Question Types**:
+- Number inputs: Large font, clear units (₹, years)
+- Risk tolerance: Visual slider with emoji indicators
+- Multiple choice: Card-based selection with hover/active states
+- Loan details: Expandable accordion per loan
 
-### Step Titles
+**Special Sections**:
+- Dependents: Add/remove cards with animation
+- Kids planning: Toggle with conditional fields (education/wedding checkboxes)
 
-1. "The Launchpad: Personal Profile"
-2. "Fueling the Engine: Earning Power"
-3. "Current Inventory: Assets & Wealth"
-4. "Clearing the Path: Debts & Liabilities"
-5. "The Target: Defining Your Ambition"
-6. "Risk Velocity: Your Tolerance Gauge"
-7. "The Efficiency Engine: Tax Optimization"
+### Dashboard
 
-### Input Fields
+**Header**:
+- Personalized greeting: "Hi, [Name]! Here's your Retirement Roadmap"
+- Quick actions: Recalculate, Export PDF, Compare
 
-- **Standard Inputs**
-  - Transparent background
-  - 1px bottom border in Nebula Grey
-  - Focus: Border transitions to 3px solid Teal Clarity
+**Allocation Section**:
+- Left: Donut chart (Recharts) with center total
+- Right: List breakdown with color-coded bars
 
-- **Age Slider** (Custom)
-  - Track: Nebula Grey
-  - Handle: Golden Accent
-  - Visual: Golden Accent bar extends on timeline above slider
+**Recommendations Grid**:
+- Tabbed interface: Mutual Funds | Bonds | Gold ETFs
+- Cards show: Name, category, key metrics, "View Details" expansion
+- Each card includes source badge and rating stars
 
-- **Validation Animation**
-  - Quick ripple of Golden Accent on successful completion
+**Projections Section**:
+- Timeline chart showing corpus growth with step-up SIPs
+- Post-retirement SWP calculator: Input expected age → Output monthly withdrawal
+- Inflation-adjusted spending display
 
-### Transitions
+**Warnings/Disclaimers**:
+- Alert card (border-l-4 border-warning) with icon
+- Pale yellow background, clear typography
 
-- **Duration**: 300ms for all transitions
-- **Next Button**: "Ready for [Next Step] →"
-- **Step Completion Sequence**:
-  1. Current card slides left & fades out
-  2. Sidebar indicator snaps to Golden Accent with checkmark
-  3. Next sidebar indicator pulses Teal Clarity
-  4. New card slides in from right
+---
 
-## Dashboard
+## Images
 
-### Design Principles
-- Maintain Deep Momentum background
-- Use glassmorphism for card containers
-- Golden Accent for positive metrics (corpus achieved, gains)
-- Teal Clarity for action items and interactive elements
+**Hero Image**: Professional photo of Indian couple (30s) reviewing financial documents on laptop, smiling, modern home setting. Warm natural lighting. Place on right 50% of hero section.
 
-### Data Visualization
-- Charts use Golden Accent and Teal Clarity as primary colors
-- Stellar White for labels and text
-- Nebula Grey for grid lines and secondary elements
+**Feature Icons**: Use Heroicons (outline) - calculator, chart-bar, shield-check for features section
 
-## Interactive Elements
+**Testimonials**: Use placeholder avatar images or initials in colored circles
 
-### Buttons
-- **Primary**: Teal Clarity background, Stellar White text
-- **Secondary**: Transparent background, Teal Clarity border
-- **Success**: Golden Accent background, Deep Momentum text
+**Dashboard**: Include chart visualizations (generated by Recharts), no static images needed
 
-### Hover States
-- Subtle scale transform (1.02)
-- Color shift to darker shade
-- Smooth transitions (200ms)
-
-### Focus States
-- 3px solid Teal Clarity outline
-- Glow effect with Teal Clarity
+---
 
 ## Animations
 
-### Micro-interactions
-- Input validation: Ripple effect in Golden Accent
-- Step completion: Confetti burst of Golden Accent particles
-- Progress: Smooth bar fills with gradient (Teal → Golden)
+Use Framer Motion sparingly:
+- Page transitions: Fade + slight y-offset (20px)
+- Card hover: Scale(1.02) + shadow increase
+- Number counting: Animate corpus/returns on dashboard load
+- Progress bar: Smooth width transition in onboarding
 
-### Page Transitions
-- Slide and fade (300ms ease-in-out)
-- Stagger animations for list items (50ms delay between items)
+---
 
-## Accessibility
+## Accessibility & Dark Mode
 
-- Maintain WCAG AA contrast ratios
-- Golden Accent (#FFC72C) on Deep Momentum (#0C101A): 8.5:1 ✓
-- Stellar White (#F0F4F8) on Deep Momentum (#0C101A): 15.2:1 ✓
-- Teal Clarity (#00C4CC) on Deep Momentum (#0C101A): 7.8:1 ✓
-
-## Spacing Scale
-
-- **xs**: 0.25rem (4px)
-- **sm**: 0.5rem (8px)
-- **md**: 1rem (16px)
-- **lg**: 1.5rem (24px)
-- **xl**: 2rem (32px)
-- **2xl**: 3rem (48px)
-- **3xl**: 4rem (64px)
-
-## Border Radius
-
-- **sm**: 0.375rem (6px)
-- **md**: 0.5rem (8px)
-- **lg**: 0.75rem (12px)
-- **xl**: 1rem (16px)
-- **full**: 9999px (pills)
+- All interactive elements: min 44px touch target
+- Color contrast: WCAG AA minimum (4.5:1 for text)
+- Dark mode: Toggle in header, persisted to localStorage
+- Form inputs: Consistent dark mode styling with proper borders
+- Charts: Maintain readability in both modes with appropriate color adjustments

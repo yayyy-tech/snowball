@@ -1,94 +1,82 @@
-@import url('https://fonts.googleapis.com/css2?family=Sora:wght@700;800&family=Inter:wght@400;500;600&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* LIGHT MODE (Day theme - for backwards compatibility) */
+/* LIGHT MODE */
 :root {
-  --button-outline: rgba(255, 199, 44, .15);
-  --badge-outline: rgba(255, 199, 44, .10);
+  --button-outline: rgba(0,0,0, .10);
+  --badge-outline: rgba(0,0,0, .05);
 
   /* Automatic computation of border around primary / danger buttons */
   --opaque-button-border-intensity: -8; /* In terms of percentages */
 
   /* Backgrounds applied on top of other backgrounds when hovered/active */
-  --elevate-1: rgba(255, 199, 44, .08);
-  --elevate-2: rgba(255, 199, 44, .15);
+  --elevate-1: rgba(0,0,0, .03);
+  --elevate-2: rgba(0,0,0, .08);
 
-  /* Deep Momentum Background */
-  --background: 217 28% 8%;
+  --background: 0 0% 98%;
 
-  /* Stellar White Foreground */
-  --foreground: 213 33% 96%;
+  --foreground: 220 13% 18%;
 
-  --border: 210 10% 23%;
+  --border: 220 9% 88%;
 
-  /* Glassmorphic cards */
-  --card: 213 33% 12%;
+  --card: 0 0% 100%;
 
-  --card-foreground: 213 33% 96%;
+  --card-foreground: 220 13% 18%;
 
-  --card-border: 210 10% 18%;
+  --card-border: 220 9% 93%;
 
-  --sidebar: 217 28% 10%;
+  --sidebar: 220 6% 96%;
 
-  --sidebar-foreground: 213 33% 96%;
+  --sidebar-foreground: 220 13% 18%;
 
-  --sidebar-border: 210 10% 23%;
+  --sidebar-border: 220 9% 90%;
 
-  /* Teal Clarity Primary */
-  --sidebar-primary: 182 100% 40%;
+  --sidebar-primary: 217 83% 53%;
 
-  --sidebar-primary-foreground: 213 33% 96%;
+  --sidebar-primary-foreground: 0 0% 100%;
 
-  --sidebar-accent: 217 28% 15%;
+  --sidebar-accent: 220 12% 92%;
 
-  --sidebar-accent-foreground: 213 33% 96%;
+  --sidebar-accent-foreground: 220 13% 18%;
 
-  --sidebar-ring: 182 100% 40%;
+  --sidebar-ring: 217 83% 53%;
 
-  --popover: 217 28% 12%;
+  --popover: 0 0% 99%;
 
-  --popover-foreground: 213 33% 96%;
+  --popover-foreground: 220 13% 18%;
 
-  --popover-border: 210 10% 18%;
+  --popover-border: 220 9% 91%;
 
-  /* Teal Clarity Primary */
-  --primary: 182 100% 40%;
+  --primary: 217 83% 53%;
 
-  --primary-foreground: 213 33% 96%;
+  --primary-foreground: 0 0% 100%;
 
-  /* Nebula Grey Secondary */
-  --secondary: 210 10% 23%;
+  --secondary: 220 10% 94%;
 
-  --secondary-foreground: 213 33% 96%;
+  --secondary-foreground: 220 13% 18%;
 
-  --muted: 217 28% 12%;
+  --muted: 220 14% 96%;
 
-  --muted-foreground: 210 10% 60%;
+  --muted-foreground: 220 9% 46%;
 
-  /* Golden Accent */
-  --accent: 48 100% 58%;
+  --accent: 217 20% 95%;
 
-  --accent-foreground: 217 28% 8%;
+  --accent-foreground: 217 83% 25%;
 
   --destructive: 0 84% 48%;
 
-  --destructive-foreground: 213 33% 96%;
+  --destructive-foreground: 0 0% 100%;
 
-  --input: 210 10% 23%;
-  --ring: 182 100% 40%;
-  
-  /* Chart colors: Teal Clarity and Golden Accent variations */
-  --chart-1: 182 100% 40%;
-  --chart-2: 48 100% 58%;
-  --chart-3: 182 80% 55%;
-  --chart-4: 48 90% 65%;
-  --chart-5: 182 70% 45%;
+  --input: 220 13% 75%;
+  --ring: 217 83% 53%;
+  --chart-1: 217 83% 53%;
+  --chart-2: 142 76% 36%;
+  --chart-3: 280 67% 48%;
+  --chart-4: 24 90% 53%;
+  --chart-5: 338 78% 56%;
 
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  --font-display: 'Sora', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-sans: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   --font-serif: Georgia, serif;
   --font-mono: Menlo, Monaco, 'Courier New', monospace;
   --radius: .5rem; /* 8px */
@@ -135,95 +123,85 @@
 }
 
 .dark {
-  /* Dark mode uses same Deep Momentum design - dark-first approach */
-  --button-outline: rgba(255, 199, 44, .15);
-  --badge-outline: rgba(255, 199, 44, .10);
+  --button-outline: rgba(255,255,255, .10);
+  --badge-outline: rgba(255,255,255, .05);
 
   --opaque-button-border-intensity: 9;  /* In terms of percentages */
 
   /* Backgrounds applied on top of other backgrounds when hovered/active */
-  --elevate-1: rgba(255, 199, 44, .08);
-  --elevate-2: rgba(255, 199, 44, .15);
+  --elevate-1: rgba(255,255,255, .04);
+  --elevate-2: rgba(255,255,255, .09);
 
-  /* Deep Momentum Background */
-  --background: 217 28% 8%;
+  --background: 220 13% 9%;
 
-  /* Stellar White Foreground */
-  --foreground: 213 33% 96%;
+  --foreground: 0 0% 95%;
 
-  --border: 210 10% 23%;
+  --border: 220 13% 22%;
 
-  /* Glassmorphic cards */
-  --card: 213 33% 12%;
+  --card: 220 13% 13%;
 
-  --card-foreground: 213 33% 96%;
+  --card-foreground: 0 0% 95%;
 
-  --card-border: 210 10% 18%;
+  --card-border: 220 13% 18%;
 
-  --sidebar: 217 28% 10%;
+  --sidebar: 220 13% 11%;
 
-  --sidebar-foreground: 213 33% 96%;
+  --sidebar-foreground: 0 0% 95%;
 
-  --sidebar-border: 210 10% 23%;
+  --sidebar-border: 220 13% 16%;
 
-  /* Teal Clarity Primary */
-  --sidebar-primary: 182 100% 40%;
+  --sidebar-primary: 217 83% 63%;
 
-  --sidebar-primary-foreground: 213 33% 96%;
+  --sidebar-primary-foreground: 220 13% 9%;
 
-  --sidebar-accent: 217 28% 15%;
+  --sidebar-accent: 220 13% 15%;
 
-  --sidebar-accent-foreground: 213 33% 96%;
+  --sidebar-accent-foreground: 0 0% 95%;
 
-  --sidebar-ring: 182 100% 40%;
+  --sidebar-ring: 217 83% 63%;
 
-  --popover: 217 28% 12%;
+  --popover: 220 13% 14%;
 
-  --popover-foreground: 213 33% 96%;
+  --popover-foreground: 0 0% 95%;
 
-  --popover-border: 210 10% 18%;
+  --popover-border: 220 13% 19%;
 
-  /* Teal Clarity Primary */
-  --primary: 182 100% 40%;
+  --primary: 217 83% 58%;
 
-  --primary-foreground: 213 33% 96%;
+  --primary-foreground: 0 0% 100%;
 
-  /* Nebula Grey Secondary */
-  --secondary: 210 10% 23%;
+  --secondary: 220 13% 17%;
 
-  --secondary-foreground: 213 33% 96%;
+  --secondary-foreground: 0 0% 95%;
 
-  --muted: 217 28% 12%;
+  --muted: 220 13% 16%;
 
-  --muted-foreground: 210 10% 60%;
+  --muted-foreground: 220 9% 70%;
 
-  /* Golden Accent */
-  --accent: 48 100% 58%;
+  --accent: 217 18% 18%;
 
-  --accent-foreground: 217 28% 8%;
+  --accent-foreground: 217 83% 75%;
 
-  --destructive: 0 84% 48%;
+  --destructive: 0 72% 51%;
 
-  --destructive-foreground: 213 33% 96%;
+  --destructive-foreground: 0 0% 100%;
 
-  --input: 210 10% 23%;
-  --ring: 182 100% 40%;
-  
-  /* Chart colors: Teal Clarity and Golden Accent variations */
-  --chart-1: 182 100% 40%;
-  --chart-2: 48 100% 58%;
-  --chart-3: 182 80% 55%;
-  --chart-4: 48 90% 65%;
-  --chart-5: 182 70% 45%;
+  --input: 220 13% 35%;
+  --ring: 217 83% 63%;
+  --chart-1: 217 83% 65%;
+  --chart-2: 142 76% 55%;
+  --chart-3: 280 67% 68%;
+  --chart-4: 24 90% 65%;
+  --chart-5: 338 78% 70%;
 
-  --shadow-2xs: 0px 1px 2px 0px hsl(0 0% 0% / 0.40);
-  --shadow-xs: 0px 1px 3px 0px hsl(0 0% 0% / 0.50);
-  --shadow-sm: 0px 2px 4px 0px hsl(0 0% 0% / 0.45), 0px 1px 2px -1px hsl(0 0% 0% / 0.35);
-  --shadow: 0px 4px 6px -1px hsl(0 0% 0% / 0.50), 0px 2px 4px -1px hsl(0 0% 0% / 0.40);
-  --shadow-md: 0px 6px 12px -2px hsl(0 0% 0% / 0.55), 0px 3px 6px -2px hsl(0 0% 0% / 0.45);
-  --shadow-lg: 0px 10px 20px -3px hsl(0 0% 0% / 0.60), 0px 4px 8px -2px hsl(0 0% 0% / 0.50);
-  --shadow-xl: 0px 20px 25px -5px hsl(0 0% 0% / 0.65), 0px 8px 10px -5px hsl(0 0% 0% / 0.55);
-  --shadow-2xl: 0px 25px 50px -12px hsl(0 0% 0% / 0.70);
+  --shadow-2xs: 0px 1px 2px 0px hsl(0 0% 0% / 0.20);
+  --shadow-xs: 0px 1px 3px 0px hsl(0 0% 0% / 0.25);
+  --shadow-sm: 0px 2px 4px 0px hsl(0 0% 0% / 0.22), 0px 1px 2px -1px hsl(0 0% 0% / 0.18);
+  --shadow: 0px 4px 6px -1px hsl(0 0% 0% / 0.25), 0px 2px 4px -1px hsl(0 0% 0% / 0.20);
+  --shadow-md: 0px 6px 12px -2px hsl(0 0% 0% / 0.30), 0px 3px 6px -2px hsl(0 0% 0% / 0.22);
+  --shadow-lg: 0px 10px 20px -3px hsl(0 0% 0% / 0.35), 0px 4px 8px -2px hsl(0 0% 0% / 0.25);
+  --shadow-xl: 0px 20px 25px -5px hsl(0 0% 0% / 0.40), 0px 8px 10px -5px hsl(0 0% 0% / 0.28);
+  --shadow-2xl: 0px 25px 50px -12px hsl(0 0% 0% / 0.50);
 
   /* Automatically computed borders - intensity can be controlled by the user by the --opaque-button-border-intensity setting */
   --sidebar-primary-border: hsl(from hsl(var(--sidebar-primary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
