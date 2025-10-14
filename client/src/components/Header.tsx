@@ -19,19 +19,14 @@ export function Header() {
         
         <nav className="hidden md:flex items-center gap-6">
           <button 
-            onClick={() => setLocation("/#features")}
+            onClick={() => setLocation("/how-it-works")}
             className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-          >
-            Features
-          </button>
-          <button 
-            onClick={() => setLocation("/#how-it-works")}
-            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+            data-testid="nav-how-it-works"
           >
             How It Works
           </button>
           <button 
-            onClick={() => setLocation("/#about-us")}
+            onClick={() => setLocation("/about-us")}
             className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
             data-testid="nav-about-us"
           >

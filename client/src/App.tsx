@@ -8,6 +8,8 @@ import { ExitIntentModal } from "@/components/ExitIntentModal";
 import Landing from "@/pages/Landing";
 import Onboarding from "@/pages/Onboarding";
 import Dashboard from "@/pages/Dashboard";
+import HowItWorks from "@/pages/HowItWorks";
+import AboutUs from "@/pages/AboutUs";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -16,6 +18,8 @@ function Router() {
       <Route path="/" component={Landing} />
       <Route path="/onboarding" component={Onboarding} />
       <Route path="/dashboard" component={Dashboard} />
+      <Route path="/how-it-works" component={HowItWorks} />
+      <Route path="/about-us" component={AboutUs} />
       <Route component={NotFound} />
     </Switch>
   );
