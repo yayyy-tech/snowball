@@ -6,7 +6,30 @@ Snowball is a retirement planning web application designed for Indian users aged
 
 ## Recent Changes (October 2025)
 
-### The Financialist-Inspired Redesign (Latest)
+### Critical Calculation & Display Fixes (Latest)
+Complete overhaul of tax calculations and dashboard display components:
+
+1. **Tax Calculation Update (FY 2024-25)**: Fixed outdated tax slabs to match India's new tax regime per Union Budget 2024
+   - Updated slabs: ₹3-7L (5%), ₹7-10L (10%), ₹10-12L (15%), ₹12-15L (20%), >₹15L (30%)
+   - Added ₹75,000 standard deduction for salaried individuals (increased from ₹50,000)
+   - Implemented Section 87A rebate (zero tax for income ≤ ₹7 lakh)
+   - Added 4% health & education cess on tax amount
+   - Previous version used outdated ₹6-9L slab which caused incorrect tax calculations for middle-income users
+
+2. **AnimatedCounter Display Fix**: Resolved dashboard summary cards showing "0" instead of calculated values
+   - Root cause: Component initialized spring animation at 0 and used hasAnimated flag that blocked updates
+   - Fix: Initialize spring with actual value, removed blocking flag, simplified update logic
+   - Now displays Years to Retirement, Corpus, and SIP amounts correctly on first render
+   - Verified via end-to-end testing: 30yo user retiring at 60 now sees "30" years, not "0"
+
+3. **Comprehensive Calculation Review**: Verified all retirement planning formulas are mathematically accurate
+   - Corpus calculation: Growing annuity formula with 6% inflation, 7% returns, 12% buffer
+   - SIP calculation: Step-up formula with 7% annual increase, monthly compounding
+   - Asset allocation: 100-age rule with risk tolerance adjustments (conservative/moderate/aggressive)
+   - SWP projections: Inflation-adjusted withdrawals from age 60-85
+   - All formulas verified against financial planning best practices
+
+### The Financialist-Inspired Redesign
 Complete visual overhaul to match The Financialist's sophisticated, data-driven aesthetic:
 
 1. **Refined Color Palette**: Updated CSS variables to muted, sophisticated tones (primary: 220 60% 45%, reduced saturation across all chart colors)
