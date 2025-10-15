@@ -2,6 +2,8 @@ import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Star } from "lucide-react";
 import { useState, useEffect } from "react";
+import { useScrollAnimation } from "@/hooks/useScrollAnimation";
+import { motion } from "framer-motion";
 
 //todo: remove mock functionality
 const testimonials = [
@@ -30,6 +32,7 @@ const testimonials = [
 
 export function TestimonialsSection() {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const { ref, isVisible } = useScrollAnimation();
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -41,17 +44,27 @@ export function TestimonialsSection() {
   return (
     <section className="py-20 md:py-24 relative overflow-hidden">
       <div className="absolute inset-0 gradient-mesh" />
-      <div className="container mx-auto px-4 md:px-8 relative z-10">
-        <div className="text-center space-y-4 mb-16">
+      <div className="container mx-auto px-4 md:px-8 relative z-10" ref={ref}>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={isVisible ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.6 }}
+          className="text-center space-y-4 mb-16"
+        >
           <h2 className="text-3xl md:text-4xl font-semibold">
             What Our <span className="gradient-text">Users Say</span>
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             Join thousands of satisfied users planning their retirement
           </p>
-        </div>
+        </motion.div>
 
-        <div className="max-w-4xl mx-auto">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={isVisible ? { opacity: 1, scale: 1 } : {}}
+          transition={{ duration: 0.6, delay: 0.2 }}
+          className="max-w-4xl mx-auto"
+        >
           <div className="grid md:grid-cols-2 gap-6">
             {testimonials.slice(currentIndex, currentIndex + 2).map((testimonial, index) => (
               <Card 
@@ -92,7 +105,7 @@ export function TestimonialsSection() {
               />
             ))}
           </div>
-        </div>
+        </motion.div>
       </div>
     </section>
   );
