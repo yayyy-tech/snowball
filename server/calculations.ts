@@ -139,28 +139,25 @@ export function calculateRetirementPlan(plan: RetirementPlan): CalculatedPlan {
   const monthlyRate = blendedReturns / 12;
   const annualStepUp = SIP_STEP_UP;
   
-  // Calculate initial SIP amount using step-up SIP formula
-  // Future value of growing annuity: FV = P * [((1+r)^n - (1+g)^n) / (r-g)]
-  // Solving for P: P = FV / [((1+r)^n - (1+g)^n) / (r-g)]
+  // Calculate initial SIP amount using ANNUAL step-up SIP formula
+  // For annual step-up: Calculate year-by-year FV, then solve for initial SIP
+  // FV = sum over years of: SIP * (1+stepUp)^(year-1) * 12 * (1+annualReturn)^(yearsRemaining)
   let sipAmount;
   if (gapToFill <= 0) {
     sipAmount = 1000; // Minimum SIP
   } else {
-    const totalMonths = yearsToRetirement * 12;
-    const stepUpMonthlyRate = Math.pow(1 + annualStepUp, 1/12) - 1;
-    const r = monthlyRate;
-    const g = stepUpMonthlyRate;
-    
-    if (Math.abs(r - g) < 0.0001) {
-      // When r ≈ g, use limiting form: FV = P * n * (1+r)^(n/2)
-      sipAmount = gapToFill / (totalMonths * Math.pow(1 + r, totalMonths / 2));
-    } else {
-      // Standard formula: FV = P * [((1+r)^n - (1+g)^n) / (r-g)]
-      const numerator = Math.pow(1 + r, totalMonths) - Math.pow(1 + g, totalMonths);
-      const denominator = r - g;
-      const factor = numerator / denominator;
-      sipAmount = gapToFill / factor;
+    // Calculate the FV factor for ₹1 initial monthly SIP with annual 7% step-up
+    let fvFactor = 0;
+    for (let year = 1; year <= yearsToRetirement; year++) {
+      const sipMultiplier = Math.pow(1 + annualStepUp, year - 1); // SIP increases each year
+      const monthlyPayments = 12; // 12 monthly SIP payments per year
+      const yearsOfGrowth = yearsToRetirement - year + 1; // How many years this year's SIPs will grow
+      const annualGrowthFactor = Math.pow(1 + blendedReturns, yearsOfGrowth);
+      fvFactor += sipMultiplier * monthlyPayments * annualGrowthFactor;
     }
+    
+    // Solve for initial monthly SIP: SIP = Gap / fvFactor
+    sipAmount = gapToFill / fvFactor;
     
     // Ensure SIP is reasonable
     sipAmount = Math.max(1000, Math.min(sipAmount, monthlySavings * 0.9));
