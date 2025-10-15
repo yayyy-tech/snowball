@@ -19,7 +19,7 @@ export function HeroSection() {
             </div>
             
             <h1 className="text-display">
-              No two lives follow the same path
+              Because your golden years deserves the <span className="text-primary">snowball effect</span>
             </h1>
             <p className="text-subheadline max-w-2xl">
               So, we plan specifically to yours
