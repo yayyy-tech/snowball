@@ -15,6 +15,7 @@ import { Plus, Trash2, Info, Heart } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { AnimatedCounter } from "@/components/AnimatedCounter";
 
 const formatIndianNumber = (value: string): string => {
   if (!value) return "";
@@ -486,41 +487,47 @@ export default function Onboarding() {
               </div>
 
               {/* Monthly Savings Calculation */}
-              <div className="grid md:grid-cols-3 gap-6 p-6 bg-muted/50 rounded-lg border-t">
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">Monthly Income</p>
-                  <p className="text-2xl font-bold text-primary" data-testid="text-monthly-income">
-                    ₹{(() => {
-                      const totalAnnualIncome = (parseInt(formData.annualIncome || '0') + parseInt(formData.spouseIncome || '0'));
-                      const monthlyIncome = totalAnnualIncome / 12;
-                      return formatIndianNumber(monthlyIncome.toFixed(0));
-                    })()}
-                  </p>
+              <div className="grid md:grid-cols-3 gap-6 p-6 bg-gradient-to-br from-primary/5 to-chart-2/5 rounded-2xl border-2 border-primary/20 shadow-lg mt-6">
+                <div className="text-center">
+                  <p className="text-sm text-muted-foreground mb-2">Monthly Income</p>
+                  <div className="text-3xl font-bold text-primary" data-testid="text-monthly-income">
+                    ₹<AnimatedCounter 
+                      value={(() => {
+                        const totalAnnualIncome = (parseInt(formData.annualIncome || '0') + parseInt(formData.spouseIncome || '0'));
+                        return totalAnnualIncome / 12;
+                      })()}
+                      formatter={(value) => formatIndianNumber(value.toFixed(0))}
+                    />
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">Total Monthly Expenses</p>
-                  <p className="text-2xl font-bold text-destructive" data-testid="text-total-expenses">
-                    ₹{(() => {
-                      const totalExpenses = (parseInt(formData.monthlyExpenses || '0') + 
-                        parseInt(formData.financialSupport || '0') + 
-                        parseInt(formData.familyEducationExpenses || '0'));
-                      return formatIndianNumber(totalExpenses.toString());
-                    })()}
-                  </p>
+                <div className="text-center">
+                  <p className="text-sm text-muted-foreground mb-2">Total Monthly Expenses</p>
+                  <div className="text-3xl font-bold text-destructive" data-testid="text-total-expenses">
+                    ₹<AnimatedCounter 
+                      value={(() => {
+                        return (parseInt(formData.monthlyExpenses || '0') + 
+                          parseInt(formData.financialSupport || '0') + 
+                          parseInt(formData.familyEducationExpenses || '0'));
+                      })()}
+                      formatter={(value) => formatIndianNumber(value.toFixed(0))}
+                    />
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">Monthly Savings</p>
-                  <p className="text-2xl font-bold text-chart-2" data-testid="text-monthly-savings">
-                    ₹{(() => {
-                      const totalAnnualIncome = (parseInt(formData.annualIncome || '0') + parseInt(formData.spouseIncome || '0'));
-                      const monthlyIncome = totalAnnualIncome / 12;
-                      const totalExpenses = (parseInt(formData.monthlyExpenses || '0') + 
-                        parseInt(formData.financialSupport || '0') + 
-                        parseInt(formData.familyEducationExpenses || '0'));
-                      const savings = monthlyIncome - totalExpenses;
-                      return formatIndianNumber(savings.toFixed(0));
-                    })()}
-                  </p>
+                <div className="text-center">
+                  <p className="text-sm text-muted-foreground mb-2">Monthly Savings</p>
+                  <div className="text-3xl font-bold text-chart-2" data-testid="text-monthly-savings">
+                    ₹<AnimatedCounter 
+                      value={(() => {
+                        const totalAnnualIncome = (parseInt(formData.annualIncome || '0') + parseInt(formData.spouseIncome || '0'));
+                        const monthlyIncome = totalAnnualIncome / 12;
+                        const totalExpenses = (parseInt(formData.monthlyExpenses || '0') + 
+                          parseInt(formData.financialSupport || '0') + 
+                          parseInt(formData.familyEducationExpenses || '0'));
+                        return monthlyIncome - totalExpenses;
+                      })()}
+                      formatter={(value) => formatIndianNumber(value.toFixed(0))}
+                    />
+                  </div>
                 </div>
               </div>
 

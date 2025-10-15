@@ -39,10 +39,13 @@ export function TestimonialsSection() {
   }, []);
 
   return (
-    <section className="py-20 md:py-24">
-      <div className="container mx-auto px-4 md:px-8">
+    <section className="py-20 md:py-24 relative overflow-hidden">
+      <div className="absolute inset-0 gradient-mesh" />
+      <div className="container mx-auto px-4 md:px-8 relative z-10">
         <div className="text-center space-y-4 mb-16">
-          <h2 className="text-3xl md:text-4xl font-semibold">What Our Users Say</h2>
+          <h2 className="text-3xl md:text-4xl font-semibold">
+            What Our <span className="gradient-text">Users Say</span>
+          </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             Join thousands of satisfied users planning their retirement
           </p>
@@ -53,18 +56,18 @@ export function TestimonialsSection() {
             {testimonials.slice(currentIndex, currentIndex + 2).map((testimonial, index) => (
               <Card 
                 key={index} 
-                className="p-6 space-y-4"
+                className="p-6 space-y-4 card-hover border-2 shadow-xl"
                 data-testid={`testimonial-${index}`}
               >
                 <div className="flex gap-1">
                   {[...Array(testimonial.rating)].map((_, i) => (
-                    <Star key={i} className="h-4 w-4 fill-chart-4 text-chart-4" />
+                    <Star key={i} className="h-5 w-5 fill-chart-4 text-chart-4" />
                   ))}
                 </div>
-                <p className="text-muted-foreground italic">"{testimonial.quote}"</p>
+                <p className="text-muted-foreground italic text-lg">"{testimonial.quote}"</p>
                 <div className="flex items-center gap-3">
-                  <Avatar>
-                    <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+                  <Avatar className="h-12 w-12">
+                    <AvatarFallback className="bg-primary/10 text-primary font-semibold text-lg">
                       {testimonial.name.split(' ').map(n => n[0]).join('')}
                     </AvatarFallback>
                   </Avatar>

@@ -4,13 +4,14 @@ import { TrendingUp, Shield, Target } from "lucide-react";
 
 export function HeroSection() {
   return (
-    <section className="relative min-h-screen flex items-center">
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-background" />
+    <section className="relative min-h-screen flex items-center overflow-hidden">
+      <div className="absolute inset-0 gradient-mesh-strong" />
+      <div className="absolute inset-0 bg-gradient-to-b from-background/50 via-background/80 to-background" />
       
       <div className="container mx-auto px-4 md:px-8 py-20 relative z-10">
         <div className="max-w-4xl mx-auto">
-          <div className="space-y-8 text-center">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20">
+          <div className="space-y-8 text-center animate-fade-in">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass border-primary/30 shadow-lg">
               <Shield className="h-4 w-4 text-primary" />
               <span className="text-sm font-medium text-primary">Trusted by 10,000+ users</span>
             </div>
@@ -18,7 +19,7 @@ export function HeroSection() {
             <div className="space-y-4">
               <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight">
                 Because your golden years deserve a{" "}
-                <span className="text-primary">snowball effect</span>
+                <span className="gradient-text">snowball effect</span>
               </h1>
               <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
                 Build your personalized retirement roadmap in minutes. Smart investment suggestions tailored for Indian investors.
@@ -27,11 +28,11 @@ export function HeroSection() {
 
             <div className="flex flex-wrap gap-4 justify-center">
               <Link href="/onboarding">
-                <Button size="lg" className="text-lg px-8" data-testid="button-hero-start">
+                <Button size="lg" className="text-lg px-8 shadow-xl hover:shadow-2xl transition-shadow" data-testid="button-hero-start">
                   Start Planning
                 </Button>
               </Link>
-              <Button size="lg" variant="outline" className="text-lg px-8" data-testid="button-learn-more">
+              <Button size="lg" variant="outline" className="text-lg px-8 shadow-lg hover:shadow-xl transition-shadow" data-testid="button-learn-more">
                 Learn More
               </Button>
             </div>
