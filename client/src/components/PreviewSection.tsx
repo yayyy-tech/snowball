@@ -1,5 +1,5 @@
 import assetAllocationImage from "@assets/image_1760463234725.png";
-import recommendedInvestmentsImage from "@assets/image_1760463257006.png";
+import recommendedInvestmentsImage from "@assets/Screenshot 2025-10-14 230405_1760493135971.png";
 
 export function PreviewSection() {
   return (
