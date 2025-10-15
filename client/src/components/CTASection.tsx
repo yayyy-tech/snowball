@@ -11,10 +11,10 @@ export function CTASection() {
           
           <div className="relative z-10 max-w-5xl mx-auto text-center">
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-              Ready to Plan Your Dream Retirement?
+              No two lives are the same, then why the retirement plan?
             </h2>
             <p className="text-lg md:text-xl text-white/90 mb-8 max-w-2xl mx-auto">
-              Get your personalized retirement roadmap in just 9 simple steps
+              that's why we curate it personalized only for you
             </p>
             <Link href="/onboarding">
               <Button 
