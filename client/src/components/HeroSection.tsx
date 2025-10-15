@@ -28,11 +28,11 @@ export function HeroSection() {
 
             <div className="flex flex-wrap gap-4 justify-center">
               <Link href="/onboarding">
-                <Button size="lg" className="text-lg px-8 shadow-xl hover:shadow-2xl transition-shadow" data-testid="button-hero-start">
+                <Button size="lg" className="gradient-button text-lg px-8 py-6 text-white shadow-xl hover:shadow-2xl" data-testid="button-hero-start">
                   Start Planning
                 </Button>
               </Link>
-              <Button size="lg" variant="outline" className="text-lg px-8 shadow-lg hover:shadow-xl transition-shadow" data-testid="button-learn-more">
+              <Button size="lg" variant="outline" className="text-lg px-8 py-6 glass shadow-lg hover:shadow-xl transition-all" data-testid="button-learn-more">
                 Learn More
               </Button>
             </div>

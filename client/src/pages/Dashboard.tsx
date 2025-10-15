@@ -6,6 +6,8 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import { TrendingUp, Download, RefreshCw, AlertTriangle, Wallet, Calculator, Target, TrendingDown } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import type { RetirementPlan } from "@shared/schema";
+import { AnimatedCounter } from "@/components/AnimatedCounter";
+import { motion } from "framer-motion";
 
 export default function Dashboard() {
   
@@ -124,18 +126,52 @@ export default function Dashboard() {
         </div>
 
         {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.6, staggerChildren: 0.1 }}
+          className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8"
+        >
           {summaryCards.map((card, index) => (
-            <Card key={index} className="p-4">
-              <div className="flex items-center justify-between mb-2">
-                <card.icon className="h-6 w-6 text-primary" />
-              </div>
-              <p className="text-xs text-muted-foreground mb-1">{card.label}</p>
-              <p className="text-xl md:text-2xl font-bold">{card.value}</p>
-              <p className="text-xs text-muted-foreground mt-1">{card.suffix}</p>
-            </Card>
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: index * 0.1 }}
+            >
+              <Card className="p-6 shadow-lg border-2 card-hover bg-gradient-to-br from-background to-primary/5">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex-1">
+                    <p className="text-sm text-muted-foreground mb-2">{card.label}</p>
+                    {index === 0 ? (
+                      <p className="text-4xl font-bold text-primary">
+                        <AnimatedCounter value={calc.yearsToRetirement} decimals={0} />
+                      </p>
+                    ) : index === 1 ? (
+                      <p className="text-4xl font-bold text-primary">
+                        ₹<AnimatedCounter 
+                          value={calc.totalCorpusNeeded / 10000000} 
+                          decimals={2} 
+                        />Cr
+                      </p>
+                    ) : (
+                      <p className="text-4xl font-bold text-primary">
+                        ₹<AnimatedCounter 
+                          value={calc.sipAmount / 1000} 
+                          decimals={0} 
+                        />K
+                      </p>
+                    )}
+                    <p className="text-xs text-muted-foreground mt-2">{card.suffix}</p>
+                  </div>
+                  <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center ml-3">
+                    <card.icon className="h-7 w-7 text-primary" />
+                  </div>
+                </div>
+              </Card>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
 
         {/* Recalculate Button */}
         <div className="mb-8">
