@@ -31,8 +31,9 @@ export function Footer() {
               </li>
               <li>
                 <button 
-                  onClick={() => setLocation("/#how-it-works")} 
+                  onClick={() => setLocation("/how-it-works")} 
                   className="text-muted-foreground hover:text-foreground transition-colors"
+                  data-testid="footer-how-it-works"
                 >
                   How It Works
                 </button>
@@ -43,7 +44,15 @@ export function Footer() {
           <div>
             <h3 className="font-semibold mb-4">Company</h3>
             <ul className="space-y-2 text-sm">
-              <li><button className="text-muted-foreground hover:text-foreground transition-colors">About</button></li>
+              <li>
+                <button 
+                  onClick={() => setLocation("/about-us")} 
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                  data-testid="footer-about-us"
+                >
+                  About
+                </button>
+              </li>
               <li><button className="text-muted-foreground hover:text-foreground transition-colors">Contact</button></li>
             </ul>
           </div>
