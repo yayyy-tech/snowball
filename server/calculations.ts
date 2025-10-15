@@ -139,21 +139,23 @@ export function calculateRetirementPlan(plan: RetirementPlan): CalculatedPlan {
   const monthlyRate = blendedReturns / 12;
   const annualStepUp = SIP_STEP_UP;
   
-  // Calculate initial SIP amount using ANNUAL step-up SIP formula
-  // For annual step-up: Calculate year-by-year FV, then solve for initial SIP
-  // FV = sum over years of: SIP * (1+stepUp)^(year-1) * 12 * (1+annualReturn)^(yearsRemaining)
+  // Calculate initial SIP amount using ANNUAL step-up with MONTHLY compounding
+  // For each year: SIP payments grow monthly, but SIP amount steps up annually
   let sipAmount;
   if (gapToFill <= 0) {
     sipAmount = 1000; // Minimum SIP
   } else {
-    // Calculate the FV factor for ₹1 initial monthly SIP with annual 7% step-up
+    // Calculate the FV factor for ₹1 initial monthly SIP with annual 7% step-up and monthly compounding
     let fvFactor = 0;
     for (let year = 1; year <= yearsToRetirement; year++) {
-      const sipMultiplier = Math.pow(1 + annualStepUp, year - 1); // SIP increases each year
-      const monthlyPayments = 12; // 12 monthly SIP payments per year
-      const yearsOfGrowth = yearsToRetirement - year + 1; // How many years this year's SIPs will grow
-      const annualGrowthFactor = Math.pow(1 + blendedReturns, yearsOfGrowth);
-      fvFactor += sipMultiplier * monthlyPayments * annualGrowthFactor;
+      const sipThisYear = Math.pow(1 + annualStepUp, year - 1); // SIP amount increases each year
+      
+      // For this year, calculate FV of 12 monthly payments with monthly compounding
+      for (let month = 1; month <= 12; month++) {
+        const monthsUntilRetirement = (yearsToRetirement - year) * 12 + (12 - month) + 1;
+        const growthFactor = Math.pow(1 + monthlyRate, monthsUntilRetirement);
+        fvFactor += sipThisYear * growthFactor;
+      }
     }
     
     // Solve for initial monthly SIP: SIP = Gap / fvFactor
