@@ -18,6 +18,8 @@ Snowball is a retirement planning web application designed for Indian users aged
 9. **Sample Roadmap Preview**: Added preview section on landing page displaying sample dashboard screenshots (asset allocation chart and recommended investments) with "Sample Roadmap" heading, positioned between Features and How It Works sections
 10. **Enhanced How It Works Content**: Expanded How It Works section with detailed 6-step journey explaining the complete Snowball process from initial questionnaire to ongoing progress tracking, with personalized explanations for each step
 11. **About Us Section**: Added comprehensive About Us section to landing page with company philosophy, vision, team background, and promises. Added "About Us" navigation link in header for easy access
+12. **Dedicated Pages**: Created separate pages for "How It Works" (/how-it-works) and "About Us" (/about-us), removed these sections from homepage for cleaner navigation
+13. **Monthly Savings Calculator**: Added automatic monthly savings calculation in Income step showing: Monthly Income (annual income ÷ 12), Total Monthly Expenses (sum of all monthly expenses), and Monthly Savings (income - expenses) with Indian number formatting
 
 ## User Preferences
 
