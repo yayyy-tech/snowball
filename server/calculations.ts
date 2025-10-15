@@ -78,6 +78,7 @@ function getBlendedReturns(allocation: { equity: number; debt: number; gold: num
 }
 
 export function calculateRetirementPlan(plan: RetirementPlan): CalculatedPlan {
+  console.log('[CALC DEBUG] ===== USING FIXED SIP CALCULATION (Oct 15, 2025) =====');
   const yearsToRetirement = plan.retirementAge - plan.currentAge;
   const yearsInRetirement = LIFE_EXPECTANCY - plan.retirementAge;
   
@@ -160,6 +161,9 @@ export function calculateRetirementPlan(plan: RetirementPlan): CalculatedPlan {
     
     // Solve for initial monthly SIP: SIP = Gap / fvFactor
     sipAmount = gapToFill / fvFactor;
+    
+    // Debug log to verify new calculation is active
+    console.log(`[SIP CALC DEBUG] Years: ${yearsToRetirement}, Gap: ${(gapToFill/10000000).toFixed(2)}Cr, FV Factor: ${fvFactor.toFixed(2)}, SIP: ₹${Math.round(sipAmount).toLocaleString('en-IN')}`);
     
     // Ensure SIP is reasonable
     sipAmount = Math.max(1000, Math.min(sipAmount, monthlySavings * 0.9));
