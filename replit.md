@@ -28,7 +28,7 @@ Preferred communication style: Simple, everyday language.
 ### Frontend Architecture
 - **Framework**: React with TypeScript, using Vite as the build tool
 - **Routing**: Wouter for client-side routing with five main routes:
-  - `/` - Landing page with hero, features, sample roadmap preview, testimonials, and CTA
+  - `/` - Landing page with hero, sample roadmap preview, testimonials, and CTA
   - `/how-it-works` - Detailed 6-step explanation of the Snowball process
   - `/about-us` - Company philosophy, vision, team background, and promises
   - `/onboarding` - Streamlined 7-step questionnaire (Personal, Income, Assets, Liabilities, Goals, Risk, Tax)
