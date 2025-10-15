@@ -23,7 +23,7 @@ export default function Dashboard() {
 
   if (!planId) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-background">
+      <div className="min-h-screen gradient-mesh">
         <Header />
         <main className="container mx-auto px-4 py-8">
           <div className="text-center">
@@ -40,7 +40,7 @@ export default function Dashboard() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-background">
+      <div className="min-h-screen gradient-mesh">
         <Header />
         <main className="container mx-auto px-4 py-8">
           <div className="text-center">
@@ -53,7 +53,7 @@ export default function Dashboard() {
 
   if (error || !plan) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-background">
+      <div className="min-h-screen gradient-mesh">
         <Header />
         <main className="container mx-auto px-4 py-8">
           <div className="text-center">
@@ -98,28 +98,28 @@ export default function Dashboard() {
   ];
   
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-background">
+    <div className="min-h-screen gradient-mesh">
       <Header />
       
       <main className="container mx-auto px-4 py-8 md:py-12">
         {/* Greeting */}
-        <div className="mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold mb-2">
+        <div className="mb-10">
+          <h1 className="text-headline mb-3">
             Hi, {userName}!
           </h1>
-          <p className="text-muted-foreground text-lg">
+          <p className="text-subheadline">
             Here's your personalized retirement roadmap
           </p>
         </div>
 
         {/* Important Notice */}
-        <div className="mb-8 bg-amber-50 dark:bg-amber-950/20 border-l-4 border-amber-500 rounded-lg p-4 flex gap-3">
+        <div className="mb-10 bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 rounded-xl p-5 flex gap-3">
           <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
           <div className="text-sm">
-            <p className="font-semibold text-amber-900 dark:text-amber-200 mb-1">
+            <p className="font-semibold text-amber-900 dark:text-amber-200 mb-2">
               Important: This calculation is very precise
             </p>
-            <p className="text-amber-800 dark:text-amber-300">
+            <p className="text-amber-800 dark:text-amber-300 leading-relaxed">
               We recommend maintaining <strong>10-15% higher savings</strong> than suggested for account for market volatility, unforeseen expenses, and changes in life circumstances. The corpus has been increased by <strong>12%</strong> to provide for unexpected expenses like weddings, education, health, etc.
             </p>
           </div>
@@ -129,33 +129,33 @@ export default function Dashboard() {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 0.6, staggerChildren: 0.1 }}
-          className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8"
+          transition={{ duration: 0.5, staggerChildren: 0.08 }}
+          className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10"
         >
           {summaryCards.map((card, index) => (
             <motion.div
               key={index}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
+              transition={{ duration: 0.4, delay: index * 0.08 }}
             >
-              <Card className="p-6 shadow-lg border-2 card-hover bg-gradient-to-br from-background to-primary/5">
+              <Card className="p-6 card-hover border-border/50">
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex-1">
-                    <p className="text-sm text-muted-foreground mb-2">{card.label}</p>
+                    <p className="text-xs text-muted-foreground mb-3 uppercase tracking-wide">{card.label}</p>
                     {index === 0 ? (
-                      <p className="text-4xl font-bold text-primary">
+                      <p className="text-3xl font-bold text-foreground">
                         <AnimatedCounter value={calc.yearsToRetirement} decimals={0} />
                       </p>
                     ) : index === 1 ? (
-                      <p className="text-4xl font-bold text-primary">
+                      <p className="text-3xl font-bold text-foreground">
                         ₹<AnimatedCounter 
                           value={calc.totalCorpusNeeded / 10000000} 
                           decimals={2} 
                         />Cr
                       </p>
                     ) : (
-                      <p className="text-4xl font-bold text-primary">
+                      <p className="text-3xl font-bold text-foreground">
                         ₹<AnimatedCounter 
                           value={calc.sipAmount / 1000} 
                           decimals={0} 
@@ -164,8 +164,8 @@ export default function Dashboard() {
                     )}
                     <p className="text-xs text-muted-foreground mt-2">{card.suffix}</p>
                   </div>
-                  <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center ml-3">
-                    <card.icon className="h-7 w-7 text-primary" />
+                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <card.icon className="h-6 w-6 text-primary" />
                   </div>
                 </div>
               </Card>

@@ -6,7 +6,21 @@ Snowball is a retirement planning web application designed for Indian users aged
 
 ## Recent Changes (October 2025)
 
-### Bug Fixes & Improvements
+### The Financialist-Inspired Redesign (Latest)
+Complete visual overhaul to match The Financialist's sophisticated, data-driven aesthetic:
+
+1. **Refined Color Palette**: Updated CSS variables to muted, sophisticated tones (primary: 220 60% 45%, reduced saturation across all chart colors)
+2. **Subtle Shadows**: Replaced heavy shadows with refined, barely-there depth (shadow-xl: 0px 12px 20px -4px hsl(220 13% 18% / 0.09))
+3. **Question-Driven Hero**: Redesigned hero section with 3 interactive cards showing user dilemmas (Debt vs Investment, Retirement Track, Early Retirement) with inline data visualizations
+4. **Typography Enhancements**: Added text-display, text-headline, text-subheadline utility classes with improved line-height, letter-spacing, and hierarchy
+5. **Numbered Step Badges**: Updated How It Works page with large "01, 02, 03" badges in 2-column grid layout
+6. **Data-Driven Features**: Added inline metrics to each feature card (e.g., "₹2.4Cr Avg. Corpus Target", "7% Annual Step-up")
+7. **Simplified Gradients**: Replaced vibrant multi-color gradients with subtle 2-tone radial patterns (gradient-mesh uses 0.03 opacity)
+8. **Dashboard Refinements**: Updated summary cards with uppercase labels, refined spacing, and cleaner visual hierarchy
+9. **Softer Interactions**: Reduced card-hover transform from -4px to -2px, subtle transitions throughout
+10. **Increased White Space**: Better breathing room with larger padding and margins across all sections
+
+### Previous Updates
 1. **Risk Tolerance Validation**: Fixed frontend onboarding form to send "moderate" instead of "balanced" for the balanced risk option, matching backend validation that expects conservative/moderate/aggressive values
 2. **Personalized Fund Reasoning**: Enhanced fund recommendation engine to receive full user context (age, retirementAge, lifestyle, monthlyExpenses) so each fund recommendation includes personalized reasoning mentioning user-specific factors like "young investor", "long investment horizon", "comfortable lifestyle", etc.
 3. **Session Cookie Security**: Made session cookie settings environment-aware (secure: false in development/testing, secure: true in production) to support OIDC testing while maintaining production security
