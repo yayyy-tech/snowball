@@ -9,25 +9,39 @@ const DEBT_RETURNS = 0.07; // 7% assumed debt returns
 const GOLD_RETURNS = 0.08; // 8% assumed gold returns
 const LIFE_EXPECTANCY = 85; // Assumed life expectancy
 
-// Indian new tax regime (2024-25)
+// Indian new tax regime (2024-25 - FY 2024-25, AY 2025-26)
+// Updated per Union Budget 2024
 function calculateTax(annualIncome: number): number {
+  // Standard deduction for salaried individuals
+  const STANDARD_DEDUCTION = 75000;
+  const taxableIncome = Math.max(0, annualIncome - STANDARD_DEDUCTION);
+  
   let tax = 0;
   
-  if (annualIncome <= 300000) {
+  // Tax slabs for new regime (default from FY 2024-25)
+  if (taxableIncome <= 300000) {
     tax = 0;
-  } else if (annualIncome <= 600000) {
-    tax = (annualIncome - 300000) * 0.05;
-  } else if (annualIncome <= 900000) {
-    tax = 15000 + (annualIncome - 600000) * 0.10;
-  } else if (annualIncome <= 1200000) {
-    tax = 45000 + (annualIncome - 900000) * 0.15;
-  } else if (annualIncome <= 1500000) {
-    tax = 90000 + (annualIncome - 1200000) * 0.20;
+  } else if (taxableIncome <= 700000) {
+    tax = (taxableIncome - 300000) * 0.05;
+  } else if (taxableIncome <= 1000000) {
+    tax = 20000 + (taxableIncome - 700000) * 0.10;
+  } else if (taxableIncome <= 1200000) {
+    tax = 50000 + (taxableIncome - 1000000) * 0.15;
+  } else if (taxableIncome <= 1500000) {
+    tax = 80000 + (taxableIncome - 1200000) * 0.20;
   } else {
-    tax = 150000 + (annualIncome - 1500000) * 0.30;
+    tax = 140000 + (taxableIncome - 1500000) * 0.30;
   }
   
-  return tax;
+  // Section 87A rebate: Full rebate if taxable income <= 7 lakhs
+  if (taxableIncome <= 700000) {
+    tax = 0; // Full rebate up to ₹25,000
+  }
+  
+  // Add 4% health and education cess
+  const cess = tax * 0.04;
+  
+  return tax + cess;
 }
 
 // Calculate asset allocation based on age and risk profile

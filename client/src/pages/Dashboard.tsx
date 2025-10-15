@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import { TrendingUp, Download, RefreshCw, AlertTriangle, Wallet, Calculator, Target, TrendingDown } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import type { RetirementPlan } from "@shared/schema";
+import type { RetirementPlan, CalculatedPlan } from "@shared/schema";
 import { AnimatedCounter } from "@/components/AnimatedCounter";
 import { motion } from "framer-motion";
 
@@ -65,7 +65,7 @@ export default function Dashboard() {
     );
   }
 
-  const calc = plan.calculatedPlan;
+  const calc = plan.calculatedPlan as CalculatedPlan;
   const userName = plan.fullName || "User";
   
   // Create summary cards from real data
