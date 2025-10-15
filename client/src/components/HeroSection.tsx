@@ -21,9 +21,6 @@ export function HeroSection() {
             <h1 className="text-display">
               Because your golden years deserves the <span className="text-primary">snowball effect</span>
             </h1>
-            <p className="text-subheadline max-w-2xl">
-              So, we plan specifically to yours
-            </p>
           </div>
 
           {/* Question-Driven Cards */}
