@@ -144,20 +144,20 @@ export default function Dashboard() {
                   <div className="flex-1">
                     <p className="text-xs text-muted-foreground mb-3 uppercase tracking-wide">{card.label}</p>
                     {index === 0 ? (
-                      <p className="text-3xl font-bold text-foreground">
-                        <AnimatedCounter value={calc.yearsToRetirement} decimals={0} />
+                      <p className="text-3xl font-bold text-foreground" data-testid="text-years-to-retirement">
+                        <AnimatedCounter value={calc?.yearsToRetirement || 0} decimals={0} />
                       </p>
                     ) : index === 1 ? (
-                      <p className="text-3xl font-bold text-foreground">
+                      <p className="text-3xl font-bold text-foreground" data-testid="text-corpus-needed">
                         ₹<AnimatedCounter 
-                          value={calc.totalCorpusNeeded / 10000000} 
+                          value={calc?.totalCorpusNeeded ? calc.totalCorpusNeeded / 10000000 : 0} 
                           decimals={2} 
                         />Cr
                       </p>
                     ) : (
-                      <p className="text-3xl font-bold text-foreground">
+                      <p className="text-3xl font-bold text-foreground" data-testid="text-sip-amount">
                         ₹<AnimatedCounter 
-                          value={calc.sipAmount / 1000} 
+                          value={calc?.sipAmount ? calc.sipAmount / 1000 : 0} 
                           decimals={0} 
                         />K
                       </p>
