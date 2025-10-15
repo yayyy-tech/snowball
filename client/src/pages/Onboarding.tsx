@@ -86,7 +86,6 @@ export default function Onboarding() {
     expensesPlannedAge: "",
     expectedMonthlyExpense: "",
     expectedLifestyle: "",
-    sipStepUp: "7",
     riskTolerance: "",
     preferredAssetMix: "",
     currentTaxSlab: "",
@@ -817,26 +816,6 @@ export default function Onboarding() {
                     <SelectItem value="modest">Modest - Simple, peaceful living</SelectItem>
                   </SelectContent>
                 </Select>
-              </div>
-
-              <div>
-                <Label htmlFor="sipStepUp">Annual SIP Step-up Percentage (%) *</Label>
-                <div className="flex items-center gap-4">
-                  <Input
-                    id="sipStepUp"
-                    type="number"
-                    value={formData.sipStepUp}
-                    onChange={(e) => setFormData({ ...formData, sipStepUp: e.target.value })}
-                    placeholder="7"
-                    className="max-w-xs"
-                    data-testid="input-sip-stepup"
-                  />
-                  <Badge variant="secondary">Recommended: 7%</Badge>
-                </div>
-                <p className="text-xs text-muted-foreground mt-2">
-                  <Info className="inline h-3 w-3 mr-1" />
-                  Recommended: 7%. Increasing your SIP salary hikes helps build your corpus faster.
-                </p>
               </div>
 
               {formData.retirementAge && formData.age && (

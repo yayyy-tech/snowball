@@ -29,6 +29,11 @@ Complete overhaul of tax calculations and dashboard display components:
    - SWP projections: Inflation-adjusted withdrawals from age 60-85
    - All formulas verified against financial planning best practices
 
+4. **Removed SIP Step-up Input Field**: Removed manual SIP step-up percentage input from onboarding form
+   - SIP step-up is now fixed at 7% (standard financial planning practice)
+   - Simplified Goals step in onboarding questionnaire
+   - Backend calculations already used fixed 7% step-up, so this aligns the UI with the logic
+
 ### The Financialist-Inspired Redesign
 Complete visual overhaul to match The Financialist's sophisticated, data-driven aesthetic:
 
