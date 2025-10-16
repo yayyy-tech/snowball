@@ -166,11 +166,14 @@ export function calculateRetirementPlan(plan: RetirementPlan): CalculatedPlan {
     // Debug log to verify new calculation is active
     console.log(`[SIP CALC DEBUG] Years: ${yearsToRetirement}, Gap: ₹${(gapToFill/10000000).toFixed(2)}Cr, FV Factor: ${fvFactor.toFixed(2)}, Initial SIP: ₹${Math.round(sipAmount).toLocaleString('en-IN')}, Monthly Savings: ₹${Math.round(monthlySavings).toLocaleString('en-IN')}`);
     
-    // Ensure SIP is reasonable and doesn't exceed monthly savings
-    const maxSip = monthlySavings * 0.95; // Allow up to 95% of monthly savings
-    if (sipAmount > maxSip) {
-      console.log(`[SIP CALC WARNING] Calculated SIP (₹${Math.round(sipAmount).toLocaleString('en-IN')}) exceeds 95% of monthly savings (₹${Math.round(maxSip).toLocaleString('en-IN')}). Capping at 95%.`);
-      sipAmount = maxSip;
+    // Warn if SIP exceeds monthly savings, but only cap if it's unreasonably high
+    if (sipAmount > monthlySavings) {
+      console.log(`[SIP CALC WARNING] Calculated SIP (₹${Math.round(sipAmount).toLocaleString('en-IN')}) exceeds monthly savings (₹${Math.round(monthlySavings).toLocaleString('en-IN')}). User may need to increase income, reduce expenses, or extend retirement age.`);
+      // Cap only if it exceeds by more than 20% (unreasonable)
+      if (sipAmount > monthlySavings * 1.2) {
+        sipAmount = monthlySavings;
+        console.log(`[SIP CALC] Capping SIP at monthly savings amount.`);
+      }
     }
     
     // Set a reasonable minimum SIP only if gap exists

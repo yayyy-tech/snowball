@@ -216,9 +216,17 @@ function generateReasoning(
 
 // Main recommendation function
 export function generateFundRecommendations(input: RecommendationInput): RecommendationOutput {
-  // Validate input
+  // Handle case where no SIP is needed (existing assets cover corpus)
   if (input.totalAmount <= 0) {
-    throw new Error("Total amount must be greater than 0");
+    return {
+      recommendedFunds: [],
+      totalAllocated: "₹0",
+      allocationSummary: {
+        lowRisk: "₹0",
+        moderateRisk: "₹0",
+        highRisk: "₹0"
+      }
+    };
   }
 
   // Select appropriate fund universe
