@@ -144,7 +144,7 @@ export function calculateRetirementPlan(plan: RetirementPlan): CalculatedPlan {
   // For each year: SIP payments grow monthly, but SIP amount steps up annually
   let sipAmount;
   if (gapToFill <= 0) {
-    sipAmount = 1000; // Minimum SIP
+    sipAmount = 0; // No SIP needed if existing assets cover the corpus
   } else {
     // Calculate the FV factor for ₹1 initial monthly SIP with annual 7% step-up and monthly compounding
     let fvFactor = 0;
@@ -153,7 +153,8 @@ export function calculateRetirementPlan(plan: RetirementPlan): CalculatedPlan {
       
       // For this year, calculate FV of 12 monthly payments with monthly compounding
       for (let month = 1; month <= 12; month++) {
-        const monthsUntilRetirement = (yearsToRetirement - year) * 12 + (12 - month) + 1;
+        // FIXED: Removed +1 from monthsUntilRetirement calculation to match simulation exactly
+        const monthsUntilRetirement = (yearsToRetirement - year) * 12 + (12 - month);
         const growthFactor = Math.pow(1 + monthlyRate, monthsUntilRetirement);
         fvFactor += sipThisYear * growthFactor;
       }
@@ -163,10 +164,17 @@ export function calculateRetirementPlan(plan: RetirementPlan): CalculatedPlan {
     sipAmount = gapToFill / fvFactor;
     
     // Debug log to verify new calculation is active
-    console.log(`[SIP CALC DEBUG] Years: ${yearsToRetirement}, Gap: ${(gapToFill/10000000).toFixed(2)}Cr, FV Factor: ${fvFactor.toFixed(2)}, SIP: ₹${Math.round(sipAmount).toLocaleString('en-IN')}`);
+    console.log(`[SIP CALC DEBUG] Years: ${yearsToRetirement}, Gap: ₹${(gapToFill/10000000).toFixed(2)}Cr, FV Factor: ${fvFactor.toFixed(2)}, Initial SIP: ₹${Math.round(sipAmount).toLocaleString('en-IN')}, Monthly Savings: ₹${Math.round(monthlySavings).toLocaleString('en-IN')}`);
     
-    // Ensure SIP is reasonable
-    sipAmount = Math.max(1000, Math.min(sipAmount, monthlySavings * 0.9));
+    // Ensure SIP is reasonable and doesn't exceed monthly savings
+    const maxSip = monthlySavings * 0.95; // Allow up to 95% of monthly savings
+    if (sipAmount > maxSip) {
+      console.log(`[SIP CALC WARNING] Calculated SIP (₹${Math.round(sipAmount).toLocaleString('en-IN')}) exceeds 95% of monthly savings (₹${Math.round(maxSip).toLocaleString('en-IN')}). Capping at 95%.`);
+      sipAmount = maxSip;
+    }
+    
+    // Set a reasonable minimum SIP only if gap exists
+    sipAmount = Math.max(500, sipAmount);
   }
   
   // Accumulation phase simulation
