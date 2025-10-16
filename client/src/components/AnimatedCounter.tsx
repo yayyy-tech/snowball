@@ -21,9 +21,9 @@ export function AnimatedCounter({
   formatter,
 }: AnimatedCounterProps) {
   const ref = useRef<HTMLSpanElement>(null);
-  const isInView = useInView(ref, { once: false, margin: "-100px" });
+  const isInView = useInView(ref, { once: true, amount: 0.1 });
 
-  const spring = useSpring(value, {
+  const spring = useSpring(0, {
     stiffness: 100,
     damping: 30,
     restDelta: 0.001,
@@ -37,10 +37,12 @@ export function AnimatedCounter({
   });
 
   useEffect(() => {
-    spring.set(value);
-  }, [value, spring]);
+    if (isInView) {
+      spring.set(value);
+    }
+  }, [value, spring, isInView]);
 
-  const [currentValue, setCurrentValue] = useState(value.toFixed(decimals));
+  const [currentValue, setCurrentValue] = useState("0");
 
   useEffect(() => {
     return display.on("change", (latest) => {
@@ -52,9 +54,8 @@ export function AnimatedCounter({
     <motion.span
       ref={ref}
       className={className}
-      initial={{ opacity: 0, y: 10 }}
-      animate={isInView ? { opacity: 1, y: 0 } : {}}
-      transition={{ duration: 0.3 }}
+      initial={{ opacity: 1 }}
+      animate={{ opacity: 1 }}
     >
       {prefix}
       {currentValue}
