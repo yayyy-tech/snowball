@@ -143,8 +143,13 @@ export function calculateRetirementPlan(plan: RetirementPlan): CalculatedPlan {
   // Calculate initial SIP amount using ANNUAL step-up with MONTHLY compounding
   // For each year: SIP payments grow monthly, but SIP amount steps up annually
   let sipAmount;
+  let sipCalculationSource: 'gap-based' | 'savings-based' = 'gap-based';
+  
   if (gapToFill <= 0) {
-    sipAmount = 0; // No SIP needed if existing assets cover the corpus
+    // Assets already cover retirement - use 80% of monthly savings capacity
+    sipAmount = monthlySavings * 0.8;
+    sipCalculationSource = 'savings-based';
+    console.log(`[SIP CALC] Assets cover retirement corpus. Using savings-based SIP: 80% of ₹${Math.round(monthlySavings).toLocaleString('en-IN')} = ₹${Math.round(sipAmount).toLocaleString('en-IN')}`);
   } else {
     // Calculate the FV factor for ₹1 initial monthly SIP with annual 7% step-up and monthly compounding
     let fvFactor = 0;
@@ -210,7 +215,7 @@ export function calculateRetirementPlan(plan: RetirementPlan): CalculatedPlan {
   
   // Verification log: Check if accumulated value meets target
   const accumulatedVsTarget = (projectedSipValue / totalCorpusNeeded) * 100;
-  console.log(`[VERIFICATION] Target Corpus: ₹${(totalCorpusNeeded/10000000).toFixed(2)}Cr, Accumulated: ₹${(projectedSipValue/10000000).toFixed(2)}Cr, Achievement: ${accumulatedVsTarget.toFixed(1)}%`);
+  console.log(`[VERIFICATION] Target Corpus: ₹${(totalCorpusNeeded/10000000).toFixed(2)}Cr, Accumulated: ₹${(projectedSipValue/10000000).toFixed(2)}Cr, Achievement: ${accumulatedVsTarget.toFixed(1)}%, SIP Source: ${sipCalculationSource}`);
   
   // Withdrawal phase (SWP)
   const swpMonthlyWithdrawal = monthlyExpenseAtRetirement;
