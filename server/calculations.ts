@@ -145,9 +145,14 @@ export function calculateRetirementPlan(plan: RetirementPlan): CalculatedPlan {
   let sipAmount;
   let sipCalculationSource: 'gap-based' | 'savings-based' = 'gap-based';
   
-  if (gapToFill <= 0) {
+  // CRITICAL: Check if monthly savings is zero or negative first
+  if (monthlySavings <= 0) {
+    sipAmount = 0;
+    sipCalculationSource = 'gap-based';
+    console.log(`[SIP CALC WARNING] Monthly savings is ₹${Math.round(monthlySavings).toLocaleString('en-IN')} (zero or negative). SIP set to ₹0. User needs to increase income or reduce expenses.`);
+  } else if (gapToFill <= 0) {
     // Assets already cover retirement - use 80% of monthly savings capacity
-    sipAmount = monthlySavings * 0.8;
+    sipAmount = Math.max(500, monthlySavings * 0.8);
     sipCalculationSource = 'savings-based';
     console.log(`[SIP CALC] Assets cover retirement corpus. Using savings-based SIP: 80% of ₹${Math.round(monthlySavings).toLocaleString('en-IN')} = ₹${Math.round(sipAmount).toLocaleString('en-IN')}`);
   } else {
@@ -176,12 +181,12 @@ export function calculateRetirementPlan(plan: RetirementPlan): CalculatedPlan {
       console.log(`[SIP CALC WARNING] Calculated SIP (₹${Math.round(sipAmount).toLocaleString('en-IN')}) exceeds monthly savings (₹${Math.round(monthlySavings).toLocaleString('en-IN')}). User may need to increase income, reduce expenses, or extend retirement age.`);
       // Cap only if it exceeds by more than 20% (unreasonable)
       if (sipAmount > monthlySavings * 1.2) {
-        sipAmount = monthlySavings;
-        console.log(`[SIP CALC] Capping SIP at monthly savings amount.`);
+        sipAmount = Math.max(500, monthlySavings);
+        console.log(`[SIP CALC] Capping SIP at monthly savings amount: ₹${Math.round(sipAmount).toLocaleString('en-IN')}`);
       }
     }
     
-    // Set a reasonable minimum SIP only if gap exists
+    // Set a reasonable minimum SIP only if gap exists and savings is positive
     sipAmount = Math.max(500, sipAmount);
   }
   
