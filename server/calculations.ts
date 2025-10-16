@@ -205,6 +205,10 @@ export function calculateRetirementPlan(plan: RetirementPlan): CalculatedPlan {
   
   const projectedSipValue = portfolioValue;
   
+  // Verification log: Check if accumulated value meets target
+  const accumulatedVsTarget = (projectedSipValue / totalCorpusNeeded) * 100;
+  console.log(`[VERIFICATION] Target Corpus: ₹${(totalCorpusNeeded/10000000).toFixed(2)}Cr, Accumulated: ₹${(projectedSipValue/10000000).toFixed(2)}Cr, Achievement: ${accumulatedVsTarget.toFixed(1)}%`);
+  
   // Withdrawal phase (SWP)
   const swpMonthlyWithdrawal = monthlyExpenseAtRetirement;
   const withdrawalYears: { year: number; withdrawal: number; balance: number }[] = [];
