@@ -67,6 +67,22 @@ export default function Dashboard() {
   }
 
   const calc = plan.calculatedPlan as CalculatedPlan;
+  
+  // Guard: Ensure calculated plan exists before rendering
+  if (!calc) {
+    return (
+      <div className="min-h-screen gradient-mesh">
+        <Header />
+        <main className="container mx-auto px-4 py-8">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold mb-4">Calculating your plan...</h1>
+            <p className="text-muted-foreground">Please wait while we generate your retirement roadmap.</p>
+          </div>
+        </main>
+      </div>
+    );
+  }
+  
   const userName = plan.fullName || "User";
   
   // Create summary cards from real data
@@ -236,19 +252,19 @@ export default function Dashboard() {
                     <p className="text-xs text-muted-foreground mb-3 uppercase tracking-wide">{card.label}</p>
                     {index === 0 ? (
                       <p className="text-3xl font-bold text-foreground" data-testid="text-years-to-retirement">
-                        <AnimatedCounter value={calc?.yearsToRetirement || 0} decimals={0} />
+                        <AnimatedCounter value={calc.yearsToRetirement || 0} decimals={0} />
                       </p>
                     ) : index === 1 ? (
                       <p className="text-3xl font-bold text-foreground" data-testid="text-corpus-needed">
                         ₹<AnimatedCounter 
-                          value={calc?.totalCorpusNeeded ? calc.totalCorpusNeeded / 10000000 : 0} 
+                          value={(calc.totalCorpusNeeded || 0) / 10000000} 
                           decimals={2} 
                         />Cr
                       </p>
                     ) : (
                       <p className="text-3xl font-bold text-foreground" data-testid="text-sip-amount">
                         ₹<AnimatedCounter 
-                          value={calc?.sipAmount ? calc.sipAmount / 1000 : 0} 
+                          value={(calc.sipAmount || 0) / 1000} 
                           decimals={0} 
                         />K
                       </p>
