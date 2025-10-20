@@ -37,10 +37,9 @@ export function AnimatedCounter({
   });
 
   useEffect(() => {
-    if (isInView) {
-      spring.set(value);
-    }
-  }, [value, spring, isInView]);
+    // Always set the value, animate only when in view
+    spring.set(value);
+  }, [value, spring]);
 
   const [currentValue, setCurrentValue] = useState("0");
 
