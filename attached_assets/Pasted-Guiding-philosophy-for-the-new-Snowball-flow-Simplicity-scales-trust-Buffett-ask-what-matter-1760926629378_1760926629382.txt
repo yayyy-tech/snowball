@@ -1,0 +1,162 @@
+Guiding philosophy for the new Snowball flow
+
+“Simplicity scales trust” — (Buffett): ask what matters, ignore what doesn’t.
+
+“Clarity > Complexity” — users don’t want a finance exam; they want to feel understood.
+
+“Lifestyle defines corpus, not numbers alone.”
+
+“Your time horizon is your biggest edge.” (Buffett/Damani both obsess over compounding time, not market timing).
+
+Let the AI do the math. Let the user do the dreaming.
+
+🧭 The new 5-Step Snowball Flow (7 → 5, but richer under the hood)
+
+You’ll see it’s simpler for the user but more intelligent behind the scenes.
+Each step feels conversational but unlocks deep inferences.
+
+Step 1 – Your Life Snapshot
+
+Purpose: capture age, income, and dependents without feeling like a form.
+
+Questions (only 3):
+
+“Hey {name}, how old are you and when do you wish to retire?”
+
+“What’s your current monthly take-home income?”
+
+“Do you have anyone financially depending on you right now?” (Yes / No → if yes: how many)
+
+AI inference:
+
+Infers working years left.
+
+Uses demographic & average spending ratios to estimate baseline expenses (if not provided).
+
+Adjusts savings-rate recommendations for dependents.
+
+💡 Inspired by Buffett’s “Don’t risk what you have for what you don’t need.”
+Dependents tighten safety margins; Snowball auto-adds safety buffer for them.
+
+Step 2 – Your Money Flow
+
+Purpose: understand saving and spending without granular breakup.
+
+Questions (only 2):
+
+“How much of your income do you typically manage to save or invest each month?” (slider 0–50%)
+
+“Roughly, how much do you spend on essentials vs lifestyle?” (auto-split if unsure → defaults to 60 : 40)
+
+AI inference:
+
+Projects inflation-adjusted expense growth.
+
+Calculates real savings rate.
+
+Builds early corpus estimate through rule of 72 style growth.
+
+🧮 Applies Damani’s philosophy: discipline > timing.
+He famously said you build wealth “not by heroics, but by habits.”
+
+Step 3 – Your Assets & Obligations
+
+Purpose: know where the money already is, and what drags it down.
+
+Questions (only 2):
+
+“How much do you already have invested (including savings, stocks, mutual funds, PF, etc.)?”
+
+“Any ongoing big loans?” (Yes / No → if yes, only EMI + years left)
+
+AI inference:
+
+Categorizes corpus into liquid vs illiquid assets using heuristics (based on amount and age).
+
+Uses Buffett’s asset-allocation rule of thumb (“Never invest in something you don’t understand”) → conservative if too little liquidity.
+
+Deducts EMI-based drain from monthly savings.
+
+Step 4 – Your Dream Retirement
+
+Purpose: capture lifestyle intent and longevity in the simplest way.
+
+Questions (only 3):
+
+“What kind of retirement do you imagine?”
+
+Modest / Comfortable / Luxury / Nomadic (choices mapped to 70% / 90% / 120% / 110% income replacement ratio).
+
+“Where do you plan to live after retiring?” (AI fetches cost-of-living index differential).
+
+“How long do you want to plan your money to last?” (default = life expectancy table + option to adjust).
+
+AI inference:
+
+Uses lifestyle choice + city COLI + inflation forecast → post-retirement monthly need.
+
+Applies SEBI & HDFC guidelines for replacement ratio.
+
+Runs corpus requirement simulation automatically.
+
+🧘 Morgan Housel influence: people don’t want millions; they want “independence.”
+So Snowball reframes this step as “How free do you want to be?” not “How rich?”
+
+Step 5 – Your Risk & Route
+
+Purpose: auto-determine suitable strategy with minimum input.
+
+Questions (only 2):
+
+“How would you feel if your portfolio dropped 20% next year?” → “Sleep fine / Worried / Panic”
+
+“Do you prefer steady income or growth that fluctuates?” → slider Income ↔ Growth
+
+AI inference:
+
+Calculates risk score (1-5).
+
+Builds asset-allocation glidepath:
+
+High risk → 60 E / 30 D / 10 G
+
+Medium → 50 / 40 / 10
+
+Low → 30 / 60 / 10
+
+Computes target corpus with real-return assumptions per risk class.
+
+⚖️ Buffett mindset: “Risk comes from not knowing what you’re doing.”
+So Snowball doesn’t ask for numbers — it infers behavior.
+
+✨ Optional Step 6 – Reality Check (Passive Insights)
+
+No questions — Snowball just shows:
+
+Corpus needed vs on-track amount
+
+Years to goal
+
+Suggested monthly increase or asset rebalance
+
+A “Retirement Freedom Score” out of 100
+
+(Users love this shareable visual — similar to Nudge’s “Wealth Wellness Score.”)
+
+🧠 Behind the scenes (AI layer doing the heavy lifting)
+
+AI Income–Expense Model: uses Indian household data to estimate expenses from income if not entered.
+
+Lifestyle Mapping Engine: translates “modest/comfortable/luxury” into income replacement ratios.
+
+Corpus Calculator: uses inflation-adjusted PV of annuity formula.
+
+Behavior Inference: risk score = weighted reaction × savings habit × dependents.
+
+Rule Engine based on legends:
+
+Buffett’s 20-slot rule → don’t over-diversify.
+
+Damani’s “cash is a position” → suggests cash allocation if user is overexposed.
+
+Charlie Munger’s mental model → bias penalty if user selects “Panic” response.
