@@ -1,11 +1,69 @@
 # Snowball Retirement Planner
 
 ## Overview
-Snowball is a retirement planning web application for Indian users aged 25-40. It guides users through a 7-step onboarding questionnaire to collect financial data and generates personalized retirement roadmaps. The platform calculates required corpus, recommends investment strategies, and suggests smart mutual funds, bonds, and gold ETFs tailored to individual risk profiles and financial goals, all based on India's tax regime. The project aims to provide a sophisticated, data-driven financial planning experience.
+Snowball is a retirement planning web application for Indian users aged 25-40. It guides users through a 5-step conversational onboarding flow with AI inference to collect financial data and generates personalized retirement roadmaps with Freedom Score (0-100). The platform calculates required corpus, recommends investment strategies, and suggests smart mutual funds, bonds, and gold ETFs tailored to individual risk profiles and financial goals, all based on India's tax regime (FY 2024-25). Features emotionally intelligent UX with Mini-Stories (wisdom quotes) and AI Advice Bot for contextual nudges.
 
 ## Recent Changes (October 2025)
 
-### Savings-Based SIP for High-Asset Users (October 16, 2025 - Latest)
+### 5-Step Conversational Onboarding with AI Inference & Freedom Score (October 20, 2025 - Latest)
+Complete redesign of the onboarding experience and dashboard with AI-powered insights:
+
+1. **New 5-Step Conversational Flow** (reduced from 7 steps):
+   - **Step 1: Life Snapshot** - Name, age, marital status
+   - **Step 2: Money Flow** - Income, savings (AI infers monthly expenses and savings rate automatically)
+   - **Step 3: Assets & Obligations** - Current investments, outstanding loans
+   - **Step 4: Dream Retirement** - Desired retirement age, lifestyle preference (AI maps to retirement expenses: ₹30K simple, ₹50K comfortable, ₹75K luxurious)
+   - **Step 5: Risk & Route** - Risk tolerance (conservative/moderate/aggressive), tax regime preference
+   - Progress tracking (1/5, 2/5...) for better UX
+   - Conversational copy with emotional engagement
+
+2. **AI Inference Engine** (server/aiInference.ts):
+   - **inferMonthlyExpenses**: Calculates expenses from income and savings automatically
+   - **calculateSavingsRate**: Determines savings efficiency (percentage of income saved)
+   - **inferLifestyleExpenses**: Maps lifestyle choice to monthly retirement expenses
+   - **calculateFreedomScore**: 0-100 score based on weighted formula:
+     - Savings Rate Score (35%): Rewards efficient savers
+     - Time Horizon Score (25%): More time = higher score
+     - Asset Score (25%): Current assets relative to goals
+     - Risk Score (15%): Appropriate risk-taking
+   - **generateAdviceTriggers**: Creates contextual advice based on user's financial situation (e.g., "low_freedom_score", "young_time_advantage", "high_savings_rate")
+
+3. **Freedom Score Display**:
+   - Prominent hero section on Dashboard with large animated counter (0-100)
+   - Circular progress visualization with color-coded ring
+   - Dynamic badges: "Needs attention" (0-40, red), "Good Progress" (41-70, yellow), "Excellent" (71-100, green)
+   - Tagline: "A measure of your progress towards financial independence"
+
+4. **Experiential Components**:
+   - **MiniStory**: Displays wisdom quotes/financial insights during plan generation
+   - **AdviceBot**: Shows personalized advice cards with contextual nudges based on triggers
+   - Both use lucide-react icons (no emoji) for professional aesthetic
+
+5. **Dashboard Enhancements**:
+   - AnimatedCounter component with framer-motion for smooth number animations
+   - Summary cards: Years to Retirement, Retirement Corpus Needed, Monthly SIP Amount
+   - Detailed calculation breakdown with accumulation and withdrawal phases
+   - Asset allocation chart (equity/debt/gold percentages)
+   - Fund recommendations integration
+
+6. **Technical Improvements**:
+   - Fixed AnimatedCounter bug where `isInView` check prevented value updates on summary cards
+   - Now always sets spring value regardless of viewport visibility while maintaining smooth animations
+   - Added comprehensive data validation using Zod schemas
+   - Integrated AI inference into calculation pipeline
+
+7. **Schema Updates** (shared/schema.ts):
+   - Added fields: `inferredMonthlyExpenses`, `savingsRate`, `lifestylePreference`, `inferredRetirementExpenses`
+   - Added calculated fields: `freedomScore`, `riskScore`, `adviceTriggers[]`
+   - Maintains backward compatibility with existing plans
+
+8. **Test Results**:
+   - Complete end-to-end flow tested and passing ✓
+   - Freedom Score calculating correctly (e.g., 56 for age 28, ₹150K income, ₹60K savings) ✓
+   - Summary cards displaying correctly with AnimatedCounter ✓
+   - All components rendering without errors ✓
+
+### Savings-Based SIP for High-Asset Users (October 16, 2025)
 Enhanced SIP calculation to provide actionable investment recommendations even when existing assets already cover retirement corpus:
 
 1. **New Dual-Mode SIP Calculation**:
