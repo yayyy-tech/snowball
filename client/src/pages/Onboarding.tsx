@@ -1,21 +1,21 @@
 import { useState } from "react";
 import { Header } from "@/components/Header";
-import { OnboardingProgress } from "@/components/OnboardingProgress";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
+import { Slider } from "@/components/ui/slider";
 import { useLocation } from "wouter";
-import { Plus, Trash2, Info, Heart } from "lucide-react";
+import { Heart, TrendingUp, Building, Palmtree, Target, Sparkles, ArrowRight } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { AnimatedCounter } from "@/components/AnimatedCounter";
+import { MiniStory } from "@/components/MiniStory";
+import { motion } from "framer-motion";
 
 const formatIndianNumber = (value: string): string => {
   if (!value) return "";
@@ -47,50 +47,50 @@ const parseIndianNumber = (value: string): string => {
   return value.replace(/,/g, "");
 };
 
-const steps = ["Personal", "Income", "Assets", "Liabilities", "Goals", "Risk", "Tax"];
+const steps = [
+  { id: 1, title: "Life Snapshot", icon: Heart, color: "blue" },
+  { id: 2, title: "Money Flow", icon: TrendingUp, color: "green" },
+  { id: 3, title: "Assets & Obligations", icon: Building, color: "purple" },
+  { id: 4, title: "Dream Retirement", icon: Palmtree, color: "orange" },
+  { id: 5, title: "Risk & Route", icon: Target, color: "red" }
+];
 
 export default function Onboarding() {
   const [, setLocation] = useLocation();
   const [currentStep, setCurrentStep] = useState(1);
-  const totalSteps = 7;
+  const totalSteps = 5;
   const { toast } = useToast();
 
-  // Form state
+  // Form state - simplified for 5-step flow
   const [formData, setFormData] = useState({
+    // Step 1: Life Snapshot
     fullName: "",
     age: "",
+    retirementAge: "60",
     maritalStatus: "",
-    planningChildren: false,
-    dependents: [] as { name: string; relationship: string; age: string }[],
-    spouseName: "",
-    spouseAge: "",
-    spouseWorking: false,
-    spouseIncome: "",
-    occupation: "",
-    annualIncome: "",
-    monthlyExpenses: "",
-    financialSupport: "",
-    familyEducationExpenses: "",
-    hasLoan: false,
-    loans: [] as { type: string; amount: string; emi: string; tenure: string; startDate: string; interestRate: string }[],
+    dependents: "0",
+    
+    // Step 2: Money Flow
+    monthlyIncome: "",
+    savingsRate: 20, // percentage
+    essentialExpenseRatio: 60, // percentage of expenses that are essential
+    
+    // Step 3: Assets & Obligations
     totalAssets: "",
-    netAssets: "",
-    realEstateValue: "",
-    stocksValue: "",
-    mutualFundsValue: "",
-    ppfEpfNps: "",
-    bankDeposits: "",
-    goldAssets: "",
-    creditCardDebt: "",
-    retirementAge: "",
-    expensesPlannedAge: "",
-    expectedMonthlyExpense: "",
-    expectedLifestyle: "",
-    riskTolerance: "",
-    preferredAssetMix: "",
-    currentTaxSlab: "",
-    preferredTaxRegime: "",
+    loanEmi: "",
+    loanYearsLeft: "",
+    
+    // Step 4: Dream Retirement
+    lifestyleChoice: "", // modest, comfortable, luxury, nomadic
+    retirementLocation: "", // current_city, tier2, village, abroad
+    longevityYears: 25, // years in retirement (default: retire at 60, live till 85)
+    
+    // Step 5: Risk & Route
+    portfolioDropReaction: "", // sleep_fine, worried, panic
+    incomeVsGrowthPreference: 50, // 0 = income focused, 100 = growth focused
   });
+
+  const [showMiniStory, setShowMiniStory] = useState(false);
 
   const createPlanMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -99,8 +99,8 @@ export default function Onboarding() {
     },
     onSuccess: (data) => {
       toast({
-        title: "Success!",
-        description: "Your retirement plan has been created.",
+        title: "Your freedom roadmap is ready!",
+        description: "Calculating your path to financial independence...",
       });
       setLocation(`/dashboard?planId=${data.id}`);
     },
@@ -115,43 +115,87 @@ export default function Onboarding() {
 
   const handleNext = () => {
     if (currentStep < totalSteps) {
-      setCurrentStep(currentStep + 1);
+      setShowMiniStory(true);
+      setTimeout(() => {
+        setCurrentStep(currentStep + 1);
+        setShowMiniStory(false);
+      }, 4000); // Show mini-story for 4 seconds
     } else {
+      // Calculate derived values
+      const currentAge = parseInt(formData.age) || 25;
+      const retirementAge = parseInt(formData.retirementAge) || 60;
+      const monthlyIncome = parseInt(parseIndianNumber(formData.monthlyIncome)) || 0;
+      const savingsRate = formData.savingsRate;
+      const totalAssets = parseInt(parseIndianNumber(formData.totalAssets)) || 0;
+      const loanEmi = parseInt(parseIndianNumber(formData.loanEmi)) || 0;
+      const loanYearsLeft = parseInt(formData.loanYearsLeft) || 0;
+      
+      // Calculate monthly savings
+      const monthlySavings = Math.round(monthlyIncome * (savingsRate / 100));
+      
+      // Infer monthly expense from income and savings rate
+      const inferredMonthlyExpense = monthlyIncome - monthlySavings;
+      
+      // Calculate lifestyle expense ratio (100 - essential ratio)
+      const lifestyleExpenseRatio = 100 - formData.essentialExpenseRatio;
+      
+      // Map lifestyle to replacement ratio (will be done on backend)
+      const replacementRatio = 
+        formData.lifestyleChoice === 'modest' ? 70 :
+        formData.lifestyleChoice === 'comfortable' ? 90 :
+        formData.lifestyleChoice === 'luxury' ? 120 :
+        formData.lifestyleChoice === 'nomadic' ? 110 : 90;
+      
       const planData = {
         fullName: formData.fullName,
-        currentAge: parseInt(formData.age) || 0,
-        retirementAge: parseInt(formData.retirementAge) || 60,
-        gender: formData.maritalStatus === 'married' ? 'male' : 'male',
+        currentAge,
+        retirementAge,
+        gender: 'male', // Default
         maritalStatus: formData.maritalStatus,
-        dependents: formData.dependents.length,
+        dependents: parseInt(formData.dependents) || 0,
         
-        monthlyIncome: Math.round((parseInt(formData.annualIncome) || 0) / 12),
-        employmentType: formData.occupation || 'salaried',
-        spouseName: formData.spouseName || null,
-        spouseAge: formData.spouseAge ? parseInt(formData.spouseAge) : null,
-        spouseWorking: formData.spouseWorking,
-        spouseIncome: formData.spouseIncome ? parseInt(formData.spouseIncome) : null,
-        hasHomeLoan: formData.hasLoan && formData.loans.some(l => l.type === 'home'),
-        homeLoanEmi: formData.hasLoan ? parseInt(formData.loans.find(l => l.type === 'home')?.emi || '0') : 0,
-        homeLoanTenure: formData.hasLoan ? parseInt(formData.loans.find(l => l.type === 'home')?.tenure || '0') : 0,
+        monthlyIncome,
+        employmentType: 'salaried',
+        spouseName: null,
+        spouseAge: null,
+        spouseWorking: false,
+        spouseIncome: null,
         
-        realEstateValue: parseInt(formData.realEstateValue) || 0,
-        stocksValue: parseInt(formData.stocksValue) || 0,
-        mutualFundsValue: parseInt(formData.mutualFundsValue) || 0,
-        ppfEpfNps: parseInt(formData.ppfEpfNps) || 0,
-        bankDeposits: parseInt(formData.bankDeposits) || 0,
-        goldAssets: parseInt(formData.goldAssets) || 0,
+        // New fields for 5-step flow
+        savingsRate,
+        essentialExpenseRatio: formData.essentialExpenseRatio,
+        lifestyleExpenseRatio,
+        totalAssets,
+        loanEmi,
+        loanYearsLeft,
+        lifestyleChoice: formData.lifestyleChoice,
+        retirementLocation: formData.retirementLocation,
+        longevityYears: formData.longevityYears,
+        portfolioDropReaction: formData.portfolioDropReaction,
+        incomeVsGrowthPreference: formData.incomeVsGrowthPreference,
+        inferredMonthlyExpense,
+        replacementRatio,
         
-        retirementLifestyle: formData.expectedLifestyle || 'comfortable',
-        postRetirementMonthlyExpense: parseInt(formData.expectedMonthlyExpense) || 0,
+        // Legacy fields (will be calculated on backend)
+        hasHomeLoan: loanEmi > 0,
+        homeLoanEmi: loanEmi,
+        homeLoanTenure: loanYearsLeft,
+        realEstateValue: 0,
+        stocksValue: 0,
+        mutualFundsValue: 0,
+        ppfEpfNps: 0,
+        bankDeposits: 0,
+        goldAssets: 0,
+        retirementLifestyle: formData.lifestyleChoice || 'comfortable',
+        postRetirementMonthlyExpense: Math.round(inferredMonthlyExpense * (replacementRatio / 100)),
         legacyGoal: 0,
         majorExpenses: [],
-        
-        riskTolerance: formData.riskTolerance || 'moderate',
+        riskTolerance: 
+          formData.portfolioDropReaction === 'sleep_fine' ? 'aggressive' :
+          formData.portfolioDropReaction === 'worried' ? 'moderate' : 'conservative',
         investmentExperience: 'intermediate',
-        preferredAssetMix: formData.preferredAssetMix || 'balanced-growth',
-        
-        taxRegime: formData.preferredTaxRegime || 'new',
+        preferredAssetMix: 'balanced-growth',
+        taxRegime: 'new',
         section80CInvestment: 0,
       };
       
@@ -165,844 +209,651 @@ export default function Onboarding() {
     }
   };
 
-  const addDependent = () => {
-    setFormData({
-      ...formData,
-      dependents: [...formData.dependents, { name: "", relationship: "", age: "" }],
-    });
-  };
-
-  const removeDependent = (index: number) => {
-    setFormData({
-      ...formData,
-      dependents: formData.dependents.filter((_, i) => i !== index),
-    });
-  };
-
-  const updateDependent = (index: number, field: string, value: string) => {
-    const newDependents = [...formData.dependents];
-    newDependents[index] = { ...newDependents[index], [field]: value };
-    setFormData({ ...formData, dependents: newDependents });
-  };
-
-  const addLoan = () => {
-    setFormData({
-      ...formData,
-      loans: [...formData.loans, { type: "", amount: "", emi: "", tenure: "", startDate: "", interestRate: "" }],
-    });
-  };
-
-  const removeLoan = (index: number) => {
-    setFormData({
-      ...formData,
-      loans: formData.loans.filter((_, i) => i !== index),
-    });
-  };
-
-  const updateLoan = (index: number, field: string, value: string) => {
-    const newLoans = [...formData.loans];
-    newLoans[index] = { ...newLoans[index], [field]: value };
-    setFormData({ ...formData, loans: newLoans });
-  };
-
   const progressPercentage = Math.round((currentStep / totalSteps) * 100);
+  
+  // Calculate monthly savings for display
+  const monthlyIncome = parseInt(parseIndianNumber(formData.monthlyIncome)) || 0;
+  const monthlySavings = Math.round(monthlyIncome * (formData.savingsRate / 100));
+  const monthlyExpense = monthlyIncome - monthlySavings;
+  
+  // Validation checks
+  const isStepValid = () => {
+    switch (currentStep) {
+      case 1:
+        return formData.fullName && formData.age && formData.retirementAge && formData.maritalStatus;
+      case 2:
+        return formData.monthlyIncome && formData.savingsRate > 0;
+      case 3:
+        return true; // Optional fields
+      case 4:
+        return formData.lifestyleChoice && formData.retirementLocation;
+      case 5:
+        return formData.portfolioDropReaction;
+      default:
+        return false;
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-muted/30">
+    <div className="min-h-screen bg-gradient-to-b from-muted/30 to-background">
       <Header />
       
-      <main className="container mx-auto px-4 py-8">
-        {/* Progress bar */}
+      <main className="container mx-auto px-4 py-8 max-w-4xl">
+        {/* Progress with Step Icons */}
         <div className="mb-8">
-          <div className="flex justify-between items-center mb-2">
-            <h2 className="text-sm font-medium text-muted-foreground">Your Progress</h2>
-            <span className="text-sm font-semibold text-primary">{progressPercentage}%</span>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-sm font-medium text-muted-foreground">Your Journey to Freedom</h2>
+            <Badge variant="secondary" className="px-3 py-1">
+              <Sparkles className="h-3 w-3 mr-1" />
+              {progressPercentage}% Complete
+            </Badge>
           </div>
-          <div className="h-2 bg-muted rounded-full overflow-hidden">
-            <div 
-              className="h-full bg-primary transition-all duration-300"
-              style={{ width: `${progressPercentage}%` }}
-            />
-          </div>
-          <div className="flex justify-between mt-4 text-xs font-medium overflow-x-auto">
-            {steps.map((step, index) => (
+          
+          {/* Visual step progress */}
+          <div className="relative">
+            <div className="flex justify-between mb-2">
+              {steps.map((step, index) => {
+                const StepIcon = step.icon;
+                const isCompleted = index + 1 < currentStep;
+                const isCurrent = index + 1 === currentStep;
+                
+                return (
+                  <div key={step.id} className="flex flex-col items-center gap-2 flex-1">
+                    <div
+                      className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${
+                        isCompleted
+                          ? "bg-primary text-primary-foreground"
+                          : isCurrent
+                          ? "bg-primary/20 text-primary border-2 border-primary"
+                          : "bg-muted text-muted-foreground"
+                      }`}
+                    >
+                      <StepIcon className="h-5 w-5" />
+                    </div>
+                    <span
+                      className={`text-xs font-medium text-center hidden md:block ${
+                        isCurrent ? "text-primary" : "text-muted-foreground"
+                      }`}
+                    >
+                      {step.title}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+            
+            {/* Progress bar */}
+            <div className="h-2 bg-muted rounded-full overflow-hidden mt-4">
               <div 
-                key={index}
-                className={`px-2 py-1 whitespace-nowrap ${
-                  index + 1 === currentStep 
-                    ? "text-primary" 
-                    : index + 1 < currentStep 
-                    ? "text-foreground" 
-                    : "text-muted-foreground"
-                }`}
-              >
-                {step}
-              </div>
-            ))}
+                className="h-full bg-gradient-to-r from-primary to-chart-2 transition-all duration-500"
+                style={{ width: `${progressPercentage}%` }}
+              />
+            </div>
           </div>
         </div>
 
-        <Card className="max-w-4xl mx-auto p-6 md:p-8">
-          {/* Step 1: Personal */}
-          {currentStep === 1 && (
-            <div className="space-y-6">
-              <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/40 rounded-lg p-4">
-                <h2 className="text-2xl font-semibold mb-1">Personal</h2>
-                <p className="text-sm text-muted-foreground">Fill in the details below. All fields marked with * are required.</p>
-              </div>
-
-              <div className="grid md:grid-cols-2 gap-6">
-                <div>
-                  <Label htmlFor="fullName">Full Name *</Label>
-                  <Input
-                    id="fullName"
-                    value={formData.fullName}
-                    onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                    placeholder="Enter your full name"
-                    data-testid="input-fullname"
-                  />
+        {/* Mini Story between steps */}
+        {showMiniStory ? (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <MiniStory step={currentStep} />
+          </motion.div>
+        ) : (
+          <Card className="p-6 md:p-8">
+            {/* Step 1: Life Snapshot */}
+            {currentStep === 1 && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="space-y-6"
+              >
+                <div className="text-center mb-8">
+                  <div className="w-16 h-16 rounded-full bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center mx-auto mb-4">
+                    <Heart className="h-8 w-8 text-blue-600 dark:text-blue-400" />
+                  </div>
+                  <h2 className="text-3xl font-bold mb-2">Let's start with you</h2>
+                  <p className="text-muted-foreground">Tell us about your current life situation</p>
                 </div>
 
-                <div>
-                  <Label htmlFor="age">Age *</Label>
-                  <Input
-                    id="age"
-                    type="number"
-                    value={formData.age}
-                    onChange={(e) => setFormData({ ...formData, age: e.target.value })}
-                    placeholder="Enter your age"
-                    data-testid="input-age"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <Label htmlFor="maritalStatus">Marital Status *</Label>
-                <Select value={formData.maritalStatus} onValueChange={(value) => setFormData({ ...formData, maritalStatus: value })}>
-                  <SelectTrigger data-testid="select-marital-status">
-                    <SelectValue placeholder="Select marital status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="single">Single</SelectItem>
-                    <SelectItem value="married">Married</SelectItem>
-                    <SelectItem value="divorced">Divorced</SelectItem>
-                    <SelectItem value="widowed">Widowed</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="planningChildren"
-                  checked={formData.planningChildren}
-                  onCheckedChange={(checked) => setFormData({ ...formData, planningChildren: checked as boolean })}
-                  data-testid="checkbox-planning-children"
-                />
-                <Label htmlFor="planningChildren" className="font-normal">I have or am planning to have children</Label>
-              </div>
-
-              <div>
-                <div className="flex justify-between items-center mb-3">
-                  <Label>Dependents (e.g., parents, elderly relatives)</Label>
-                  <Button variant="outline" size="sm" onClick={addDependent} data-testid="button-add-dependent">
-                    <Plus className="h-4 w-4 mr-1" />
-                    Add Dependent
-                  </Button>
-                </div>
-                
-                {formData.dependents.map((dependent, index) => (
-                  <div key={index} className="grid grid-cols-10 gap-3 mb-3">
-                    <Input
-                      placeholder="Name"
-                      value={dependent.name}
-                      onChange={(e) => updateDependent(index, "name", e.target.value)}
-                      className="col-span-4"
-                      data-testid={`input-dependent-name-${index}`}
-                    />
-                    <Input
-                      placeholder="Relationship"
-                      value={dependent.relationship}
-                      onChange={(e) => updateDependent(index, "relationship", e.target.value)}
-                      className="col-span-3"
-                      data-testid={`input-dependent-relationship-${index}`}
-                    />
-                    <Input
-                      type="number"
-                      placeholder="Age"
-                      value={dependent.age}
-                      onChange={(e) => updateDependent(index, "age", e.target.value)}
-                      className="col-span-2"
-                      data-testid={`input-dependent-age-${index}`}
-                    />
-                    <Button variant="ghost" size="icon" onClick={() => removeDependent(index)} className="col-span-1" data-testid={`button-remove-dependent-${index}`}>
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-
-              {formData.maritalStatus === "married" && (
-                <div className="border border-border rounded-lg p-4 space-y-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Heart className="h-4 w-4 text-primary" />
-                    <Label className="text-base font-semibold">Spouse Details</Label>
-                  </div>
-                  
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="spouseName">Spouse Name</Label>
-                      <Input
-                        id="spouseName"
-                        value={formData.spouseName}
-                        onChange={(e) => setFormData({ ...formData, spouseName: e.target.value })}
-                        placeholder="Enter spouse name"
-                        data-testid="input-spouse-name"
-                      />
-                    </div>
-
-                    <div>
-                      <Label htmlFor="spouseAge">Spouse Age</Label>
-                      <Input
-                        id="spouseAge"
-                        type="number"
-                        value={formData.spouseAge}
-                        onChange={(e) => setFormData({ ...formData, spouseAge: e.target.value })}
-                        placeholder="Enter spouse age"
-                        data-testid="input-spouse-age"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="spouseWorking"
-                      checked={formData.spouseWorking}
-                      onCheckedChange={(checked) => setFormData({ ...formData, spouseWorking: checked as boolean })}
-                      data-testid="checkbox-spouse-working"
-                    />
-                    <Label htmlFor="spouseWorking" className="font-normal">Spouse is currently working</Label>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Step 2: Income */}
-          {currentStep === 2 && (
-            <div className="space-y-6">
-              <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/40 rounded-lg p-4">
-                <h2 className="text-2xl font-semibold mb-1">Income</h2>
-                <p className="text-sm text-muted-foreground">Fill in the details below. All fields marked with * are required.</p>
-              </div>
-
-              <div>
-                <Label htmlFor="occupation">Occupation/Employer *</Label>
-                <Input
-                  id="occupation"
-                  value={formData.occupation}
-                  onChange={(e) => setFormData({ ...formData, occupation: e.target.value })}
-                  placeholder="e.g., Software Engineer at TCS"
-                  data-testid="input-occupation"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="annualIncome">Your Annual Income (₹) *</Label>
-                <Input
-                  id="annualIncome"
-                  value={formatIndianNumber(formData.annualIncome)}
-                  onChange={(e) => setFormData({ ...formData, annualIncome: parseIndianNumber(e.target.value) })}
-                  placeholder="e.g., 12,00,000"
-                  data-testid="input-annual-income"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="monthlyExpenses">Current Monthly Expenses (₹) *</Label>
-                <Input
-                  id="monthlyExpenses"
-                  value={formatIndianNumber(formData.monthlyExpenses)}
-                  onChange={(e) => setFormData({ ...formData, monthlyExpenses: parseIndianNumber(e.target.value) })}
-                  placeholder="e.g., 50,000"
-                  data-testid="input-monthly-expenses"
-                />
-              </div>
-
-              {formData.maritalStatus === "married" && formData.spouseWorking && (
-                <div className="border border-border rounded-lg p-4 space-y-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Heart className="h-4 w-4 text-primary" />
-                    <Label className="text-base font-semibold">Spouse Income</Label>
-                  </div>
-                  
+                <div className="space-y-5">
                   <div>
-                    <Label htmlFor="spouseIncome">Spouse Annual Income (₹)</Label>
+                    <Label htmlFor="fullName" className="text-base">What's your name?</Label>
                     <Input
-                      id="spouseIncome"
-                      value={formatIndianNumber(formData.spouseIncome)}
-                      onChange={(e) => setFormData({ ...formData, spouseIncome: parseIndianNumber(e.target.value) })}
-                      placeholder="e.g., 8,00,000"
-                      data-testid="input-spouse-income"
+                      id="fullName"
+                      value={formData.fullName}
+                      onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                      placeholder="Your full name"
+                      className="mt-2 h-12 text-lg"
+                      data-testid="input-fullname"
                     />
                   </div>
-                </div>
-              )}
 
-              <div className="space-y-4 pt-4 border-t">
-                <h3 className="font-semibold">Monthly Expenses</h3>
-                
-                <div>
-                  <Label htmlFor="monthlyExpenses">Monthly Household Expenses (₹) *</Label>
-                  <Input
-                    id="monthlyExpenses"
-                    value={formatIndianNumber(formData.monthlyExpenses)}
-                    onChange={(e) => setFormData({ ...formData, monthlyExpenses: parseIndianNumber(e.target.value) })}
-                    placeholder="e.g., 45,000"
-                    data-testid="input-monthly-expenses"
-                  />
-                </div>
+                  <div className="grid md:grid-cols-2 gap-5">
+                    <div>
+                      <Label htmlFor="age" className="text-base">How old are you?</Label>
+                      <Input
+                        id="age"
+                        type="number"
+                        value={formData.age}
+                        onChange={(e) => setFormData({ ...formData, age: e.target.value })}
+                        placeholder="Your age"
+                        className="mt-2 h-12 text-lg"
+                        data-testid="input-age"
+                      />
+                    </div>
 
-                <div>
-                  <Label htmlFor="financialSupport">Financial Support to Relatives (₹/month)</Label>
-                  <Input
-                    id="financialSupport"
-                    value={formatIndianNumber(formData.financialSupport)}
-                    onChange={(e) => setFormData({ ...formData, financialSupport: parseIndianNumber(e.target.value) })}
-                    placeholder="e.g., 10,000"
-                    data-testid="input-financial-support"
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="familyEducationExpenses">Family Education Expenses (₹/month)</Label>
-                  <Input
-                    id="familyEducationExpenses"
-                    value={formatIndianNumber(formData.familyEducationExpenses)}
-                    onChange={(e) => setFormData({ ...formData, familyEducationExpenses: parseIndianNumber(e.target.value) })}
-                    placeholder="e.g., 15,000"
-                    data-testid="input-education-expenses"
-                  />
-                </div>
-              </div>
-
-              {/* Monthly Savings Calculation */}
-              <div className="grid md:grid-cols-3 gap-6 p-6 bg-gradient-to-br from-primary/5 to-chart-2/5 rounded-2xl border-2 border-primary/20 shadow-lg mt-6">
-                <div className="text-center">
-                  <p className="text-sm text-muted-foreground mb-2">Monthly Income</p>
-                  <div className="text-3xl font-bold text-primary" data-testid="text-monthly-income">
-                    ₹<AnimatedCounter 
-                      value={(() => {
-                        const totalAnnualIncome = (parseInt(formData.annualIncome || '0') + parseInt(formData.spouseIncome || '0'));
-                        return totalAnnualIncome / 12;
-                      })()}
-                      formatter={(value) => formatIndianNumber(value.toFixed(0))}
-                    />
+                    <div>
+                      <Label htmlFor="retirementAge" className="text-base">When do you want to retire?</Label>
+                      <Input
+                        id="retirementAge"
+                        type="number"
+                        value={formData.retirementAge}
+                        onChange={(e) => setFormData({ ...formData, retirementAge: e.target.value })}
+                        placeholder="Retirement age"
+                        className="mt-2 h-12 text-lg"
+                        data-testid="input-retirement-age"
+                      />
+                    </div>
                   </div>
-                </div>
-                <div className="text-center">
-                  <p className="text-sm text-muted-foreground mb-2">Total Monthly Expenses</p>
-                  <div className="text-3xl font-bold text-destructive" data-testid="text-total-expenses">
-                    ₹<AnimatedCounter 
-                      value={(() => {
-                        return (parseInt(formData.monthlyExpenses || '0') + 
-                          parseInt(formData.financialSupport || '0') + 
-                          parseInt(formData.familyEducationExpenses || '0'));
-                      })()}
-                      formatter={(value) => formatIndianNumber(value.toFixed(0))}
-                    />
+
+                  <div>
+                    <Label className="text-base mb-3 block">Marital status</Label>
+                    <RadioGroup 
+                      value={formData.maritalStatus} 
+                      onValueChange={(value) => setFormData({ ...formData, maritalStatus: value })}
+                      className="grid grid-cols-2 gap-4"
+                    >
+                      <div>
+                        <RadioGroupItem value="single" id="single" className="peer sr-only" />
+                        <Label
+                          htmlFor="single"
+                          className="flex items-center justify-center rounded-lg border-2 border-muted bg-background p-4 hover-elevate cursor-pointer peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5"
+                          data-testid="radio-single"
+                        >
+                          Single
+                        </Label>
+                      </div>
+                      <div>
+                        <RadioGroupItem value="married" id="married" className="peer sr-only" />
+                        <Label
+                          htmlFor="married"
+                          className="flex items-center justify-center rounded-lg border-2 border-muted bg-background p-4 hover-elevate cursor-pointer peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5"
+                          data-testid="radio-married"
+                        >
+                          Married
+                        </Label>
+                      </div>
+                    </RadioGroup>
                   </div>
-                </div>
-                <div className="text-center">
-                  <p className="text-sm text-muted-foreground mb-2">Monthly Savings</p>
-                  <div className="text-3xl font-bold text-chart-2" data-testid="text-monthly-savings">
-                    ₹<AnimatedCounter 
-                      value={(() => {
-                        const totalAnnualIncome = (parseInt(formData.annualIncome || '0') + parseInt(formData.spouseIncome || '0'));
-                        const monthlyIncome = totalAnnualIncome / 12;
-                        const totalExpenses = (parseInt(formData.monthlyExpenses || '0') + 
-                          parseInt(formData.financialSupport || '0') + 
-                          parseInt(formData.familyEducationExpenses || '0'));
-                        return monthlyIncome - totalExpenses;
-                      })()}
-                      formatter={(value) => formatIndianNumber(value.toFixed(0))}
-                    />
-                  </div>
-                </div>
-              </div>
 
-            </div>
-          )}
-
-          {/* Step 3: Assets */}
-          {currentStep === 3 && (
-            <div className="space-y-6">
-              <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/40 rounded-lg p-4">
-                <h2 className="text-2xl font-semibold mb-1">Assets</h2>
-                <p className="text-sm text-muted-foreground">Fill in the details below. All fields marked with * are required.</p>
-              </div>
-
-              <div className="grid md:grid-cols-2 gap-6 p-6 bg-muted/50 rounded-lg">
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">Total Assets</p>
-                  <p className="text-3xl font-bold text-primary">
-                    ₹{(() => {
-                      const total = (parseInt(formData.realEstateValue || '0') +
-                        parseInt(formData.stocksValue || '0') +
-                        parseInt(formData.mutualFundsValue || '0') +
-                        parseInt(formData.ppfEpfNps || '0') +
-                        parseInt(formData.bankDeposits || '0') +
-                        parseInt(formData.goldAssets || '0'));
-                      return (total / 100000).toFixed(2);
-                    })()}L
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">Net Assets</p>
-                  <p className="text-3xl font-bold text-chart-2">
-                    ₹{(() => {
-                      const total = (parseInt(formData.realEstateValue || '0') +
-                        parseInt(formData.stocksValue || '0') +
-                        parseInt(formData.mutualFundsValue || '0') +
-                        parseInt(formData.ppfEpfNps || '0') +
-                        parseInt(formData.bankDeposits || '0') +
-                        parseInt(formData.goldAssets || '0'));
-                      return (total / 100000).toFixed(2);
-                    })()}L
-                  </p>
-                </div>
-              </div>
-
-              <div className="grid md:grid-cols-2 gap-6">
-                <div>
-                  <Label htmlFor="realEstate">Real Estate Value (₹)</Label>
-                  <Input
-                    id="realEstate"
-                    value={formatIndianNumber(formData.realEstateValue)}
-                    onChange={(e) => setFormData({ ...formData, realEstateValue: parseIndianNumber(e.target.value) })}
-                    placeholder="e.g., 50,00,000"
-                    data-testid="input-real-estate"
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="stocks">Stocks Value (₹)</Label>
-                  <Input
-                    id="stocks"
-                    value={formatIndianNumber(formData.stocksValue)}
-                    onChange={(e) => setFormData({ ...formData, stocksValue: parseIndianNumber(e.target.value) })}
-                    placeholder="e.g., 5,00,000"
-                    data-testid="input-stocks"
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="mutualFunds">Mutual Funds Value (₹)</Label>
-                  <Input
-                    id="mutualFunds"
-                    value={formatIndianNumber(formData.mutualFundsValue)}
-                    onChange={(e) => setFormData({ ...formData, mutualFundsValue: parseIndianNumber(e.target.value) })}
-                    placeholder="e.g., 3,00,000"
-                    data-testid="input-mutual-funds"
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="ppfEpfNps">PPF/EPF/NPS Balance (₹)</Label>
-                  <Input
-                    id="ppfEpfNps"
-                    value={formatIndianNumber(formData.ppfEpfNps)}
-                    onChange={(e) => setFormData({ ...formData, ppfEpfNps: parseIndianNumber(e.target.value) })}
-                    placeholder="e.g., 2,00,000"
-                    data-testid="input-ppf-epf"
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="bankDeposits">Bank Deposits (₹)</Label>
-                  <Input
-                    id="bankDeposits"
-                    value={formatIndianNumber(formData.bankDeposits)}
-                    onChange={(e) => setFormData({ ...formData, bankDeposits: parseIndianNumber(e.target.value) })}
-                    placeholder="e.g., 1,00,000"
-                    data-testid="input-bank-deposits"
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="goldAssets">Gold/Other Assets (₹)</Label>
-                  <Input
-                    id="goldAssets"
-                    value={formatIndianNumber(formData.goldAssets)}
-                    onChange={(e) => setFormData({ ...formData, goldAssets: parseIndianNumber(e.target.value) })}
-                    placeholder="e.g., 50,000"
-                    data-testid="input-gold-assets"
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Step 4: Liabilities */}
-          {currentStep === 4 && (
-            <div className="space-y-6">
-              <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/40 rounded-lg p-4">
-                <h2 className="text-2xl font-semibold mb-1">Liabilities</h2>
-                <p className="text-sm text-muted-foreground">Fill in the details below. All fields marked with * are required.</p>
-              </div>
-
-              <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/40 rounded-lg p-4">
-                <p className="text-sm text-amber-900 dark:text-amber-200">
-                  <Info className="inline h-4 w-4 mr-1" />
-                  Add all your current loans and EMIs. We'll calculate when they'll end and adjust your savings plan accordingly.
-                </p>
-              </div>
-
-              <div className="flex items-center space-x-2 mb-4">
-                <Checkbox
-                  id="hasLoan"
-                  checked={formData.hasLoan}
-                  onCheckedChange={(checked) => setFormData({ ...formData, hasLoan: checked as boolean })}
-                  data-testid="checkbox-has-loan"
-                />
-                <Label htmlFor="hasLoan" className="font-normal">I own my house (No rent payment needed post-retirement)</Label>
-              </div>
-
-              <div className="flex justify-between items-center mb-3">
-                <Label className="text-base font-semibold">Your Loans</Label>
-                <Button variant="outline" size="sm" onClick={addLoan} data-testid="button-add-loan">
-                  <Plus className="h-4 w-4 mr-1" />
-                  Add Loan
-                </Button>
-              </div>
-
-              {formData.loans.length === 0 && (
-                <Card className="p-6 text-center">
-                  <p className="text-sm text-muted-foreground">
-                    No loans added yet. Click "Add Loan" to include your liabilities.
-                  </p>
-                </Card>
-              )}
-
-              {formData.loans.map((loan, index) => (
-                <Card key={index} className="p-4 mb-3">
-                  <div className="flex justify-between items-center mb-3">
-                    <h4 className="font-semibold text-sm">Loan #{index + 1}</h4>
-                    <Button variant="ghost" size="icon" onClick={() => removeLoan(index)} data-testid={`button-remove-loan-${index}`}>
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <Select value={loan.type} onValueChange={(value) => updateLoan(index, "type", value)}>
-                      <SelectTrigger data-testid={`select-loan-type-${index}`}>
-                        <SelectValue placeholder="Loan Type" />
+                  <div>
+                    <Label htmlFor="dependents" className="text-base">How many dependents? (kids, parents, etc.)</Label>
+                    <Select 
+                      value={formData.dependents} 
+                      onValueChange={(value) => setFormData({ ...formData, dependents: value })}
+                    >
+                      <SelectTrigger className="mt-2 h-12 text-lg" data-testid="select-dependents">
+                        <SelectValue placeholder="Select number of dependents" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="home">Home Loan</SelectItem>
-                        <SelectItem value="car">Car Loan</SelectItem>
-                        <SelectItem value="personal">Personal Loan</SelectItem>
-                        <SelectItem value="education">Education Loan</SelectItem>
+                        {[0, 1, 2, 3, 4, 5, 6].map(num => (
+                          <SelectItem key={num} value={num.toString()}>{num}</SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
-                    <Input
-                      placeholder="Loan Amount (₹)"
-                      value={formatIndianNumber(loan.amount)}
-                      onChange={(e) => updateLoan(index, "amount", parseIndianNumber(e.target.value))}
-                      data-testid={`input-loan-amount-${index}`}
-                    />
-                    <Input
-                      placeholder="Monthly EMI (₹)"
-                      value={formatIndianNumber(loan.emi)}
-                      onChange={(e) => updateLoan(index, "emi", parseIndianNumber(e.target.value))}
-                      data-testid={`input-loan-emi-${index}`}
-                    />
-                    <Input
-                      type="number"
-                      placeholder="Tenure (months)"
-                      value={loan.tenure}
-                      onChange={(e) => updateLoan(index, "tenure", e.target.value)}
-                      data-testid={`input-loan-tenure-${index}`}
-                    />
-                    <Input
-                      type="date"
-                      placeholder="Start Date"
-                      value={loan.startDate}
-                      onChange={(e) => updateLoan(index, "startDate", e.target.value)}
-                      data-testid={`input-loan-start-${index}`}
-                    />
-                    <Input
-                      type="number"
-                      placeholder="Interest Rate (%)"
-                      value={loan.interestRate}
-                      onChange={(e) => updateLoan(index, "interestRate", e.target.value)}
-                      data-testid={`input-loan-rate-${index}`}
-                    />
-                  </div>
-                </Card>
-              ))}
-            </div>
-          )}
-
-          {/* Step 5: Goals */}
-          {currentStep === 5 && (
-            <div className="space-y-6">
-              <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/40 rounded-lg p-4">
-                <h2 className="text-2xl font-semibold mb-1">Goals</h2>
-                <p className="text-sm text-muted-foreground">Fill in the details below. All fields marked with * are required.</p>
-              </div>
-
-              <div className="grid md:grid-cols-2 gap-6">
-                <div>
-                  <Label htmlFor="retirementAge">Desired Retirement Age *</Label>
-                  <Input
-                    id="retirementAge"
-                    type="number"
-                    value={formData.retirementAge}
-                    onChange={(e) => setFormData({ ...formData, retirementAge: e.target.value })}
-                    placeholder="e.g., 60"
-                    data-testid="input-retirement-age"
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="expensesAge">Expenses planned until age *</Label>
-                  <Input
-                    id="expensesAge"
-                    type="number"
-                    value={formData.expensesPlannedAge}
-                    onChange={(e) => setFormData({ ...formData, expensesPlannedAge: e.target.value })}
-                    placeholder="e.g., 85"
-                    data-testid="input-expenses-age"
-                  />
-                  <div className="flex items-center gap-2 mt-2 text-sm text-chart-2">
-                    <Heart className="h-4 w-4" />
-                    <span>We hope you live the longest!</span>
                   </div>
                 </div>
-              </div>
+              </motion.div>
+            )}
 
-              <div>
-                <Label htmlFor="expectedExpense">Expected Monthly Expense After Retirement (₹) *</Label>
-                <Input
-                  id="expectedExpense"
-                  value={formatIndianNumber(formData.expectedMonthlyExpense)}
-                  onChange={(e) => setFormData({ ...formData, expectedMonthlyExpense: parseIndianNumber(e.target.value) })}
-                  placeholder="e.g., 75,000"
-                  data-testid="input-expected-expense"
-                />
-                <p className="text-xs text-muted-foreground mt-1">
-                  Today's value, we'll adjust for 6% inflation automatically
-                </p>
-              </div>
-
-              {formData.expectedMonthlyExpense && (
-                <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/40 rounded-lg p-4">
-                  <p className="text-sm text-blue-900 dark:text-blue-200">
-                    <Info className="inline h-4 w-4 mr-1" />
-                    After inflation (@ 6%): Your monthly expense at retirement will be approximately{" "}
-                    <strong>₹{(parseInt(formData.expectedMonthlyExpense) * Math.pow(1.06, parseInt(formData.retirementAge || "60") - parseInt(formData.age || "30"))).toLocaleString('en-IN')}</strong>
-                  </p>
+            {/* Step 2: Money Flow */}
+            {currentStep === 2 && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="space-y-6"
+              >
+                <div className="text-center mb-8">
+                  <div className="w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/40 flex items-center justify-center mx-auto mb-4">
+                    <TrendingUp className="h-8 w-8 text-green-600 dark:text-green-400" />
+                  </div>
+                  <h2 className="text-3xl font-bold mb-2">Your money flow</h2>
+                  <p className="text-muted-foreground">Help us understand your income and savings</p>
                 </div>
-              )}
 
-              <div>
-                <Label htmlFor="lifestyle">Expected Lifestyle After Retirement *</Label>
-                <Select value={formData.expectedLifestyle} onValueChange={(value) => setFormData({ ...formData, expectedLifestyle: value })}>
-                  <SelectTrigger data-testid="select-lifestyle">
-                    <SelectValue placeholder="Select lifestyle" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="luxurious">Luxurious - Premium lifestyle with travel</SelectItem>
-                    <SelectItem value="comfortable">Comfortable - Premium lifestyle with travel</SelectItem>
-                    <SelectItem value="modest">Modest - Simple, peaceful living</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+                <div className="space-y-6">
+                  <div>
+                    <Label htmlFor="monthlyIncome" className="text-base">What's your monthly income? (take-home)</Label>
+                    <Input
+                      id="monthlyIncome"
+                      value={formatIndianNumber(formData.monthlyIncome)}
+                      onChange={(e) => setFormData({ ...formData, monthlyIncome: parseIndianNumber(e.target.value) })}
+                      placeholder="e.g., 1,00,000"
+                      className="mt-2 h-12 text-lg"
+                      data-testid="input-monthly-income"
+                    />
+                    <p className="text-sm text-muted-foreground mt-2">Enter your post-tax monthly income in ₹</p>
+                  </div>
 
-              {formData.retirementAge && formData.age && (
-                <div className="bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-900/40 rounded-lg p-4">
-                  <p className="text-sm text-green-900 dark:text-green-200">
-                    <Info className="inline h-4 w-4 mr-1" />
-                    Planning Horizon: You have <strong>{parseInt(formData.retirementAge) - parseInt(formData.age)} years</strong> until retirement. The earlier you start, the more your corpus can grow through compounding!
-                  </p>
-                </div>
-              )}
-            </div>
-          )}
+                  <div>
+                    <div className="flex justify-between items-center mb-3">
+                      <Label className="text-base">What percentage do you save each month?</Label>
+                      <Badge variant="secondary" className="text-lg font-bold">
+                        {formData.savingsRate}%
+                      </Badge>
+                    </div>
+                    <Slider
+                      value={[formData.savingsRate]}
+                      onValueChange={(value) => setFormData({ ...formData, savingsRate: value[0] })}
+                      min={0}
+                      max={70}
+                      step={5}
+                      className="mt-2"
+                      data-testid="slider-savings-rate"
+                    />
+                    <div className="flex justify-between text-xs text-muted-foreground mt-2">
+                      <span>0%</span>
+                      <span>35%</span>
+                      <span>70%</span>
+                    </div>
+                  </div>
 
-          {/* Step 6: Risk */}
-          {currentStep === 6 && (
-            <div className="space-y-6">
-              <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/40 rounded-lg p-4">
-                <h2 className="text-2xl font-semibold mb-1">Risk</h2>
-                <p className="text-sm text-muted-foreground">Fill in the details below. All fields marked with * are required.</p>
-              </div>
+                  <div>
+                    <div className="flex justify-between items-center mb-3">
+                      <Label className="text-base">Of your expenses, how much is essential?</Label>
+                      <Badge variant="secondary" className="text-lg font-bold">
+                        {formData.essentialExpenseRatio}%
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground mb-3">
+                      Essential = Rent, groceries, utilities, EMIs. Lifestyle = Dining, travel, shopping, entertainment
+                    </p>
+                    <Slider
+                      value={[formData.essentialExpenseRatio]}
+                      onValueChange={(value) => setFormData({ ...formData, essentialExpenseRatio: value[0] })}
+                      min={30}
+                      max={90}
+                      step={5}
+                      className="mt-2"
+                      data-testid="slider-essential-ratio"
+                    />
+                    <div className="flex justify-between text-xs text-muted-foreground mt-2">
+                      <span>30% Essential</span>
+                      <span>60%</span>
+                      <span>90% Essential</span>
+                    </div>
+                  </div>
 
-              <div>
-                <Label className="text-base font-semibold mb-4 block">What's your comfort level with market volatility? *</Label>
-                <RadioGroup
-                  value={formData.riskTolerance}
-                  onValueChange={(value) => setFormData({ ...formData, riskTolerance: value })}
-                  className="space-y-3"
-                >
-                  <Card className={`p-4 cursor-pointer transition-all ${formData.riskTolerance === 'conservative' ? 'ring-2 ring-primary' : ''}`}>
-                    <div className="flex items-start space-x-3">
-                      <RadioGroupItem value="conservative" id="conservative" data-testid="radio-conservative" className="mt-1" />
-                      <div className="flex-1">
-                        <Label htmlFor="conservative" className="font-semibold cursor-pointer">Conservative</Label>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          I prefer stable, low-risk investments. I'm okay with lower returns for peace of mind.
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-2">
-                          Typical Allocation: Equity 30-35%, Debt 50-60%, Gold 5-10%
-                        </p>
+                  {/* Live Calculation */}
+                  {monthlyIncome > 0 && (
+                    <div className="grid md:grid-cols-3 gap-4 p-6 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 rounded-xl border border-green-200 dark:border-green-900 mt-6">
+                      <div className="text-center">
+                        <p className="text-sm text-muted-foreground mb-1">Monthly Savings</p>
+                        <div className="text-2xl font-bold text-green-600 dark:text-green-400" data-testid="text-monthly-savings">
+                          ₹<AnimatedCounter 
+                            value={monthlySavings}
+                            formatter={(value) => formatIndianNumber(value.toFixed(0))}
+                          />
+                        </div>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-sm text-muted-foreground mb-1">Monthly Expense</p>
+                        <div className="text-2xl font-bold text-foreground" data-testid="text-monthly-expense">
+                          ₹<AnimatedCounter 
+                            value={monthlyExpense}
+                            formatter={(value) => formatIndianNumber(value.toFixed(0))}
+                          />
+                        </div>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-sm text-muted-foreground mb-1">Savings Rate</p>
+                        <div className="text-2xl font-bold text-primary" data-testid="text-savings-rate">
+                          {formData.savingsRate}%
+                        </div>
                       </div>
                     </div>
-                  </Card>
+                  )}
+                </div>
+              </motion.div>
+            )}
 
-                  <Card className={`p-4 cursor-pointer transition-all ${formData.riskTolerance === 'moderate' ? 'ring-2 ring-primary' : ''}`}>
-                    <div className="flex items-start space-x-3">
-                      <RadioGroupItem value="moderate" id="moderate" data-testid="radio-moderate" className="mt-1" />
-                      <div className="flex-1">
-                        <Label htmlFor="moderate" className="font-semibold cursor-pointer">Balanced</Label>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          I can handle some market ups and downs for potentially better returns.
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-2">
-                          Typical Allocation: Equity 50-55%, Debt 35-40%, Gold 5-10%
-                        </p>
+            {/* Step 3: Assets & Obligations */}
+            {currentStep === 3 && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="space-y-6"
+              >
+                <div className="text-center mb-8">
+                  <div className="w-16 h-16 rounded-full bg-purple-100 dark:bg-purple-900/40 flex items-center justify-center mx-auto mb-4">
+                    <Building className="h-8 w-8 text-purple-600 dark:text-purple-400" />
+                  </div>
+                  <h2 className="text-3xl font-bold mb-2">What you own & owe</h2>
+                  <p className="text-muted-foreground">Your current financial position</p>
+                </div>
+
+                <div className="space-y-6">
+                  <div>
+                    <Label htmlFor="totalAssets" className="text-base">Total value of all your assets</Label>
+                    <Input
+                      id="totalAssets"
+                      value={formatIndianNumber(formData.totalAssets)}
+                      onChange={(e) => setFormData({ ...formData, totalAssets: parseIndianNumber(e.target.value) })}
+                      placeholder="e.g., 50,00,000"
+                      className="mt-2 h-12 text-lg"
+                      data-testid="input-total-assets"
+                    />
+                    <p className="text-sm text-muted-foreground mt-2">
+                      Include: Property, stocks, mutual funds, PPF, NPS, FD, gold, PF balance, etc.
+                    </p>
+                  </div>
+
+                  <div className="border-t pt-6">
+                    <h3 className="text-lg font-semibold mb-4">Do you have any loans?</h3>
+                    
+                    <div className="space-y-4">
+                      <div>
+                        <Label htmlFor="loanEmi" className="text-base">Total monthly EMI (all loans combined)</Label>
+                        <Input
+                          id="loanEmi"
+                          value={formatIndianNumber(formData.loanEmi)}
+                          onChange={(e) => setFormData({ ...formData, loanEmi: parseIndianNumber(e.target.value) })}
+                          placeholder="e.g., 25,000 (or 0 if no loans)"
+                          className="mt-2 h-12 text-lg"
+                          data-testid="input-loan-emi"
+                        />
+                      </div>
+
+                      {formData.loanEmi && parseInt(parseIndianNumber(formData.loanEmi)) > 0 && (
+                        <div>
+                          <Label htmlFor="loanYearsLeft" className="text-base">How many years until loans are paid off?</Label>
+                          <Input
+                            id="loanYearsLeft"
+                            type="number"
+                            value={formData.loanYearsLeft}
+                            onChange={(e) => setFormData({ ...formData, loanYearsLeft: e.target.value })}
+                            placeholder="e.g., 15"
+                            className="mt-2 h-12 text-lg"
+                            data-testid="input-loan-years"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Summary */}
+                  {(formData.totalAssets || formData.loanEmi) && (
+                    <div className="p-6 bg-gradient-to-br from-purple-50 to-violet-50 dark:from-purple-950/20 dark:to-violet-950/20 rounded-xl border border-purple-200 dark:border-purple-900">
+                      <div className="grid md:grid-cols-2 gap-4">
+                        <div>
+                          <p className="text-sm text-muted-foreground mb-1">Total Assets</p>
+                          <div className="text-2xl font-bold text-purple-600 dark:text-purple-400" data-testid="text-total-assets">
+                            ₹{formatIndianNumber(formData.totalAssets || "0")}
+                          </div>
+                        </div>
+                        <div>
+                          <p className="text-sm text-muted-foreground mb-1">Monthly EMI</p>
+                          <div className="text-2xl font-bold text-foreground" data-testid="text-monthly-emi">
+                            ₹{formatIndianNumber(formData.loanEmi || "0")}
+                          </div>
+                        </div>
                       </div>
                     </div>
-                  </Card>
+                  )}
+                </div>
+              </motion.div>
+            )}
 
-                  <Card className={`p-4 cursor-pointer transition-all ${formData.riskTolerance === 'aggressive' ? 'ring-2 ring-primary' : ''}`}>
-                    <div className="flex items-start space-x-3">
-                      <RadioGroupItem value="aggressive" id="aggressive" data-testid="radio-aggressive" className="mt-1" />
-                      <div className="flex-1">
-                        <Label htmlFor="aggressive" className="font-semibold cursor-pointer">Aggressive</Label>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          I'm comfortable with market volatility and want to maximize long-term growth.
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-2">
-                          Typical Allocation: Equity 70-80%, Debt 15-25%, Gold 5%
-                        </p>
+            {/* Step 4: Dream Retirement */}
+            {currentStep === 4 && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="space-y-6"
+              >
+                <div className="text-center mb-8">
+                  <div className="w-16 h-16 rounded-full bg-orange-100 dark:bg-orange-900/40 flex items-center justify-center mx-auto mb-4">
+                    <Palmtree className="h-8 w-8 text-orange-600 dark:text-orange-400" />
+                  </div>
+                  <h2 className="text-3xl font-bold mb-2">Dream retirement</h2>
+                  <p className="text-muted-foreground">What does freedom look like for you?</p>
+                </div>
+
+                <div className="space-y-6">
+                  <div>
+                    <Label className="text-base mb-3 block">What lifestyle do you want in retirement?</Label>
+                    <RadioGroup 
+                      value={formData.lifestyleChoice} 
+                      onValueChange={(value) => setFormData({ ...formData, lifestyleChoice: value })}
+                      className="grid grid-cols-2 gap-4"
+                    >
+                      <div>
+                        <RadioGroupItem value="modest" id="modest" className="peer sr-only" />
+                        <Label
+                          htmlFor="modest"
+                          className="flex flex-col items-center justify-center rounded-lg border-2 border-muted bg-background p-4 hover-elevate cursor-pointer peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5"
+                          data-testid="radio-modest"
+                        >
+                          <span className="text-lg font-semibold mb-1">Modest</span>
+                          <span className="text-xs text-center text-muted-foreground">Simple living, basic comforts</span>
+                        </Label>
                       </div>
-                    </div>
-                  </Card>
-                </RadioGroup>
-              </div>
+                      <div>
+                        <RadioGroupItem value="comfortable" id="comfortable" className="peer sr-only" />
+                        <Label
+                          htmlFor="comfortable"
+                          className="flex flex-col items-center justify-center rounded-lg border-2 border-muted bg-background p-4 hover-elevate cursor-pointer peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5"
+                          data-testid="radio-comfortable"
+                        >
+                          <span className="text-lg font-semibold mb-1">Comfortable</span>
+                          <span className="text-xs text-center text-muted-foreground">Current lifestyle maintained</span>
+                        </Label>
+                      </div>
+                      <div>
+                        <RadioGroupItem value="luxury" id="luxury" className="peer sr-only" />
+                        <Label
+                          htmlFor="luxury"
+                          className="flex flex-col items-center justify-center rounded-lg border-2 border-muted bg-background p-4 hover-elevate cursor-pointer peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5"
+                          data-testid="radio-luxury"
+                        >
+                          <span className="text-lg font-semibold mb-1">Luxury</span>
+                          <span className="text-xs text-center text-muted-foreground">Premium lifestyle, frequent travel</span>
+                        </Label>
+                      </div>
+                      <div>
+                        <RadioGroupItem value="nomadic" id="nomadic" className="peer sr-only" />
+                        <Label
+                          htmlFor="nomadic"
+                          className="flex flex-col items-center justify-center rounded-lg border-2 border-muted bg-background p-4 hover-elevate cursor-pointer peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5"
+                          data-testid="radio-nomadic"
+                        >
+                          <span className="text-lg font-semibold mb-1">Nomadic</span>
+                          <span className="text-xs text-center text-muted-foreground">Adventure & exploration</span>
+                        </Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
 
-              <div>
-                <Label className="text-base font-semibold mb-4 block">Preferred Asset Mix *</Label>
-                <div className="grid md:grid-cols-3 gap-4">
-                  <Card 
-                    className={`p-4 cursor-pointer transition-all text-center ${formData.preferredAssetMix === 'safety' ? 'ring-2 ring-primary bg-primary/5' : ''}`}
-                    onClick={() => setFormData({ ...formData, preferredAssetMix: 'safety' })}
-                    data-testid="card-safety"
-                  >
-                    <div className="mx-auto mb-3 w-4 h-4 rounded-full border-2 border-primary flex items-center justify-center">
-                      {formData.preferredAssetMix === 'safety' && <div className="w-2 h-2 rounded-full bg-primary" />}
-                    </div>
-                    <Label htmlFor="safety" className="font-semibold cursor-pointer block">Safety First</Label>
-                    <p className="text-xs text-muted-foreground mt-2">More debt and fixed deposits</p>
-                  </Card>
+                  <div>
+                    <Label className="text-base mb-3 block">Where do you plan to retire?</Label>
+                    <Select 
+                      value={formData.retirementLocation} 
+                      onValueChange={(value) => setFormData({ ...formData, retirementLocation: value })}
+                    >
+                      <SelectTrigger className="h-12 text-lg" data-testid="select-retirement-location">
+                        <SelectValue placeholder="Select retirement location" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="current_city">Current city (Metro)</SelectItem>
+                        <SelectItem value="tier2">Tier-2 city (Lower cost)</SelectItem>
+                        <SelectItem value="village">Village/Hometown</SelectItem>
+                        <SelectItem value="abroad">Abroad</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-                  <Card 
-                    className={`p-4 cursor-pointer transition-all text-center ${formData.preferredAssetMix === 'balanced-growth' ? 'ring-2 ring-primary bg-primary/5' : ''}`}
-                    onClick={() => setFormData({ ...formData, preferredAssetMix: 'balanced-growth' })}
-                    data-testid="card-balanced-growth"
-                  >
-                    <div className="mx-auto mb-3 w-4 h-4 rounded-full border-2 border-primary flex items-center justify-center">
-                      {formData.preferredAssetMix === 'balanced-growth' && <div className="w-2 h-2 rounded-full bg-primary" />}
+                  <div>
+                    <div className="flex justify-between items-center mb-3">
+                      <Label className="text-base">How long do you expect to live in retirement?</Label>
+                      <Badge variant="secondary" className="text-lg font-bold">
+                        {formData.longevityYears} years
+                      </Badge>
                     </div>
-                    <Label htmlFor="balanced-growth" className="font-semibold cursor-pointer block">Balanced Growth</Label>
-                    <p className="text-xs text-muted-foreground mt-2">Equal focus on growth and stability</p>
-                  </Card>
-
-                  <Card 
-                    className={`p-4 cursor-pointer transition-all text-center ${formData.preferredAssetMix === 'growth' ? 'ring-2 ring-primary bg-primary/5' : ''}`}
-                    onClick={() => setFormData({ ...formData, preferredAssetMix: 'growth' })}
-                    data-testid="card-growth"
-                  >
-                    <div className="mx-auto mb-3 w-4 h-4 rounded-full border-2 border-primary flex items-center justify-center">
-                      {formData.preferredAssetMix === 'growth' && <div className="w-2 h-2 rounded-full bg-primary" />}
+                    <Slider
+                      value={[formData.longevityYears]}
+                      onValueChange={(value) => setFormData({ ...formData, longevityYears: value[0] })}
+                      min={15}
+                      max={40}
+                      step={5}
+                      className="mt-2"
+                      data-testid="slider-longevity"
+                    />
+                    <div className="flex justify-between text-xs text-muted-foreground mt-2">
+                      <span>15 years</span>
+                      <span>27 years</span>
+                      <span>40 years</span>
                     </div>
-                    <Label htmlFor="growth" className="font-semibold cursor-pointer block">Growth Focused</Label>
-                    <p className="text-xs text-muted-foreground mt-2">Higher equity for maximum returns</p>
-                  </Card>
+                    <p className="text-sm text-muted-foreground mt-2">
+                      Life expectancy is 85 years. Adjust based on your health and family history.
+                    </p>
+                  </div>
                 </div>
-              </div>
+              </motion.div>
+            )}
+
+            {/* Step 5: Risk & Route */}
+            {currentStep === 5 && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="space-y-6"
+              >
+                <div className="text-center mb-8">
+                  <div className="w-16 h-16 rounded-full bg-red-100 dark:bg-red-900/40 flex items-center justify-center mx-auto mb-4">
+                    <Target className="h-8 w-8 text-red-600 dark:text-red-400" />
+                  </div>
+                  <h2 className="text-3xl font-bold mb-2">Your investment DNA</h2>
+                  <p className="text-muted-foreground">Let's understand your risk profile</p>
+                </div>
+
+                <div className="space-y-6">
+                  <div>
+                    <Label className="text-base mb-3 block">
+                      If your portfolio drops 20% in a market crash, you would:
+                    </Label>
+                    <RadioGroup 
+                      value={formData.portfolioDropReaction} 
+                      onValueChange={(value) => setFormData({ ...formData, portfolioDropReaction: value })}
+                      className="space-y-3"
+                    >
+                      <div>
+                        <RadioGroupItem value="sleep_fine" id="sleep_fine" className="peer sr-only" />
+                        <Label
+                          htmlFor="sleep_fine"
+                          className="flex items-start justify-start rounded-lg border-2 border-muted bg-background p-4 hover-elevate cursor-pointer peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5"
+                          data-testid="radio-sleep-fine"
+                        >
+                          <div className="flex-1">
+                            <span className="text-base font-semibold block mb-1">Sleep fine and maybe buy more</span>
+                            <span className="text-sm text-muted-foreground">You understand markets recover over time</span>
+                          </div>
+                        </Label>
+                      </div>
+                      <div>
+                        <RadioGroupItem value="worried" id="worried" className="peer sr-only" />
+                        <Label
+                          htmlFor="worried"
+                          className="flex items-start justify-start rounded-lg border-2 border-muted bg-background p-4 hover-elevate cursor-pointer peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5"
+                          data-testid="radio-worried"
+                        >
+                          <div className="flex-1">
+                            <span className="text-base font-semibold block mb-1">Feel worried but stay invested</span>
+                            <span className="text-sm text-muted-foreground">Volatility bothers you but you won't panic</span>
+                          </div>
+                        </Label>
+                      </div>
+                      <div>
+                        <RadioGroupItem value="panic" id="panic" className="peer sr-only" />
+                        <Label
+                          htmlFor="panic"
+                          className="flex items-start justify-start rounded-lg border-2 border-muted bg-background p-4 hover-elevate cursor-pointer peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5"
+                          data-testid="radio-panic"
+                        >
+                          <div className="flex-1">
+                            <span className="text-base font-semibold block mb-1">Panic and sell everything</span>
+                            <span className="text-sm text-muted-foreground">You can't handle seeing losses</span>
+                          </div>
+                        </Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+
+                  <div className="pt-4 border-t">
+                    <div className="flex justify-between items-center mb-3">
+                      <Label className="text-base">What matters more to you?</Label>
+                      <Badge variant="secondary" className="text-base font-bold">
+                        {formData.incomeVsGrowthPreference < 40 ? 'Regular Income' : 
+                         formData.incomeVsGrowthPreference > 60 ? 'Long-term Growth' : 'Balanced'}
+                      </Badge>
+                    </div>
+                    <Slider
+                      value={[formData.incomeVsGrowthPreference]}
+                      onValueChange={(value) => setFormData({ ...formData, incomeVsGrowthPreference: value[0] })}
+                      min={0}
+                      max={100}
+                      step={10}
+                      className="mt-2"
+                      data-testid="slider-income-growth"
+                    />
+                    <div className="flex justify-between text-xs text-muted-foreground mt-2">
+                      <span>Regular Income</span>
+                      <span>Balanced</span>
+                      <span>Long-term Growth</span>
+                    </div>
+                    <p className="text-sm text-muted-foreground mt-3">
+                      Regular income means steady dividends/interest. Growth means letting money compound for the long run.
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
+            {/* Navigation */}
+            <div className="flex justify-between gap-4 mt-8 pt-6 border-t">
+              <Button
+                variant="outline"
+                onClick={handleBack}
+                disabled={currentStep === 1}
+                data-testid="button-back"
+              >
+                Back
+              </Button>
+              <Button 
+                onClick={handleNext} 
+                data-testid="button-next"
+                disabled={!isStepValid() || createPlanMutation.isPending}
+                className="min-w-40"
+              >
+                {createPlanMutation.isPending ? (
+                  "Creating Your Roadmap..."
+                ) : currentStep === totalSteps ? (
+                  <>
+                    Complete & View Plan
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </>
+                ) : (
+                  <>
+                    Continue
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </>
+                )}
+              </Button>
             </div>
-          )}
-
-          {/* Step 7: Tax */}
-          {currentStep === 7 && (
-            <div className="space-y-6">
-              <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/40 rounded-lg p-4">
-                <h2 className="text-2xl font-semibold mb-1">Tax</h2>
-                <p className="text-sm text-muted-foreground">Fill in the details below. All fields marked with * are required.</p>
-              </div>
-
-              <div className="grid md:grid-cols-2 gap-6">
-                <div>
-                  <Label htmlFor="taxSlab">Current Tax Slab *</Label>
-                  <Select value={formData.currentTaxSlab} onValueChange={(value) => setFormData({ ...formData, currentTaxSlab: value })}>
-                    <SelectTrigger data-testid="select-tax-slab">
-                      <SelectValue placeholder="Select tax slab" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="0-250000">₹0 - ₹2.5L (0%)</SelectItem>
-                      <SelectItem value="250000-500000">₹2.5L - ₹5L (5%)</SelectItem>
-                      <SelectItem value="500000-750000">₹5L - ₹7.5L (10%)</SelectItem>
-                      <SelectItem value="750000-1000000">₹7.5L - ₹10L (15%)</SelectItem>
-                      <SelectItem value="1000000-1250000">₹10L - ₹12.5L (20%)</SelectItem>
-                      <SelectItem value="1250000-1500000">₹12.5L - ₹15L (25%)</SelectItem>
-                      <SelectItem value="1500000+">₹15L+ (30%)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <Label htmlFor="taxRegime">Preferred Tax Regime *</Label>
-                  <Select value={formData.preferredTaxRegime} onValueChange={(value) => setFormData({ ...formData, preferredTaxRegime: value })}>
-                    <SelectTrigger data-testid="select-tax-regime">
-                      <SelectValue placeholder="Select tax regime" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="new">New Regime (lower rates, no deductions)</SelectItem>
-                      <SelectItem value="old">Old Regime (with 80C, HRA, etc.)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/40 rounded-lg p-4">
-                <p className="text-sm text-amber-900 dark:text-amber-200">
-                  <Info className="inline h-4 w-4 mr-1" />
-                  <strong>Tax Tip:</strong> If you're in the old regime, maximize deductions under Section 80C (₹1.5L), 80D for health insurance, and NPS (₹50k) to reduce tax liability.
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* Navigation */}
-          <div className="flex justify-between gap-4 mt-8 pt-6 border-t">
-            <Button
-              variant="outline"
-              onClick={handleBack}
-              disabled={currentStep === 1}
-              data-testid="button-back"
-            >
-              Back
-            </Button>
-            <Button 
-              onClick={handleNext} 
-              data-testid="button-next"
-              disabled={createPlanMutation.isPending}
-            >
-              {createPlanMutation.isPending ? "Creating Plan..." : currentStep === totalSteps ? "Complete & View Plan" : "Continue"}
-            </Button>
-          </div>
-        </Card>
+          </Card>
+        )}
       </main>
     </div>
   );
