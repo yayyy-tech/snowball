@@ -6,14 +6,17 @@ Snowball is a retirement planning web application for Indian users aged 25-40. I
 ## Recent Changes (October 2025)
 
 ### Critical Bug Fixes: SIP Calculation & Investment Recommendations (October 20, 2025 - Latest)
-Fixed two critical bugs affecting user experience in the 5-step onboarding flow:
+Fixed critical bugs affecting the 5-step onboarding flow that caused SIP to show ₹0 and missing fund recommendations:
 
-1. **Bug Fix: SIP Showing ₹0**:
-   - **Root Cause**: server/calculations.ts line 136 was incorrectly using `postRetirementExpense` (retirement expenses) as current expenses, causing negative or zero monthly savings calculation
-   - **Fix**: Now checks if `savingsRate` exists (5-step flow) and calculates: `monthlySavings = monthlyIncome * (savingsRate / 100)`
-   - **Backward Compatibility**: Falls back to legacy calculation for old plans without savingsRate field
-   - **Impact**: SIP now displays correct non-zero values (e.g., ₹36K for 35% savings rate on ₹180K income)
-   - **Logging**: Added explicit logging to distinguish between savingsRate-based vs legacy calculation
+1. **Bug Fix: Loan Double-Counting Leading to ₹0 SIP**:
+   - **Root Cause**: When users entered their savings rate in the 5-step flow, the system was subtracting loan EMI again, making monthly savings negative (e.g., 25% of ₹130K = ₹32.5K, then ₹32.5K - ₹50K EMI = -₹17.5K)
+   - **Why This Was Wrong**: When someone says "I save 25% of my income," that's AFTER paying all expenses including loans. We were double-counting the loan.
+   - **Fix**: Implemented dual-path logic in server/calculations.ts:
+     - **5-Step Flow (savingsRate exists)**: `monthlySavings = monthlyIncome * (savingsRate / 100)` - DO NOT subtract loan EMI (already accounted for)
+     - **Legacy Flow (no savingsRate)**: `monthlySavings = (income - expenses - tax) / 12` - THEN subtract loan EMI
+   - **Backward Compatibility**: Legacy plans without savingsRate field continue to work as before
+   - **Impact**: SIP now displays correct positive values even for users with loans (e.g., ₹26K for 25% savings on ₹130K income with ₹50K loan)
+   - **Logging**: Added explicit logging to distinguish calculation paths and loan handling
 
 2. **Bug Fix: Only Gold Recommendations Showing**:
    - **Root Cause**: server/fundRecommendations.ts returned empty arrays when `totalAmount <= 0`, causing equity and debt categories to disappear
@@ -22,13 +25,14 @@ Fixed two critical bugs affecting user experience in the 5-step onboarding flow:
    - **Impact**: All three categories (Equity, Debt, Gold) now show personalized fund recommendations regardless of SIP amount
    - **Logging**: Added logging when using minimum amount for recommendations
 
-3. **Test Results** (End-to-End Verification):
-   - Test Profile: Age 32, Income ₹180K, Savings 35%, Assets ₹8L, Moderate Risk
-   - ✅ Monthly SIP displays ₹36K (non-zero)
-   - ✅ Equity Mutual Funds: 3+ recommendations with allocation details
+3. **Test Results** (End-to-End Verification with Loan):
+   - Test Profile: Age 30, Income ₹130K, Savings 25%, Loan EMI ₹50K, Assets ₹5L, Moderate Risk
+   - ✅ Monthly SIP displays ₹26K (positive, not ₹0!)
+   - ✅ Savings correctly calculated: 25% × ₹130K = ₹32.5K (loan NOT subtracted)
+   - ✅ Equity Mutual Funds: 5 recommendations with allocation details
    - ✅ Debt Funds: Multiple recommendations with expected returns
    - ✅ Gold ETFs: Recommendations present
-   - ✅ Freedom Score: 42/100 (calculated correctly)
+   - ✅ Freedom Score: 36/100 (calculated correctly)
    - ✅ All dashboard cards rendering without errors
 
 ### 5-Step Conversational Onboarding with AI Inference & Freedom Score (October 20, 2025)
