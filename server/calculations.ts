@@ -1,5 +1,14 @@
 import { type RetirementPlan, type CalculatedPlan } from "@shared/schema";
 import { generateCompleteRecommendations, type RiskAppetite, type GrowthPreference } from "./fundRecommendations";
+import { 
+  calculateFreedomScore, 
+  calculateRiskScore, 
+  getAdviceBotTriggers,
+  getAssetAllocationByRiskScore,
+  inferMonthlyExpense,
+  getReplacementRatio,
+  getCityColiAdjustment
+} from "./aiInference";
 
 const INFLATION_RATE = 0.06; // Fixed 6% inflation
 const SIP_STEP_UP = 0.07; // 7% annual step-up
@@ -80,10 +89,14 @@ function getBlendedReturns(allocation: { equity: number; debt: number; gold: num
 export function calculateRetirementPlan(plan: RetirementPlan): CalculatedPlan {
   console.log('[CALC DEBUG] ===== USING FIXED SIP CALCULATION (Oct 15, 2025) =====');
   const yearsToRetirement = plan.retirementAge - plan.currentAge;
-  const yearsInRetirement = LIFE_EXPECTANCY - plan.retirementAge;
+  const yearsInRetirement = plan.longevityYears || (LIFE_EXPECTANCY - plan.retirementAge);
+  
+  // Handle null/missing values with defaults
+  const postRetirementExpense = plan.postRetirementMonthlyExpense || inferMonthlyExpense(plan.monthlyIncome, plan.dependents || 0);
+  const riskTolerance = plan.riskTolerance || 'moderate';
   
   // Calculate monthly expense at retirement with inflation
-  const monthlyExpenseAtRetirement = plan.postRetirementMonthlyExpense * Math.pow(1 + INFLATION_RATE, yearsToRetirement);
+  const monthlyExpenseAtRetirement = postRetirementExpense * Math.pow(1 + INFLATION_RATE, yearsToRetirement);
   
   // Calculate corpus needed using annuity formula
   const annualExpenseAtRetirement = monthlyExpenseAtRetirement * 12;
@@ -109,7 +122,7 @@ export function calculateRetirementPlan(plan: RetirementPlan): CalculatedPlan {
     (plan.bankDeposits || 0) + (plan.goldAssets || 0);
   
   // Asset allocation
-  const assetAllocation = getAssetAllocation(plan.currentAge, plan.riskTolerance, plan.preferredAssetMix);
+  const assetAllocation = getAssetAllocation(plan.currentAge, riskTolerance, plan.preferredAssetMix || 'balanced-growth');
   const blendedReturns = getBlendedReturns(assetAllocation);
   
   // Project current assets to retirement
@@ -120,7 +133,7 @@ export function calculateRetirementPlan(plan: RetirementPlan): CalculatedPlan {
   const spouseAnnualIncome = (plan.spouseWorking && plan.spouseIncome) ? plan.spouseIncome : 0;
   const totalAnnualIncome = primaryAnnualIncome + spouseAnnualIncome;
   
-  const annualExpense = plan.postRetirementMonthlyExpense * 12; // Assuming current expense same as retirement
+  const annualExpense = postRetirementExpense * 12; // Assuming current expense same as retirement
   const annualTax = calculateTax(totalAnnualIncome);
   const savingsBeforeLoan = totalAnnualIncome - annualExpense - annualTax;
   
@@ -249,14 +262,47 @@ export function calculateRetirementPlan(plan: RetirementPlan): CalculatedPlan {
   // Investment recommendations using dynamic fund engine
   const investmentRecommendations = getDynamicInvestmentRecommendations(
     assetAllocation, 
-    plan.riskTolerance,
+    riskTolerance,
     plan.currentAge,
     yearsToRetirement,
     sipAmount,
-    plan.retirementLifestyle,
+    plan.retirementLifestyle || plan.lifestyleChoice || 'comfortable',
     plan.retirementAge,
-    plan.postRetirementMonthlyExpense
+    postRetirementExpense
   );
+  
+  // Calculate Freedom Score using AI inference
+  const riskScore = plan.riskScore || calculateRiskScore(
+    plan.portfolioDropReaction || 'worried',
+    plan.incomeVsGrowthPreference || 50
+  );
+  
+  const savingsRate = plan.savingsRate || Math.round((monthlySavings / plan.monthlyIncome) * 100);
+  
+  const freedomScore = calculateFreedomScore({
+    currentAge: plan.currentAge,
+    retirementAge: plan.retirementAge,
+    monthlyIncome: plan.monthlyIncome,
+    savingsRate,
+    totalAssets: plan.totalAssets || totalAssets,
+    postRetirementMonthlyExpense: postRetirementExpense,
+    longevityYears: yearsInRetirement,
+    riskScore,
+  });
+  
+  // Get advice bot triggers for contextual nudges
+  const adviceTriggers = getAdviceBotTriggers({
+    freedomScore,
+    savingsRate,
+    loanEmi: plan.loanEmi || (plan.hasHomeLoan ? plan.homeLoanEmi || 0 : 0),
+    monthlyIncome: plan.monthlyIncome,
+    retirementAge: plan.retirementAge,
+    currentAge: plan.currentAge,
+    riskScore,
+    lifestyleChoice: plan.lifestyleChoice || plan.retirementLifestyle || 'comfortable',
+  });
+  
+  console.log(`[FREEDOM SCORE] Calculated Freedom Score: ${freedomScore}, Advice Triggers: ${adviceTriggers.join(', ')}`);
   
   return {
     yearsToRetirement,
@@ -279,6 +325,9 @@ export function calculateRetirementPlan(plan: RetirementPlan): CalculatedPlan {
     additionalSavingsAfterLoan: additionalSavingsAfterLoan ? Math.round(additionalSavingsAfterLoan) : undefined,
     assetAllocation,
     investmentRecommendations,
+    freedomScore,
+    riskScore,
+    adviceTriggers,
   };
 }
 

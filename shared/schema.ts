@@ -171,6 +171,10 @@ export interface CalculatedPlan {
       allocation: number;
       returns: string;
       risk: string;
+      reason?: string;
     }[];
   }[];
+  freedomScore: number;
+  riskScore: number;
+  adviceTriggers: string[];
 }
