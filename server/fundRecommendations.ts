@@ -216,8 +216,18 @@ function generateReasoning(
 
 // Main recommendation function
 export function generateFundRecommendations(input: RecommendationInput): RecommendationOutput {
-  // Handle case where no SIP is needed (existing assets cover corpus)
-  if (input.totalAmount <= 0) {
+  // Use minimum viable amount for recommendations if actual amount is too small
+  // This ensures users always get fund recommendations even with small SIPs
+  const MIN_RECOMMENDATION_AMOUNT = 50000; // ₹50K total investment over period
+  const effectiveAmount = Math.max(input.totalAmount, MIN_RECOMMENDATION_AMOUNT);
+  
+  // Log if we're using minimum amount
+  if (input.totalAmount < MIN_RECOMMENDATION_AMOUNT && input.totalAmount > 0) {
+    console.log(`[FUND RECS] Using minimum amount ₹${MIN_RECOMMENDATION_AMOUNT.toLocaleString('en-IN')} for recommendations (actual: ₹${input.totalAmount.toLocaleString('en-IN')})`);
+  }
+  
+  // Only return empty if amount is exactly 0 (user chose not to invest)
+  if (input.totalAmount === 0) {
     return {
       recommendedFunds: [],
       totalAllocated: "₹0",
@@ -233,8 +243,9 @@ export function generateFundRecommendations(input: RecommendationInput): Recomme
   const availableFunds = input.fundType === "debt" ? debtFunds : 
     [...largeCapFunds, ...flexiCapFunds, ...smallCapFunds];
 
-  // Select funds and calculate allocations
-  const { funds, allocations } = selectFunds(input, availableFunds);
+  // Select funds and calculate allocations using effective amount
+  const effectiveInput = { ...input, totalAmount: effectiveAmount };
+  const { funds, allocations } = selectFunds(effectiveInput, availableFunds);
 
   if (funds.length === 0) {
     throw new Error("No suitable funds found for the given criteria");
@@ -261,9 +272,9 @@ export function generateFundRecommendations(input: RecommendationInput): Recomme
     recommendedFunds: recommendations,
     totalAllocated: formatIndianCurrency(totalAllocated),
     allocationSummary: {
-      lowRisk: formatIndianCurrency(input.totalAmount * strategy.low),
-      moderateRisk: formatIndianCurrency(input.totalAmount * strategy.moderate),
-      highRisk: formatIndianCurrency(input.totalAmount * strategy.high)
+      lowRisk: formatIndianCurrency(effectiveAmount * strategy.low),
+      moderateRisk: formatIndianCurrency(effectiveAmount * strategy.moderate),
+      highRisk: formatIndianCurrency(effectiveAmount * strategy.high)
     }
   };
 }

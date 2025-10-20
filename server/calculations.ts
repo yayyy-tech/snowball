@@ -132,12 +132,22 @@ export function calculateRetirementPlan(plan: RetirementPlan): CalculatedPlan {
   const primaryAnnualIncome = plan.monthlyIncome * 12;
   const spouseAnnualIncome = (plan.spouseWorking && plan.spouseIncome) ? plan.spouseIncome : 0;
   const totalAnnualIncome = primaryAnnualIncome + spouseAnnualIncome;
-  
-  const annualExpense = postRetirementExpense * 12; // Assuming current expense same as retirement
   const annualTax = calculateTax(totalAnnualIncome);
-  const savingsBeforeLoan = totalAnnualIncome - annualExpense - annualTax;
   
-  let monthlySavings = savingsBeforeLoan / 12;
+  // NEW: Calculate monthlySavings from savingsRate if available (5-step flow)
+  // OLD: Fall back to income - expenses - tax for backward compatibility
+  let monthlySavings: number;
+  if (plan.savingsRate !== null && plan.savingsRate !== undefined) {
+    // Use savings rate from 5-step flow (more accurate)
+    monthlySavings = plan.monthlyIncome * (plan.savingsRate / 100);
+    console.log(`[SAVINGS CALC] Using savingsRate: ${plan.savingsRate}% of ₹${plan.monthlyIncome.toLocaleString('en-IN')} = ₹${Math.round(monthlySavings).toLocaleString('en-IN')}`);
+  } else {
+    // Backward compatibility: Calculate from income - expenses - tax
+    const annualExpense = postRetirementExpense * 12;
+    const savingsBeforeLoan = totalAnnualIncome - annualExpense - annualTax;
+    monthlySavings = savingsBeforeLoan / 12;
+    console.log(`[SAVINGS CALC] Using legacy calculation: (₹${totalAnnualIncome.toLocaleString('en-IN')} - ₹${annualExpense.toLocaleString('en-IN')} - ₹${annualTax.toLocaleString('en-IN')}) / 12 = ₹${Math.round(monthlySavings).toLocaleString('en-IN')}`);
+  }
   let loanEndYear: number | undefined;
   let additionalSavingsAfterLoan: number | undefined;
   
