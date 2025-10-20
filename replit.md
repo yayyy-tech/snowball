@@ -5,7 +5,33 @@ Snowball is a retirement planning web application for Indian users aged 25-40. I
 
 ## Recent Changes (October 2025)
 
-### 5-Step Conversational Onboarding with AI Inference & Freedom Score (October 20, 2025 - Latest)
+### Critical Bug Fixes: SIP Calculation & Investment Recommendations (October 20, 2025 - Latest)
+Fixed two critical bugs affecting user experience in the 5-step onboarding flow:
+
+1. **Bug Fix: SIP Showing ₹0**:
+   - **Root Cause**: server/calculations.ts line 136 was incorrectly using `postRetirementExpense` (retirement expenses) as current expenses, causing negative or zero monthly savings calculation
+   - **Fix**: Now checks if `savingsRate` exists (5-step flow) and calculates: `monthlySavings = monthlyIncome * (savingsRate / 100)`
+   - **Backward Compatibility**: Falls back to legacy calculation for old plans without savingsRate field
+   - **Impact**: SIP now displays correct non-zero values (e.g., ₹36K for 35% savings rate on ₹180K income)
+   - **Logging**: Added explicit logging to distinguish between savingsRate-based vs legacy calculation
+
+2. **Bug Fix: Only Gold Recommendations Showing**:
+   - **Root Cause**: server/fundRecommendations.ts returned empty arrays when `totalAmount <= 0`, causing equity and debt categories to disappear
+   - **Fix**: Implemented minimum viable amount (₹50K) for generating recommendations even when actual investment amounts are small
+   - **Logic**: Only returns empty if totalAmount is exactly 0 (user chose not to invest)
+   - **Impact**: All three categories (Equity, Debt, Gold) now show personalized fund recommendations regardless of SIP amount
+   - **Logging**: Added logging when using minimum amount for recommendations
+
+3. **Test Results** (End-to-End Verification):
+   - Test Profile: Age 32, Income ₹180K, Savings 35%, Assets ₹8L, Moderate Risk
+   - ✅ Monthly SIP displays ₹36K (non-zero)
+   - ✅ Equity Mutual Funds: 3+ recommendations with allocation details
+   - ✅ Debt Funds: Multiple recommendations with expected returns
+   - ✅ Gold ETFs: Recommendations present
+   - ✅ Freedom Score: 42/100 (calculated correctly)
+   - ✅ All dashboard cards rendering without errors
+
+### 5-Step Conversational Onboarding with AI Inference & Freedom Score (October 20, 2025)
 Complete redesign of the onboarding experience and dashboard with AI-powered insights:
 
 1. **New 5-Step Conversational Flow** (reduced from 7 steps):
