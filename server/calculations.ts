@@ -137,25 +137,38 @@ export function calculateRetirementPlan(plan: RetirementPlan): CalculatedPlan {
   // NEW: Calculate monthlySavings from savingsRate if available (5-step flow)
   // OLD: Fall back to income - expenses - tax for backward compatibility
   let monthlySavings: number;
-  if (plan.savingsRate !== null && plan.savingsRate !== undefined) {
+  let loanEndYear: number | undefined;
+  let additionalSavingsAfterLoan: number | undefined;
+  const usingSavingsRate = plan.savingsRate !== null && plan.savingsRate !== undefined;
+  
+  if (usingSavingsRate) {
     // Use savings rate from 5-step flow (more accurate)
-    monthlySavings = plan.monthlyIncome * (plan.savingsRate / 100);
-    console.log(`[SAVINGS CALC] Using savingsRate: ${plan.savingsRate}% of ₹${plan.monthlyIncome.toLocaleString('en-IN')} = ₹${Math.round(monthlySavings).toLocaleString('en-IN')}`);
+    // IMPORTANT: Savings rate is NET of all expenses including loans
+    // DO NOT subtract loan EMI again - it's already accounted for
+    const savingsRate = plan.savingsRate!; // Safe: checked above
+    monthlySavings = plan.monthlyIncome * (savingsRate / 100);
+    console.log(`[SAVINGS CALC] Using savingsRate: ${savingsRate}% of ₹${plan.monthlyIncome.toLocaleString('en-IN')} = ₹${Math.round(monthlySavings).toLocaleString('en-IN')} (NET of all expenses including loans)`);
+    
+    // Track loan info for projection purposes only (not for reducing savings)
+    if (plan.hasHomeLoan && plan.homeLoanEmi && plan.homeLoanTenure) {
+      loanEndYear = Math.min(plan.homeLoanTenure, yearsToRetirement);
+      additionalSavingsAfterLoan = plan.homeLoanEmi;
+      console.log(`[LOAN INFO] User has loan EMI ₹${plan.homeLoanEmi.toLocaleString('en-IN')} but NOT subtracting (already in savings rate)`);
+    }
   } else {
     // Backward compatibility: Calculate from income - expenses - tax
     const annualExpense = postRetirementExpense * 12;
     const savingsBeforeLoan = totalAnnualIncome - annualExpense - annualTax;
     monthlySavings = savingsBeforeLoan / 12;
     console.log(`[SAVINGS CALC] Using legacy calculation: (₹${totalAnnualIncome.toLocaleString('en-IN')} - ₹${annualExpense.toLocaleString('en-IN')} - ₹${annualTax.toLocaleString('en-IN')}) / 12 = ₹${Math.round(monthlySavings).toLocaleString('en-IN')}`);
-  }
-  let loanEndYear: number | undefined;
-  let additionalSavingsAfterLoan: number | undefined;
-  
-  // Handle loan EMI
-  if (plan.hasHomeLoan && plan.homeLoanEmi && plan.homeLoanTenure) {
-    monthlySavings = monthlySavings - plan.homeLoanEmi;
-    loanEndYear = Math.min(plan.homeLoanTenure, yearsToRetirement);
-    additionalSavingsAfterLoan = plan.homeLoanEmi;
+    
+    // Legacy path: Subtract loan EMI from calculated savings
+    if (plan.hasHomeLoan && plan.homeLoanEmi && plan.homeLoanTenure) {
+      monthlySavings = monthlySavings - plan.homeLoanEmi;
+      loanEndYear = Math.min(plan.homeLoanTenure, yearsToRetirement);
+      additionalSavingsAfterLoan = plan.homeLoanEmi;
+      console.log(`[LOAN DEDUCTION] Subtracting loan EMI ₹${plan.homeLoanEmi.toLocaleString('en-IN')} from savings (legacy path)`);
+    }
   }
   
   // Calculate SIP with step-up using proper formula
