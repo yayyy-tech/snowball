@@ -3,7 +3,6 @@ import { ThemeToggle } from "./ThemeToggle";
 import { useLocation } from "wouter";
 import { Snowflake, LogOut, User as UserIcon } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import type { User } from "@shared/schema";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,7 +14,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export function Header() {
   const [location, setLocation] = useLocation();
-  const { isAuthenticated, user } = useAuth() as { isAuthenticated: boolean; user: User | undefined };
+  const { isAuthenticated, user } = useAuth();
 
   const handleLogout = () => {
     window.location.href = "/api/logout";
