@@ -11,17 +11,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication (Google login, GitHub, etc.)
   await setupAuth(app);
 
-  // Auth routes - disabled for now
-  app.get("/api/auth/user", async (req: any, res) => {
-    res.json({ id: "anonymous", email: null, firstName: "Guest", lastName: "User" });
+  // Auth route - returns logged-in user data
+  app.get("/api/auth/user", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      res.json(user);
+    } catch (error) {
+      console.error("Error fetching user:", error);
+      res.status(500).json({ message: "Failed to fetch user" });
+    }
   });
 
-  // Create a new retirement plan
-  app.post("/api/retirement-plans", async (req, res) => {
+  // Create a new retirement plan (protected - requires login)
+  app.post("/api/retirement-plans", isAuthenticated, async (req: any, res) => {
     try {
+      const userId = req.user.claims.sub;
       const validatedData = insertRetirementPlanSchema.parse(req.body);
       
-      const plan = await storage.createRetirementPlan(validatedData);
+      // Associate plan with logged-in user
+      const plan = await storage.createRetirementPlan({
+        ...validatedData,
+        userId,
+      });
       
       // Calculate retirement plan
       const calculatedPlan = calculateRetirementPlan(plan);
@@ -41,13 +56,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get a retirement plan by ID
-  app.get("/api/retirement-plans/:id", async (req, res) => {
+  // Get a retirement plan by ID (protected - must be owner)
+  app.get("/api/retirement-plans/:id", isAuthenticated, async (req: any, res) => {
     try {
+      const userId = req.user.claims.sub;
       const plan = await storage.getRetirementPlan(req.params.id);
       
       if (!plan) {
         return res.status(404).json({ error: "Retirement plan not found" });
+      }
+      
+      // Ensure user can only access their own plan
+      if (plan.userId !== userId) {
+        return res.status(403).json({ error: "Forbidden: You can only access your own retirement plans" });
       }
       
       res.json(plan);
@@ -57,9 +78,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Update a retirement plan
-  app.put("/api/retirement-plans/:id", async (req, res) => {
+  // Update a retirement plan (protected - must be owner)
+  app.put("/api/retirement-plans/:id", isAuthenticated, async (req: any, res) => {
     try {
+      const userId = req.user.claims.sub;
+      
+      // First check if plan exists and user owns it
+      const existingPlan = await storage.getRetirementPlan(req.params.id);
+      if (!existingPlan) {
+        return res.status(404).json({ error: "Retirement plan not found" });
+      }
+      
+      if (existingPlan.userId !== userId) {
+        return res.status(403).json({ error: "Forbidden: You can only update your own retirement plans" });
+      }
+      
       const validatedData = insertRetirementPlanSchema.partial().parse(req.body);
       
       await storage.updateRetirementPlan(req.params.id, validatedData);
@@ -148,13 +181,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // GPT-powered AI recommendations
-  app.get("/api/gpt-recommendations/:planId", async (req, res) => {
+  // GPT-powered AI recommendations (protected - must own plan)
+  app.get("/api/gpt-recommendations/:planId", isAuthenticated, async (req: any, res) => {
     try {
+      const userId = req.user.claims.sub;
       const plan = await storage.getRetirementPlan(req.params.planId);
       
       if (!plan) {
         return res.status(404).json({ error: "Retirement plan not found" });
+      }
+      
+      // Ensure user can only get recommendations for their own plan
+      if (plan.userId !== userId) {
+        return res.status(403).json({ error: "Forbidden: You can only access your own retirement plans" });
       }
       
       const gptRecommendations = await generateGPTRecommendations(plan);
