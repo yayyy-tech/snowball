@@ -5,7 +5,48 @@ Snowball is a retirement planning web application for Indian users aged 25-40. I
 
 ## Recent Changes (October 2025)
 
-### Critical Bug Fixes: SIP Calculation & Investment Recommendations (October 20, 2025 - Latest)
+### Authentication System Implementation (October 21, 2025 - Latest)
+Implemented complete authentication system using Replit Auth with Google/GitHub/email login:
+
+1. **Auth-Based Routing**:
+   - **Unauthenticated Users**: See Landing page with "Sign In" button; can access public routes (/, /how-it-works, /about-us)
+   - **Loading State**: Centered loading spinner while checking authentication status
+   - **Authenticated Users**: Redirected to Onboarding or Dashboard; see user avatar menu in Header
+   - **NotFound Handling**: Both authenticated and unauthenticated users properly see NotFound page for unmatched routes
+
+2. **Header Component**:
+   - **Logged-out**: Shows "Sign In" button that redirects to /api/login (OIDC flow)
+   - **Logged-in**: Shows user avatar with dropdown menu containing:
+     - User profile info (name, email)
+     - Dashboard link
+     - Log Out button
+   - Properly typed with User type from schema
+
+3. **useAuth Hook**:
+   - Properly typed with `useQuery<User>` for type safety
+   - Uses custom `queryFn` with `on401: "returnNull"` to handle 401 responses gracefully
+   - Returns: `{ user, isLoading, isAuthenticated }`
+   - No stuck loading states - treats 401 as "not authenticated" rather than error
+
+4. **Protected API Routes**:
+   - All `/api/retirement-plans/*` endpoints require authentication
+   - Plans are associated with logged-in users via `userId` foreign key
+   - Users can only access their own retirement plans
+
+5. **Three-State Router** (client/src/App.tsx):
+   - **isLoading=true**: Shows centered loading spinner
+   - **isLoading=false, !isAuthenticated**: Shows Landing/public pages
+   - **isLoading=false, isAuthenticated**: Shows Onboarding/Dashboard
+
+6. **Test Results**:
+   - Complete auth flow tested end-to-end ✓
+   - Sign In → OIDC login → Onboarding → Dashboard ✓
+   - User menu shows correct profile data ✓
+   - Log Out → Landing page ✓
+   - No flashing between states ✓
+   - NotFound properly renders for unmatched routes ✓
+
+### Critical Bug Fixes: SIP Calculation & Investment Recommendations (October 20, 2025)
 Fixed critical bugs affecting the 5-step onboarding flow that caused SIP to show ₹0 and missing fund recommendations:
 
 1. **Bug Fix: Loan Double-Counting Leading to ₹0 SIP**:
