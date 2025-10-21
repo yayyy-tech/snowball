@@ -35,7 +35,7 @@ function Router() {
         <Route path="/" component={Landing} />
         <Route path="/how-it-works" component={HowItWorks} />
         <Route path="/about-us" component={AboutUs} />
-        <Route component={Landing} />
+        <Route component={NotFound} />
       </Switch>
     );
   }
