@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { ExitIntentModal } from "@/components/ExitIntentModal";
+import { useAuth } from "@/hooks/useAuth";
 import Landing from "@/pages/Landing";
 import Onboarding from "@/pages/Onboarding";
 import Dashboard from "@/pages/Dashboard";
@@ -13,9 +14,24 @@ import AboutUs from "@/pages/AboutUs";
 import NotFound from "@/pages/not-found";
 
 function Router() {
+  const { isAuthenticated, isLoading } = useAuth();
+
+  // Show landing page while loading or if not authenticated
+  if (isLoading || !isAuthenticated) {
+    return (
+      <Switch>
+        <Route path="/" component={Landing} />
+        <Route path="/how-it-works" component={HowItWorks} />
+        <Route path="/about-us" component={AboutUs} />
+        <Route component={Landing} />
+      </Switch>
+    );
+  }
+
+  // Show authenticated routes
   return (
     <Switch>
-      <Route path="/" component={Landing} />
+      <Route path="/" component={Onboarding} />
       <Route path="/onboarding" component={Onboarding} />
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/how-it-works" component={HowItWorks} />
