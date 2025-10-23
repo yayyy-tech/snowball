@@ -177,4 +177,6 @@ export interface CalculatedPlan {
   freedomScore: number;
   riskScore: number;
   adviceTriggers: string[];
+  assetCoveragePercentage: number;
+  hasSubstantialAssets: boolean;
 }

@@ -9,8 +9,11 @@ import type { RetirementPlan, CalculatedPlan } from "@shared/schema";
 import { AnimatedCounter } from "@/components/AnimatedCounter";
 import { motion } from "framer-motion";
 import { AdviceBot } from "@/components/AdviceBot";
+import { useToast } from "@/hooks/use-toast";
+import { useEffect } from "react";
 
 export default function Dashboard() {
+  const { toast } = useToast();
   
   // Get planId from query parameters
   const params = new URLSearchParams(window.location.search);
@@ -21,6 +24,21 @@ export default function Dashboard() {
     queryKey: [`/api/retirement-plans/${planId}`],
     enabled: !!planId,
   });
+  
+  // Show substantial assets notification once when data loads
+  useEffect(() => {
+    if (plan?.calculatedPlan) {
+      const calc = plan.calculatedPlan as CalculatedPlan;
+      if (calc.hasSubstantialAssets) {
+        toast({
+          title: "Excellent Financial Position!",
+          description: `Your existing assets cover ${calc.assetCoveragePercentage}% of your retirement corpus. The recommended SIP will build an even stronger cushion for your golden years.`,
+          duration: 8000,
+        });
+      }
+    }
+    // Trigger when hasSubstantialAssets flag changes, not just on plan ID change
+  }, [plan?.calculatedPlan?.hasSubstantialAssets, plan?.calculatedPlan?.assetCoveragePercentage, toast]);
 
   if (!planId) {
     return (
@@ -360,7 +378,7 @@ export default function Dashboard() {
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Current Monthly Expense:</span>
-                  <span className="font-semibold">₹{plan.postRetirementMonthlyExpense.toLocaleString('en-IN')}</span>
+                  <span className="font-semibold">₹{(plan.postRetirementMonthlyExpense || 0).toLocaleString('en-IN')}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Inflation Rate Used:</span>

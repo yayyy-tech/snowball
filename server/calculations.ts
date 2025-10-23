@@ -190,10 +190,22 @@ export function calculateRetirementPlan(plan: RetirementPlan): CalculatedPlan {
     sipCalculationSource = 'gap-based';
     console.log(`[SIP CALC WARNING] Monthly savings is ₹${Math.round(monthlySavings).toLocaleString('en-IN')} (zero or negative). SIP set to ₹0. User needs to increase income or reduce expenses.`);
   } else if (gapToFill <= 0) {
-    // Assets already cover retirement - use 80% of monthly savings capacity
-    sipAmount = Math.max(500, monthlySavings * 0.8);
+    // Assets already cover retirement - recommend meaningful SIP for extra cushion/legacy
+    // Use 60% of monthly savings, with minimum ₹5,000 IF user can afford it
+    const targetSip = monthlySavings * 0.6;
+    if (monthlySavings >= 5000) {
+      sipAmount = Math.max(5000, targetSip);
+    } else {
+      // For users with savings < ₹5K, recommend 60% but cap at their actual capacity
+      // Use ₹500 minimum only if they can afford it, otherwise use their full savings
+      const recommendedMinimum = Math.min(500, monthlySavings);
+      sipAmount = Math.max(targetSip, recommendedMinimum);
+      // Final safety check: never recommend more than they can save
+      sipAmount = Math.min(sipAmount, monthlySavings);
+      console.log(`[SIP CALC WARNING] User's savings (₹${Math.round(monthlySavings).toLocaleString('en-IN')}) below ₹5K. Recommending ₹${Math.round(sipAmount).toLocaleString('en-IN')} for extra cushion.`);
+    }
     sipCalculationSource = 'savings-based';
-    console.log(`[SIP CALC] Assets cover retirement corpus. Using savings-based SIP: 80% of ₹${Math.round(monthlySavings).toLocaleString('en-IN')} = ₹${Math.round(sipAmount).toLocaleString('en-IN')}`);
+    console.log(`[SIP CALC] Assets cover retirement corpus. Using savings-based SIP for extra cushion: 60% of ₹${Math.round(monthlySavings).toLocaleString('en-IN')} = ₹${Math.round(sipAmount).toLocaleString('en-IN')}`);
   } else {
     // Calculate the FV factor for ₹1 initial monthly SIP with annual 7% step-up and monthly compounding
     let fvFactor = 0;
@@ -220,13 +232,20 @@ export function calculateRetirementPlan(plan: RetirementPlan): CalculatedPlan {
       console.log(`[SIP CALC WARNING] Calculated SIP (₹${Math.round(sipAmount).toLocaleString('en-IN')}) exceeds monthly savings (₹${Math.round(monthlySavings).toLocaleString('en-IN')}). User may need to increase income, reduce expenses, or extend retirement age.`);
       // Cap only if it exceeds by more than 20% (unreasonable)
       if (sipAmount > monthlySavings * 1.2) {
-        sipAmount = Math.max(500, monthlySavings);
+        sipAmount = monthlySavings; // Cap at actual savings capacity
         console.log(`[SIP CALC] Capping SIP at monthly savings amount: ₹${Math.round(sipAmount).toLocaleString('en-IN')}`);
       }
     }
     
-    // Set a reasonable minimum SIP only if gap exists and savings is positive
-    sipAmount = Math.max(500, sipAmount);
+    // Set a meaningful minimum SIP for retirement planning (₹5,000)
+    // BUT only if user can afford it - don't recommend impossible amounts
+    if (monthlySavings >= 5000) {
+      sipAmount = Math.max(5000, sipAmount);
+    } else {
+      // User's savings capacity is below ₹5K - use their actual capacity
+      sipAmount = Math.max(monthlySavings, sipAmount);
+      console.log(`[SIP CALC WARNING] User's monthly savings (₹${Math.round(monthlySavings).toLocaleString('en-IN')}) is below recommended minimum of ₹5,000. Using available savings capacity.`);
+    }
   }
   
   // Accumulation phase simulation
@@ -330,6 +349,14 @@ export function calculateRetirementPlan(plan: RetirementPlan): CalculatedPlan {
   
   console.log(`[FREEDOM SCORE] Calculated Freedom Score: ${freedomScore}, Advice Triggers: ${adviceTriggers.join(', ')}`);
   
+  // Calculate asset coverage percentage and flag substantial assets
+  const assetCoveragePercentage = totalCorpusNeeded > 0 ? Math.round((projectedAssetValue / totalCorpusNeeded) * 100) : 0;
+  const hasSubstantialAssets = assetCoveragePercentage >= 70;
+  
+  if (hasSubstantialAssets) {
+    console.log(`[SUBSTANTIAL ASSETS] User has ${assetCoveragePercentage}% asset coverage - existing assets will significantly contribute to retirement corpus!`);
+  }
+  
   return {
     yearsToRetirement,
     yearsInRetirement,
@@ -354,6 +381,8 @@ export function calculateRetirementPlan(plan: RetirementPlan): CalculatedPlan {
     freedomScore,
     riskScore,
     adviceTriggers,
+    assetCoveragePercentage,
+    hasSubstantialAssets,
   };
 }
 
