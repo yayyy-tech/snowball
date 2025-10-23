@@ -116,10 +116,13 @@ export function calculateRetirementPlan(plan: RetirementPlan): CalculatedPlan {
   const bufferAmount = baseCorpusNeeded * CORPUS_BUFFER;
   const totalCorpusNeeded = baseCorpusNeeded + bufferAmount;
   
-  // Calculate current assets
-  const totalAssets = (plan.realEstateValue || 0) + (plan.stocksValue || 0) + 
+  // Calculate current assets - prioritize plan.totalAssets from 5-step flow
+  const legacyTotalAssets = (plan.realEstateValue || 0) + (plan.stocksValue || 0) + 
     (plan.mutualFundsValue || 0) + (plan.ppfEpfNps || 0) + 
     (plan.bankDeposits || 0) + (plan.goldAssets || 0);
+  const totalAssets = plan.totalAssets !== null && plan.totalAssets !== undefined ? plan.totalAssets : legacyTotalAssets;
+  
+  console.log(`[ASSETS] Using totalAssets: ₹${totalAssets.toLocaleString('en-IN')} (from ${plan.totalAssets !== null && plan.totalAssets !== undefined ? '5-step flow' : 'legacy calculation'})`);
   
   // Asset allocation
   const assetAllocation = getAssetAllocation(plan.currentAge, riskTolerance, plan.preferredAssetMix || 'balanced-growth');
@@ -307,7 +310,7 @@ export function calculateRetirementPlan(plan: RetirementPlan): CalculatedPlan {
     retirementAge: plan.retirementAge,
     monthlyIncome: plan.monthlyIncome,
     savingsRate,
-    totalAssets: plan.totalAssets || totalAssets,
+    totalAssets: plan.totalAssets !== null && plan.totalAssets !== undefined ? plan.totalAssets : totalAssets,
     postRetirementMonthlyExpense: postRetirementExpense,
     longevityYears: yearsInRetirement,
     riskScore,
@@ -327,6 +330,9 @@ export function calculateRetirementPlan(plan: RetirementPlan): CalculatedPlan {
   
   console.log(`[FREEDOM SCORE] Calculated Freedom Score: ${freedomScore}, Advice Triggers: ${adviceTriggers.join(', ')}`);
   
+  // Use plan.totalAssets from 5-step flow if available, otherwise fall back to calculated legacy value
+  const finalTotalAssets = plan.totalAssets !== null && plan.totalAssets !== undefined ? plan.totalAssets : totalAssets;
+  
   return {
     yearsToRetirement,
     yearsInRetirement,
@@ -334,7 +340,7 @@ export function calculateRetirementPlan(plan: RetirementPlan): CalculatedPlan {
     baseCorpusNeeded: Math.round(baseCorpusNeeded),
     bufferAmount: Math.round(bufferAmount),
     totalCorpusNeeded: Math.round(totalCorpusNeeded),
-    totalAssets,
+    totalAssets: finalTotalAssets,
     projectedAssetValue: Math.round(projectedAssetValue),
     monthlySavings: Math.round(monthlySavings),
     sipAmount: Math.round(sipAmount),
