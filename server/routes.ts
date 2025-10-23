@@ -26,13 +26,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Create a new retirement plan (protected - requires login)
-  app.post("/api/retirement-plans", isAuthenticated, async (req: any, res) => {
+  // Create a new retirement plan (public - no login required)
+  app.post("/api/retirement-plans", async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      // userId is optional for guest users (no authentication required)
+      const userId = req.user?.claims?.sub || null;
       const validatedData = insertRetirementPlanSchema.parse(req.body);
       
-      // Associate plan with logged-in user
+      // Associate plan with user if logged in, otherwise create as guest plan
       const plan = await storage.createRetirementPlan({
         ...validatedData,
         userId,
@@ -56,21 +57,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get a retirement plan by ID (protected - must be owner)
-  app.get("/api/retirement-plans/:id", isAuthenticated, async (req: any, res) => {
+  // Get a retirement plan by ID (public - no login required)
+  app.get("/api/retirement-plans/:id", async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
       const plan = await storage.getRetirementPlan(req.params.id);
       
       if (!plan) {
         return res.status(404).json({ error: "Retirement plan not found" });
       }
       
-      // Ensure user can only access their own plan
-      if (plan.userId !== userId) {
-        return res.status(403).json({ error: "Forbidden: You can only access your own retirement plans" });
-      }
-      
+      // Public access - anyone can view any plan by ID
       res.json(plan);
     } catch (error: any) {
       console.error("Error fetching retirement plan:", error);
@@ -78,21 +74,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Update a retirement plan (protected - must be owner)
-  app.put("/api/retirement-plans/:id", isAuthenticated, async (req: any, res) => {
+  // Update a retirement plan (public - no login required)
+  app.put("/api/retirement-plans/:id", async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
-      
-      // First check if plan exists and user owns it
+      // First check if plan exists
       const existingPlan = await storage.getRetirementPlan(req.params.id);
       if (!existingPlan) {
         return res.status(404).json({ error: "Retirement plan not found" });
       }
       
-      if (existingPlan.userId !== userId) {
-        return res.status(403).json({ error: "Forbidden: You can only update your own retirement plans" });
-      }
-      
+      // Public access - anyone can update any plan by ID
       const validatedData = insertRetirementPlanSchema.partial().parse(req.body);
       
       await storage.updateRetirementPlan(req.params.id, validatedData);
@@ -181,21 +172,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // GPT-powered AI recommendations (protected - must own plan)
-  app.get("/api/gpt-recommendations/:planId", isAuthenticated, async (req: any, res) => {
+  // GPT-powered AI recommendations (public - no login required)
+  app.get("/api/gpt-recommendations/:planId", async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
       const plan = await storage.getRetirementPlan(req.params.planId);
       
       if (!plan) {
         return res.status(404).json({ error: "Retirement plan not found" });
       }
       
-      // Ensure user can only get recommendations for their own plan
-      if (plan.userId !== userId) {
-        return res.status(403).json({ error: "Forbidden: You can only access your own retirement plans" });
-      }
-      
+      // Public access - anyone can get recommendations for any plan
       const gptRecommendations = await generateGPTRecommendations(plan);
       
       res.json(gptRecommendations);

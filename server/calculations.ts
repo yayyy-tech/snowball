@@ -310,7 +310,7 @@ export function calculateRetirementPlan(plan: RetirementPlan): CalculatedPlan {
     retirementAge: plan.retirementAge,
     monthlyIncome: plan.monthlyIncome,
     savingsRate,
-    totalAssets: plan.totalAssets !== null && plan.totalAssets !== undefined ? plan.totalAssets : totalAssets,
+    totalAssets,
     postRetirementMonthlyExpense: postRetirementExpense,
     longevityYears: yearsInRetirement,
     riskScore,
@@ -330,9 +330,6 @@ export function calculateRetirementPlan(plan: RetirementPlan): CalculatedPlan {
   
   console.log(`[FREEDOM SCORE] Calculated Freedom Score: ${freedomScore}, Advice Triggers: ${adviceTriggers.join(', ')}`);
   
-  // Use plan.totalAssets from 5-step flow if available, otherwise fall back to calculated legacy value
-  const finalTotalAssets = plan.totalAssets !== null && plan.totalAssets !== undefined ? plan.totalAssets : totalAssets;
-  
   return {
     yearsToRetirement,
     yearsInRetirement,
@@ -340,7 +337,7 @@ export function calculateRetirementPlan(plan: RetirementPlan): CalculatedPlan {
     baseCorpusNeeded: Math.round(baseCorpusNeeded),
     bufferAmount: Math.round(bufferAmount),
     totalCorpusNeeded: Math.round(totalCorpusNeeded),
-    totalAssets: finalTotalAssets,
+    totalAssets,
     projectedAssetValue: Math.round(projectedAssetValue),
     monthlySavings: Math.round(monthlySavings),
     sipAmount: Math.round(sipAmount),
