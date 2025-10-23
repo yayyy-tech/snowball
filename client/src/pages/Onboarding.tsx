@@ -449,15 +449,15 @@ export default function Onboarding() {
                       value={[formData.savingsRate]}
                       onValueChange={(value) => setFormData({ ...formData, savingsRate: value[0] })}
                       min={0}
-                      max={70}
+                      max={100}
                       step={5}
                       className="mt-2"
                       data-testid="slider-savings-rate"
                     />
                     <div className="flex justify-between text-xs text-muted-foreground mt-2">
                       <span>0%</span>
-                      <span>35%</span>
-                      <span>70%</span>
+                      <span>50%</span>
+                      <span>100%</span>
                     </div>
                   </div>
 
