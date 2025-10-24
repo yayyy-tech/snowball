@@ -3,8 +3,19 @@
 ## Overview
 Snowball is a retirement planning web application for Indian users aged 25-40. It guides users through a 5-step conversational onboarding flow with AI inference to collect financial data and generates personalized retirement roadmaps with a "Freedom Score" (0-100). The platform calculates the required corpus, recommends investment strategies, and suggests smart mutual funds, bonds, and gold ETFs tailored to individual risk profiles and financial goals, all based on India's tax regime (FY 2024-25). It features an emotionally intelligent UX with Mini-Stories (wisdom quotes) and an AI Advice Bot for contextual nudges. The application is designed for public access without requiring authentication.
 
-## Recent Changes (Oct 23, 2025)
-### SIP Calculation Logic Overhaul
+## Recent Changes (Oct 24, 2025)
+
+### PDF Download Feature
+- **Download Retirement Plan**: Users can download their personalized retirement plan as a PDF
+- **PDF Content**: Includes user name, retirement summary, investment strategy, asset allocation, Freedom Score, and compounding wisdom quote
+- **Quotes**: Random selection from Warren Buffett, Charlie Munger, and Morgan Housel
+- **Design**: Clean, minimalist layout with emerald-green and grey tones
+- **Snowball Note**: "Remember: Compounding rewards patience. Stick to your plan — and let time do its job."
+- **Filename**: `Snowball_Retirement_Plan_[username or date].pdf`
+- **Button**: Emerald-styled download button at end of retirement roadmap
+- **Toast Notification**: Success message "✅ Your Snowball plan is ready to download!"
+
+### SIP Calculation Logic Overhaul (Oct 23, 2025)
 - **Minimum SIP Increased**: Changed from ₹500 to ₹5,000 for meaningful retirement planning (₹60K/year minimum)
 - **Affordability-Based Logic**: System now respects user's monthly savings capacity
   - When `monthlySavings >= ₹5,000`: Enforces ₹5K minimum for both gap-based and savings-based calculations

@@ -549,6 +549,48 @@ export default function Dashboard() {
             Data sourced from AMFI, Moneycontrol, and Wint Wealth. Past performance does not guarantee future results.
           </p>
         </div>
+
+        {/* Download Plan Button */}
+        <div className="mt-8 flex justify-center">
+          <Button
+            onClick={async () => {
+              try {
+                const response = await fetch(`/api/retirement-plans/${planId}/download-pdf`);
+                if (!response.ok) throw new Error('Failed to download PDF');
+                
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `Snowball_Retirement_Plan_${userName.replace(/\s+/g, '_')}.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+                
+                toast({
+                  title: "Success!",
+                  description: "✅ Your Snowball plan is ready to download!",
+                  duration: 5000,
+                });
+              } catch (error) {
+                console.error('Error downloading PDF:', error);
+                toast({
+                  title: "Error",
+                  description: "Failed to download PDF. Please try again.",
+                  variant: "destructive",
+                  duration: 5000,
+                });
+              }
+            }}
+            size="lg"
+            className="bg-emerald-600 text-white font-semibold shadow-md"
+            data-testid="button-download-pdf"
+          >
+            <Download className="h-5 w-5 mr-2" />
+            Download Plan (PDF)
+          </Button>
+        </div>
       </main>
     </div>
   );

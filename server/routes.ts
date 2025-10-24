@@ -6,6 +6,7 @@ import { calculateRetirementPlan } from "./calculations";
 import { generateFundRecommendations, generateCompleteRecommendations, type RecommendationInput } from "./fundRecommendations";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { generateGPTRecommendations } from "./gptRecommendations";
+import { generateRetirementPDF } from "./pdfGenerator";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication (Google login, GitHub, etc.)
@@ -71,6 +72,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       console.error("Error fetching retirement plan:", error);
       res.status(500).json({ error: "Failed to fetch retirement plan" });
+    }
+  });
+
+  // Download retirement plan as PDF (public - no login required)
+  app.get("/api/retirement-plans/:id/download-pdf", async (req: any, res) => {
+    try {
+      const plan = await storage.getRetirementPlan(req.params.id);
+      
+      if (!plan) {
+        return res.status(404).json({ error: "Retirement plan not found" });
+      }
+      
+      // Generate PDF
+      const pdfBuffer = generateRetirementPDF(plan);
+      
+      // Create filename with user name or date
+      const userName = plan.fullName ? plan.fullName.replace(/\s+/g, '_') : new Date().toISOString().split('T')[0];
+      const filename = `Snowball_Retirement_Plan_${userName}.pdf`;
+      
+      // Set headers for PDF download
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      res.setHeader('Content-Length', pdfBuffer.length);
+      
+      res.send(pdfBuffer);
+    } catch (error: any) {
+      console.error("Error generating PDF:", error);
+      res.status(500).json({ error: "Failed to generate PDF" });
     }
   });
 
