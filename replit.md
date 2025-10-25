@@ -3,9 +3,24 @@
 ## Overview
 Snowball is a retirement planning web application for Indian users aged 25-40. It guides users through a 5-step conversational onboarding flow with AI inference to collect financial data and generates personalized retirement roadmaps with a "Freedom Score" (0-100). The platform calculates the required corpus, recommends investment strategies, and suggests smart mutual funds, bonds, and gold ETFs tailored to individual risk profiles and financial goals, all based on India's tax regime (FY 2024-25). It features an emotionally intelligent UX with Mini-Stories (wisdom quotes) and an AI Advice Bot for contextual nudges. The application is designed for public access without requiring authentication.
 
-## Recent Changes (Oct 24, 2025)
+## Recent Changes (Oct 25, 2025)
 
-### PDF Download Feature
+### Onboarding UX Improvement - Direct Amount Inputs (Oct 25)
+- **Replaced Percentage Sliders with Direct Inputs**: Step 2 "Money Flow" now uses direct amount inputs instead of percentage sliders
+  - **Before**: "What percentage do you save?" slider (0-100%) and "Of your expenses, how much is essential?" slider (30-90%)
+  - **After**: "How much do you save each month?" (₹ input) and "What are your monthly expenses?" (₹ input)
+- **Auto-Calculated Savings Rate**: System now derives savings rate % from actual amounts (savings/income × 100)
+- **Enhanced Live Calculation Display**: Shows savings rate %, total accounted for (savings + expenses), and validation status
+- **Comprehensive Validation**: Blocks progression when:
+  - Any field is empty
+  - Any field contains non-numeric input (regex `/^\d+$/` validation)
+  - Income ≤ 0 or savings/expenses < 0
+  - Savings + expenses > income (shows clear error: "Please adjust your numbers so that savings + expenses ≤ income")
+- **Visual Feedback**: Red error box appears when validation fails, Continue button disabled until fixed
+- **Default Essential Expense Ratio**: Set to 60% for backend calculations (reasonable middle-ground assumption)
+- **Test Coverage**: E2E test validates all input scenarios including invalid inputs and validation blocking
+
+### PDF Download Feature (Oct 24)
 - **Download Retirement Plan**: Users can download their personalized retirement plan as a PDF
 - **PDF Content**: Includes user name, retirement summary, investment strategy, asset allocation, Freedom Score, and compounding wisdom quote
 - **Quotes**: Random selection from Warren Buffett, Charlie Munger, and Morgan Housel
