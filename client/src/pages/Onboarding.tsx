@@ -72,8 +72,8 @@ export default function Onboarding() {
     
     // Step 2: Money Flow
     monthlyIncome: "",
-    savingsRate: 20, // percentage
-    essentialExpenseRatio: 60, // percentage of expenses that are essential
+    monthlySavings: "", // direct amount instead of percentage
+    monthlyExpenses: "", // direct amount instead of percentage
     
     // Step 3: Assets & Obligations
     totalAssets: "",
@@ -125,19 +125,22 @@ export default function Onboarding() {
       const currentAge = parseInt(formData.age) || 25;
       const retirementAge = parseInt(formData.retirementAge) || 60;
       const monthlyIncome = parseInt(parseIndianNumber(formData.monthlyIncome)) || 0;
-      const savingsRate = formData.savingsRate;
+      const monthlySavings = parseInt(parseIndianNumber(formData.monthlySavings)) || 0;
+      const monthlyExpenses = parseInt(parseIndianNumber(formData.monthlyExpenses)) || 0;
       const totalAssets = parseInt(parseIndianNumber(formData.totalAssets)) || 0;
       const loanEmi = parseInt(parseIndianNumber(formData.loanEmi)) || 0;
       const loanYearsLeft = parseInt(formData.loanYearsLeft) || 0;
       
-      // Calculate monthly savings
-      const monthlySavings = Math.round(monthlyIncome * (savingsRate / 100));
+      // Calculate percentages for backend
+      const savingsRate = monthlyIncome > 0 ? Math.round((monthlySavings / monthlyIncome) * 100) : 0;
       
-      // Infer monthly expense from income and savings rate
-      const inferredMonthlyExpense = monthlyIncome - monthlySavings;
+      // Use the monthly expenses directly
+      const inferredMonthlyExpense = monthlyExpenses;
       
-      // Calculate lifestyle expense ratio (100 - essential ratio)
-      const lifestyleExpenseRatio = 100 - formData.essentialExpenseRatio;
+      // Calculate essential expense ratio: assume 60% default if no expenses entered
+      // This will be used by backend calculations
+      const essentialExpenseRatio = 60; // Default - can be enhanced later
+      const lifestyleExpenseRatio = 100 - essentialExpenseRatio;
       
       // Map lifestyle to replacement ratio (will be done on backend)
       const replacementRatio = 
@@ -162,8 +165,8 @@ export default function Onboarding() {
         spouseIncome: null,
         
         // New fields for 5-step flow
-        savingsRate,
-        essentialExpenseRatio: formData.essentialExpenseRatio,
+        savingsRate, // Calculated from monthlySavings / monthlyIncome
+        essentialExpenseRatio, // Default 60% - for backend calculations
         lifestyleExpenseRatio,
         totalAssets,
         loanEmi,
@@ -211,18 +214,37 @@ export default function Onboarding() {
 
   const progressPercentage = Math.round((currentStep / totalSteps) * 100);
   
-  // Calculate monthly savings for display
+  // Calculate values for display
   const monthlyIncome = parseInt(parseIndianNumber(formData.monthlyIncome)) || 0;
-  const monthlySavings = Math.round(monthlyIncome * (formData.savingsRate / 100));
-  const monthlyExpense = monthlyIncome - monthlySavings;
+  const monthlySavings = parseInt(parseIndianNumber(formData.monthlySavings)) || 0;
+  const monthlyExpenses = parseInt(parseIndianNumber(formData.monthlyExpenses)) || 0;
+  
+  // Calculate derived savings rate for display
+  const derivedSavingsRate = monthlyIncome > 0 ? Math.round((monthlySavings / monthlyIncome) * 100) : 0;
   
   // Validation checks
   const isStepValid = () => {
     switch (currentStep) {
       case 1:
         return formData.fullName && formData.age && formData.retirementAge && formData.maritalStatus;
-      case 2:
-        return formData.monthlyIncome && formData.savingsRate > 0;
+      case 2: {
+        // Check all fields are filled and are positive numbers
+        const hasAllFields = formData.monthlyIncome && formData.monthlySavings && formData.monthlyExpenses;
+        if (!hasAllFields) return false;
+        
+        // Parse values
+        const income = parseInt(parseIndianNumber(formData.monthlyIncome)) || 0;
+        const savings = parseInt(parseIndianNumber(formData.monthlySavings)) || 0;
+        const expenses = parseInt(parseIndianNumber(formData.monthlyExpenses)) || 0;
+        
+        // Ensure all are positive numbers
+        if (income <= 0 || savings < 0 || expenses < 0) return false;
+        
+        // Block if savings + expenses exceeds income
+        if (savings + expenses > income) return false;
+        
+        return true;
+      }
       case 3:
         return true; // Optional fields
       case 4:
@@ -439,81 +461,105 @@ export default function Onboarding() {
                   </div>
 
                   <div>
-                    <div className="flex justify-between items-center mb-3">
-                      <Label className="text-base">What percentage do you save each month?</Label>
-                      <Badge variant="secondary" className="text-lg font-bold">
-                        {formData.savingsRate}%
-                      </Badge>
-                    </div>
-                    <Slider
-                      value={[formData.savingsRate]}
-                      onValueChange={(value) => setFormData({ ...formData, savingsRate: value[0] })}
-                      min={0}
-                      max={100}
-                      step={5}
-                      className="mt-2"
-                      data-testid="slider-savings-rate"
+                    <Label htmlFor="monthlySavings" className="text-base">How much do you save each month?</Label>
+                    <Input
+                      id="monthlySavings"
+                      type="text"
+                      inputMode="numeric"
+                      value={formatIndianNumber(formData.monthlySavings)}
+                      onChange={(e) => {
+                        const value = parseIndianNumber(e.target.value);
+                        if (value === '' || /^\d+$/.test(value)) {
+                          setFormData({ ...formData, monthlySavings: value });
+                        }
+                      }}
+                      placeholder="e.g., 20,000"
+                      className="mt-2 h-12 text-lg"
+                      data-testid="input-monthly-savings"
                     />
-                    <div className="flex justify-between text-xs text-muted-foreground mt-2">
-                      <span>0%</span>
-                      <span>50%</span>
-                      <span>100%</span>
-                    </div>
+                    <p className="text-sm text-muted-foreground mt-2">
+                      Enter the amount you typically save or invest each month
+                    </p>
                   </div>
 
                   <div>
-                    <div className="flex justify-between items-center mb-3">
-                      <Label className="text-base">Of your expenses, how much is essential?</Label>
-                      <Badge variant="secondary" className="text-lg font-bold">
-                        {formData.essentialExpenseRatio}%
-                      </Badge>
-                    </div>
-                    <p className="text-sm text-muted-foreground mb-3">
-                      Essential = Rent, groceries, utilities, EMIs. Lifestyle = Dining, travel, shopping, entertainment
-                    </p>
-                    <Slider
-                      value={[formData.essentialExpenseRatio]}
-                      onValueChange={(value) => setFormData({ ...formData, essentialExpenseRatio: value[0] })}
-                      min={30}
-                      max={90}
-                      step={5}
-                      className="mt-2"
-                      data-testid="slider-essential-ratio"
+                    <Label htmlFor="monthlyExpenses" className="text-base">What are your monthly expenses?</Label>
+                    <Input
+                      id="monthlyExpenses"
+                      type="text"
+                      inputMode="numeric"
+                      value={formatIndianNumber(formData.monthlyExpenses)}
+                      onChange={(e) => {
+                        const value = parseIndianNumber(e.target.value);
+                        if (value === '' || /^\d+$/.test(value)) {
+                          setFormData({ ...formData, monthlyExpenses: value });
+                        }
+                      }}
+                      placeholder="e.g., 60,000"
+                      className="mt-2 h-12 text-lg"
+                      data-testid="input-monthly-expenses"
                     />
-                    <div className="flex justify-between text-xs text-muted-foreground mt-2">
-                      <span>30% Essential</span>
-                      <span>60%</span>
-                      <span>90% Essential</span>
-                    </div>
+                    <p className="text-sm text-muted-foreground mt-2">
+                      Include rent, groceries, utilities, EMIs, dining, travel, shopping, entertainment, etc.
+                    </p>
                   </div>
 
                   {/* Live Calculation */}
-                  {monthlyIncome > 0 && (
-                    <div className="grid md:grid-cols-3 gap-4 p-6 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 rounded-xl border border-green-200 dark:border-green-900 mt-6">
-                      <div className="text-center">
-                        <p className="text-sm text-muted-foreground mb-1">Monthly Savings</p>
-                        <div className="text-2xl font-bold text-green-600 dark:text-green-400" data-testid="text-monthly-savings">
-                          ₹<AnimatedCounter 
-                            value={monthlySavings}
-                            formatter={(value) => formatIndianNumber(value.toFixed(0))}
-                          />
+                  {monthlyIncome > 0 && (monthlySavings > 0 || monthlyExpenses > 0) && (
+                    <div className="space-y-4 mt-6">
+                      <div className="grid md:grid-cols-3 gap-4 p-6 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 rounded-xl border border-green-200 dark:border-green-900">
+                        <div className="text-center">
+                          <p className="text-sm text-muted-foreground mb-1">Savings Rate</p>
+                          <div className="text-2xl font-bold text-green-600 dark:text-green-400" data-testid="text-savings-rate">
+                            {derivedSavingsRate}%
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-1">of your income</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-sm text-muted-foreground mb-1">Total Accounted</p>
+                          <div className="text-2xl font-bold text-foreground" data-testid="text-total-accounted">
+                            ₹<AnimatedCounter 
+                              value={monthlySavings + monthlyExpenses}
+                              formatter={(value) => formatIndianNumber(value.toFixed(0))}
+                            />
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {monthlySavings + monthlyExpenses > monthlyIncome ? (
+                              <span className="text-destructive">⚠ Exceeds income!</span>
+                            ) : monthlySavings + monthlyExpenses === monthlyIncome ? (
+                              <span className="text-green-600 dark:text-green-400">✓ Balanced</span>
+                            ) : (
+                              <span>₹{formatIndianNumber((monthlyIncome - monthlySavings - monthlyExpenses).toString())} unaccounted</span>
+                            )}
+                          </p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-sm text-muted-foreground mb-1">Income Breakdown</p>
+                          <div className="text-sm font-medium">
+                            <div className="flex justify-between mb-1">
+                              <span>Savings:</span>
+                              <span className="text-green-600 dark:text-green-400">{derivedSavingsRate}%</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span>Expenses:</span>
+                              <span>{monthlyIncome > 0 ? Math.round((monthlyExpenses / monthlyIncome) * 100) : 0}%</span>
+                            </div>
+                          </div>
                         </div>
                       </div>
-                      <div className="text-center">
-                        <p className="text-sm text-muted-foreground mb-1">Monthly Expense</p>
-                        <div className="text-2xl font-bold text-foreground" data-testid="text-monthly-expense">
-                          ₹<AnimatedCounter 
-                            value={monthlyExpense}
-                            formatter={(value) => formatIndianNumber(value.toFixed(0))}
-                          />
+                      
+                      {/* Validation Error Message */}
+                      {monthlySavings + monthlyExpenses > monthlyIncome && (
+                        <div className="p-4 bg-destructive/10 border border-destructive/30 rounded-lg" data-testid="error-exceeds-income">
+                          <p className="text-sm font-medium text-destructive">
+                            Your savings and expenses together (₹{formatIndianNumber((monthlySavings + monthlyExpenses).toString())}) 
+                            exceed your income (₹{formatIndianNumber(monthlyIncome.toString())}).
+                          </p>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            Please adjust your numbers so that savings + expenses ≤ income.
+                          </p>
                         </div>
-                      </div>
-                      <div className="text-center">
-                        <p className="text-sm text-muted-foreground mb-1">Savings Rate</p>
-                        <div className="text-2xl font-bold text-primary" data-testid="text-savings-rate">
-                          {formData.savingsRate}%
-                        </div>
-                      </div>
+                      )}
                     </div>
                   )}
                 </div>
