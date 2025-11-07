@@ -29,14 +29,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Create a new retirement plan (public - no login required)
-  app.post("/api/retirement-plans", async (req: any, res) => {
+  // Create a new retirement plan (authentication required)
+  app.post("/api/retirement-plans", isAuthenticated, async (req: any, res) => {
     try {
-      // userId is optional for guest users (no authentication required)
-      const userId = req.user?.claims?.sub || null;
+      // userId is required (authentication mandatory)
+      const userId = req.user.claims.sub;
       const validatedData = insertRetirementPlanSchema.parse(req.body);
       
-      // Associate plan with user if logged in, otherwise create as guest plan
+      // Associate plan with authenticated user
       const plan = await storage.createRetirementPlan({
         ...validatedData,
         userId,
