@@ -5,6 +5,41 @@ Snowball is a retirement planning web application for Indian users aged 25-40. I
 
 ## Recent Changes (Nov 7, 2025)
 
+### Security Hardening & Bug Fixes (Nov 7, 2025)
+**Comprehensive Authentication & Authorization Implementation**
+
+#### Critical Security Fixes
+- ✅ **All API Endpoints Secured**: Every endpoint now requires authentication via `isAuthenticated` middleware
+- ✅ **Ownership Verification**: All plan-related operations verify `plan.userId === req.user.claims.sub` before allowing access
+- ✅ **403 Forbidden Responses**: Unauthorized access attempts return proper HTTP 403 status
+- ✅ **Expense Creation Protection**: POST /api/expenses now validates retirementPlanId ownership before attachment
+- ✅ **What If Simulator Security**: Verifies plan ownership before allowing Claude-powered scenario analysis
+- ✅ **Chatbot Security**: Enforces authentication and plan ownership for contextual advice
+
+#### UI/UX Bug Fixes
+- ✅ **Fixed React Hooks Error**: Resolved "Rendered more hooks than during the previous render" error in Onboarding component
+  - Issue: Hooks (useState, useMutation) were being called after conditional early returns
+  - Fix: Moved all hooks to top of component before any early returns
+  - Impact: Onboarding now renders correctly for authenticated users without runtime errors
+
+#### End-to-End Testing Results
+- ✅ Authentication flow works correctly (OIDC with Google)
+- ✅ Onboarding 5-step flow completes successfully
+- ✅ Dashboard loads with personalized retirement plan
+- ✅ Feature 1: One-Time Expenses tracking functional
+- ✅ Feature 2: Interactive charts display correctly
+- ⏳ Features 3 & 4: Claude-powered What If & Chatbot blocked by API billing (requires Claude API credits restoration)
+- ✅ Security: Unauthorized access properly blocked with auth gates
+
+#### Security Model Summary
+All endpoints now follow this pattern:
+1. **Authentication Check**: `isAuthenticated` middleware verifies user session
+2. **Ownership Verification**: Code checks `plan.userId === req.user.claims.sub`
+3. **Error Handling**: Returns 401 (Unauthorized) or 403 (Forbidden) appropriately
+4. **No Data Leakage**: Users can only access their own plans, expenses, and AI interactions
+
+## Recent Changes (Nov 7, 2025)
+
 ### Five Advanced Features Implementation (Nov 7)
 Completed full-stack implementation of all 5 advanced features with Claude AI integration and mandatory authentication:
 

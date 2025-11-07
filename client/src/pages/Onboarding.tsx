@@ -63,48 +63,7 @@ export default function Onboarding() {
   const { toast } = useToast();
   const { user, isAuthenticated, isLoading, login } = useAuth();
 
-  // Show auth gate if not authenticated
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-muted/30 to-background">
-        <Header />
-        <main className="container mx-auto px-4 py-8 max-w-4xl flex items-center justify-center min-h-[60vh]">
-          <Card className="p-8 text-center">
-            <p className="text-muted-foreground">Loading...</p>
-          </Card>
-        </main>
-      </div>
-    );
-  }
-
-  if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-muted/30 to-background">
-        <Header />
-        <main className="container mx-auto px-4 py-8 max-w-4xl">
-          <Card className="p-8 md:p-12 text-center">
-            <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-6">
-              <Lock className="h-10 w-10 text-primary" />
-            </div>
-            <h2 className="text-3xl font-bold mb-4">Authentication Required</h2>
-            <p className="text-muted-foreground text-lg mb-8 max-w-2xl mx-auto">
-              To create your personalized retirement plan and access all features including expense tracking, 
-              AI-powered scenario analysis, and chatbot assistant, please log in with your Google account.
-            </p>
-            <Button 
-              size="lg" 
-              onClick={() => login()}
-              data-testid="button-login-onboarding"
-            >
-              Log In with Google
-            </Button>
-          </Card>
-        </main>
-      </div>
-    );
-  }
-
-  // Form state - simplified for 5-step flow
+  // Form state - simplified for 5-step flow (MUST be before early returns)
   const [formData, setFormData] = useState({
     // Step 1: Life Snapshot
     fullName: "",
@@ -155,6 +114,47 @@ export default function Onboarding() {
       });
     },
   });
+
+  // Show auth gate if not authenticated (AFTER all hooks)
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-muted/30 to-background">
+        <Header />
+        <main className="container mx-auto px-4 py-8 max-w-4xl flex items-center justify-center min-h-[60vh]">
+          <Card className="p-8 text-center">
+            <p className="text-muted-foreground">Loading...</p>
+          </Card>
+        </main>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-muted/30 to-background">
+        <Header />
+        <main className="container mx-auto px-4 py-8 max-w-4xl">
+          <Card className="p-8 md:p-12 text-center">
+            <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-6">
+              <Lock className="h-10 w-10 text-primary" />
+            </div>
+            <h2 className="text-3xl font-bold mb-4">Authentication Required</h2>
+            <p className="text-muted-foreground text-lg mb-8 max-w-2xl mx-auto">
+              To create your personalized retirement plan and access all features including expense tracking, 
+              AI-powered scenario analysis, and chatbot assistant, please log in with your Google account.
+            </p>
+            <Button 
+              size="lg" 
+              onClick={() => login()}
+              data-testid="button-login-onboarding"
+            >
+              Log In with Google
+            </Button>
+          </Card>
+        </main>
+      </div>
+    );
+  }
 
   const handleNext = () => {
     if (currentStep < totalSteps) {
