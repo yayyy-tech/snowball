@@ -6,14 +6,15 @@ Snowball is a retirement planning web application for Indian users aged 25-40. I
 ## Recent Changes (Nov 7, 2025)
 
 ### Five Advanced Features Implementation (Nov 7)
-Completed full-stack implementation of all 5 advanced features with Claude AI integration:
+Completed full-stack implementation of all 5 advanced features with Claude AI integration and mandatory authentication:
 
-#### 1. Google Authentication Integration
+#### 1. Google Authentication Integration (Mandatory)
 - **Auth UI in Header**: Login/logout buttons with user avatar display
 - **useAuth Hook**: Provides user state, isAuthenticated flag, and login/logout functions
 - **Session Management**: Leverages existing Replit Auth infrastructure at /api/login and /api/logout
-- **Mixed Auth Model**: App supports both guest users (retirement plans without userId) and authenticated users (full feature access)
-- **Auth Gating**: One-time expenses, What If simulator, and chatbot require authentication
+- **Mandatory Auth**: All retirement plan creation and access requires Google authentication
+- **Onboarding Gate**: Unauthenticated users see lock icon and "Log In with Google" prompt before accessing onboarding
+- **Comprehensive Security**: All API endpoints enforce authentication and ownership verification (403 Forbidden for unauthorized access)
 
 #### 2. One-Time Expenses Tracking
 - **Backend API**: Full CRUD endpoints at /api/expenses (GET, POST, DELETE)
@@ -47,11 +48,16 @@ Completed full-stack implementation of all 5 advanced features with Claude AI in
 
 ### Technical Architecture Updates
 - **Claude Integration**: Centralized utilities in server/utils/claude.ts with error handling and context marshaling
-- **Auth Middleware**: New optionalAuth middleware allows mixed public/private routes
+- **Auth Middleware**: isAuthenticated middleware enforces authentication on all protected routes
+- **Security Model**: All plan-related endpoints verify ownership (plan.userId === req.user.claims.sub)
 - **Storage Layer**: Extended IStorage interface with createExpense, deleteExpense, createChatMessage, getChatHistory methods
-- **Database Extensions**: Added oneTimeExpenses and chatMessages tables with proper foreign keys
+- **Database Extensions**: Added oneTimeExpenses and chatMessages tables with proper foreign keys and userId constraints
 - **Frontend Integration**: All components integrated into Dashboard with proper auth checks and error handling
 - **API Request Pattern**: Updated components to use apiRequest(method, url, data) signature correctly
+- **Authorization Checks**: 
+  - Retirement plans: Create (auth required), View (owner only), Update (owner only), Download PDF (owner only)
+  - Expenses: Create (auth + plan ownership verification), View (owner only), Update (owner only), Delete (owner only)
+  - AI Features: GPT recommendations (owner only), What If simulator (owner only), Chatbot (auth required)
 
 ### Onboarding UX Improvement - Direct Amount Inputs (Oct 25)
 - **Replaced Percentage Sliders with Direct Inputs**: Step 2 "Money Flow" now uses direct amount inputs instead of percentage sliders

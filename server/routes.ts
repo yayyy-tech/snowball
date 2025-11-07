@@ -63,16 +63,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get a retirement plan by ID (public - no login required)
-  app.get("/api/retirement-plans/:id", async (req: any, res) => {
+  // Get a retirement plan by ID (authentication required)
+  app.get("/api/retirement-plans/:id", isAuthenticated, async (req: any, res) => {
     try {
+      const userId = req.user.claims.sub;
       const plan = await storage.getRetirementPlan(req.params.id);
       
       if (!plan) {
         return res.status(404).json({ error: "Retirement plan not found" });
       }
       
-      // Public access - anyone can view any plan by ID
+      // Verify ownership - users can only view their own plans
+      if (plan.userId !== userId) {
+        return res.status(403).json({ error: "You do not have permission to view this plan" });
+      }
+      
       res.json(plan);
     } catch (error: any) {
       console.error("Error fetching retirement plan:", error);
@@ -80,13 +85,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Download retirement plan as PDF (public - no login required)
-  app.get("/api/retirement-plans/:id/download-pdf", async (req: any, res) => {
+  // Download retirement plan as PDF (authentication required)
+  app.get("/api/retirement-plans/:id/download-pdf", isAuthenticated, async (req: any, res) => {
     try {
+      const userId = req.user.claims.sub;
       const plan = await storage.getRetirementPlan(req.params.id);
       
       if (!plan) {
         return res.status(404).json({ error: "Retirement plan not found" });
+      }
+      
+      // Verify ownership - users can only download their own plans
+      if (plan.userId !== userId) {
+        return res.status(403).json({ error: "You do not have permission to download this plan" });
       }
       
       // Generate PDF
@@ -108,16 +119,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Update a retirement plan (public - no login required)
-  app.put("/api/retirement-plans/:id", async (req: any, res) => {
+  // Update a retirement plan (authentication required)
+  app.put("/api/retirement-plans/:id", isAuthenticated, async (req: any, res) => {
     try {
+      const userId = req.user.claims.sub;
+      
       // First check if plan exists
       const existingPlan = await storage.getRetirementPlan(req.params.id);
       if (!existingPlan) {
         return res.status(404).json({ error: "Retirement plan not found" });
       }
       
-      // Public access - anyone can update any plan by ID
+      // Verify ownership - users can only update their own plans
+      if (existingPlan.userId !== userId) {
+        return res.status(403).json({ error: "You do not have permission to update this plan" });
+      }
+      
       const validatedData = insertRetirementPlanSchema.partial().parse(req.body);
       
       await storage.updateRetirementPlan(req.params.id, validatedData);
@@ -209,16 +226,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // GPT-powered AI recommendations (public - no login required)
-  app.get("/api/gpt-recommendations/:planId", async (req: any, res) => {
+  // GPT-powered AI recommendations (authentication required)
+  app.get("/api/gpt-recommendations/:planId", isAuthenticated, async (req: any, res) => {
     try {
+      const userId = req.user.claims.sub;
       const plan = await storage.getRetirementPlan(req.params.planId);
       
       if (!plan) {
         return res.status(404).json({ error: "Retirement plan not found" });
       }
       
-      // Public access - anyone can get recommendations for any plan
+      // Verify ownership - users can only get recommendations for their own plans
+      if (plan.userId !== userId) {
+        return res.status(403).json({ error: "You do not have permission to access this plan" });
+      }
+      
       const gptRecommendations = await generateGPTRecommendations(plan);
       
       res.json(gptRecommendations);
@@ -242,9 +264,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get expenses for a specific plan
-  app.get("/api/expenses/plan/:planId", optionalAuth, async (req: any, res) => {
+  // Get expenses for a specific plan (authentication required)
+  app.get("/api/expenses/plan/:planId", isAuthenticated, async (req: any, res) => {
     try {
+      const userId = req.user.claims.sub;
+      
+      // Verify plan ownership
+      const plan = await storage.getRetirementPlan(req.params.planId);
+      if (!plan) {
+        return res.status(404).json({ error: "Plan not found" });
+      }
+      if (plan.userId !== userId) {
+        return res.status(403).json({ error: "You do not have permission to view expenses for this plan" });
+      }
+      
       const expenses = await storage.getOneTimeExpensesByPlanId(req.params.planId);
       res.json(expenses);
     } catch (error: any) {
@@ -262,6 +295,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         userId,
       });
       
+      // Verify plan ownership if retirementPlanId is provided
+      if (validatedData.retirementPlanId) {
+        const plan = await storage.getRetirementPlan(validatedData.retirementPlanId);
+        if (!plan) {
+          return res.status(404).json({ error: "Retirement plan not found" });
+        }
+        if (plan.userId !== userId) {
+          return res.status(403).json({ error: "You do not have permission to add expenses to this plan" });
+        }
+      }
+      
       // Calculate inflation-adjusted cost
       const currentYear = new Date().getFullYear();
       const yearsUntilExpense = (validatedData.targetYear || currentYear) - currentYear;
@@ -275,7 +319,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Update the expense with inflation-adjusted cost
       await storage.updateOneTimeExpense(expense.id, userId, {
         inflationAdjustedCost,
-      });
+      } as any);
       
       // If expense is linked to a plan, recalculate the plan
       if (expense.retirementPlanId) {
@@ -317,7 +361,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         await storage.updateOneTimeExpense(req.params.id, userId, {
           inflationAdjustedCost,
-        });
+        } as any);
       }
       
       if (!expense) {
@@ -389,6 +433,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Plan not found" });
       }
       
+      // Verify ownership - users can only simulate scenarios for their own plans
+      if (plan.userId !== userId) {
+        return res.status(403).json({ error: "You do not have permission to access this plan" });
+      }
+      
       // Use Claude to interpret the scenario and provide analysis
       const systemPrompt = `You are a retirement planning expert. Analyze "what if" scenarios for Indian users.
 You have access to the user's current retirement plan data. Provide detailed, accurate financial projections.
@@ -451,7 +500,8 @@ Format your response in markdown.`;
       let planContext = '';
       if (planId) {
         const plan = await storage.getRetirementPlan(planId);
-        if (plan && (plan.userId === userId || !plan.userId)) {
+        // Verify ownership - users can only chat about their own plans
+        if (plan && plan.userId === userId) {
           planContext = `User's Retirement Plan:
 - Age: ${plan.currentAge}, Retirement: ${plan.retirementAge}
 - Income: ₹${plan.monthlyIncome?.toLocaleString('en-IN')}/month
