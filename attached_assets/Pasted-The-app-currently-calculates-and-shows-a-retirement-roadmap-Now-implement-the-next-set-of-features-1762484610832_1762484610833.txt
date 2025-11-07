@@ -1,0 +1,142 @@
+The app currently calculates and shows a retirement roadmap. Now, implement the next set of features below. Understand their purpose, data flow, and frontend + backend requirements. Keep the UI clean, minimal, and responsive.
+FEATURE 1: LOGIN / SIGNUP SYSTEM
+ Goal: Personalize user data and securely store progress.
+Use Google Auth only.
+
+
+Store user data in the database: email, age, income, savingsRate, city, goals, createdAt, lastLogin.
+
+
+Redirect logged-in users to their dashboard with saved retirement data.
+
+
+Include Remember Me and Forgot Password functionality.
+
+
+Maintain session persistence with Firebase or Supabase.
+
+
+FEATURE 2: ONE-TIME BIG EXPENSES
+ Goal: Let users add large one-time expenses (car, home, wedding, etc.) that affect their retirement corpus.
+Add an "Additional Expenses" section in the dashboard.
+
+
+Fields: Expense name, year/age, estimated cost.
+
+
+Integrate into corpus calculation logic.
+
+
+Use inflation-adjusted values (example: Car ₹12L today ≈ ₹18L in 10 years).
+
+
+Allow multiple expenses dynamically.
+
+
+Recalculate projections immediately when new data is added.
+
+
+FEATURE 3: GRAPHICAL REPRESENTATION
+ Goal: Add interactive visualizations in the retirement roadmap.
+Add charts for corpus growth, savings vs. expenses, and retirement goal completion percentage.
+
+
+Include hover tooltips, color-coded visuals (green = surplus, red = shortfall).
+
+
+Animate chart updates on input change.
+
+
+Keep visuals smooth and minimal.
+
+
+FEATURE 4: “WHAT IF” SCENARIO SIMULATOR
+ Goal: Let users simulate lifestyle and financial changes.
+ Examples:
+ “What if I save 5% more this month?”
+ “What if I move to Bangalore?”
+ “What if I start freelancing next year?”
+ “What if I invest ₹15k instead of ₹10k?”
+Implementation:
+Add a “What If?” tab with text input for natural language and suggested buttons for quick scenarios.
+
+
+Use Claude (Anthropic API) for all logic, reasoning, and numeric calculation.
+
+
+Claude must interpret the question and adjust parameters accordingly.
+
+
+Pull city-wise inflation, rent, salary, and spending data (API or JSON).
+
+
+Display both text and visual results:
+ Example outputs:
+ “You’d need +₹4.2L more over 10 years to maintain lifestyle.”
+ “Your FIRE age moves from 57 → 54.”
+
+
+Show graph comparisons (Base vs. Scenario).
+
+
+FEATURE 5: IN-APP ASSISTANT CHATBOT
+ Goal: Create an AI assistant that helps users understand their plan, answer queries, and give nudges.
+Add a floating chat widget (bottom-right corner).
+
+
+Add a small pop-up above it saying “Ask me 👋”.
+
+
+The assistant should answer questions like:
+ “How do you calculate inflation?”
+ “Should I increase my SIP amount?”
+ “Show my expense breakdown.”
+
+
+Connect the chatbot to backend data for context-aware answers.
+
+
+Use Claude for reasoning and data-driven responses.
+
+
+Add Smart Suggestions after major steps:
+ “Compounding works best when boredom does.”
+ “You’re closer than you think. Stay consistent.”
+
+
+CLAUDE INTEGRATION INSTRUCTIONS
+All heavy calculations and projections must run through Claude instead of openai.
+
+
+Source API key securely from Replit Secrets using the name CLAUDE_API_KEY.
+
+
+If the key is not found, prompt me directly to input it.
+
+
+Implement a reusable utility file (/utils/claude.js) that handles:
+
+
+API call setup and authentication
+
+
+Error retries
+
+
+Token handling
+
+
+Response formatting
+
+
+Use Claude for:
+
+
+Corpus projections and inflation logic
+
+
+“What If” scenario analysis
+
+
+Chatbot reasoning and advice generation
+After implementing all the features , run a calculation accuracy check, if any errors found resolve them and make sure calculation is 100% accurate in all the cases, after this run a genereal debug test and make sure every feature is working perfectly. 
