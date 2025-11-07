@@ -21,26 +21,25 @@ const LIFE_EXPECTANCY = 85; // Assumed life expectancy
 // Indian new tax regime (2024-25 - FY 2024-25, AY 2025-26)
 // Updated per Union Budget 2024
 function calculateTax(annualIncome: number): number {
-  // Standard deduction for salaried individuals (FY 2024-25)
-  const STANDARD_DEDUCTION = 50000;
+  // Standard deduction for salaried individuals
+  const STANDARD_DEDUCTION = 75000;
   const taxableIncome = Math.max(0, annualIncome - STANDARD_DEDUCTION);
   
   let tax = 0;
   
-  // Tax slabs for new regime (FY 2024-25 - Updated post Union Budget 2024)
-  // Ref: https://www.incometax.gov.in/iec/foportal/
-  if (taxableIncome <= 400000) {
+  // Tax slabs for new regime (default from FY 2024-25)
+  if (taxableIncome <= 300000) {
     tax = 0;
-  } else if (taxableIncome <= 800000) {
-    tax = (taxableIncome - 400000) * 0.05;
+  } else if (taxableIncome <= 700000) {
+    tax = (taxableIncome - 300000) * 0.05;
+  } else if (taxableIncome <= 1000000) {
+    tax = 20000 + (taxableIncome - 700000) * 0.10;
   } else if (taxableIncome <= 1200000) {
-    tax = 20000 + (taxableIncome - 800000) * 0.10;
-  } else if (taxableIncome <= 1600000) {
-    tax = 60000 + (taxableIncome - 1200000) * 0.15;
-  } else if (taxableIncome <= 2000000) {
-    tax = 120000 + (taxableIncome - 1600000) * 0.20;
+    tax = 50000 + (taxableIncome - 1000000) * 0.15;
+  } else if (taxableIncome <= 1500000) {
+    tax = 80000 + (taxableIncome - 1200000) * 0.20;
   } else {
-    tax = 200000 + (taxableIncome - 2000000) * 0.30;
+    tax = 140000 + (taxableIncome - 1500000) * 0.30;
   }
   
   // Section 87A rebate: Full rebate if taxable income <= 7 lakhs
@@ -93,24 +92,8 @@ export function calculateRetirementPlan(plan: RetirementPlan): CalculatedPlan {
   const yearsInRetirement = plan.longevityYears || (LIFE_EXPECTANCY - plan.retirementAge);
   
   // Handle null/missing values with defaults
-  // Priority: 1) User's actual input (inferredMonthlyExpense), 2) Calculated postRetirement, 3) Inferred from income
-  const actualMonthlyExpense = plan.inferredMonthlyExpense || inferMonthlyExpense(plan.monthlyIncome, plan.dependents || 0);
-  
-  // Apply replacement ratio if postRetirementMonthlyExpense is not provided
-  let postRetirementExpense: number;
-  if (plan.postRetirementMonthlyExpense) {
-    postRetirementExpense = plan.postRetirementMonthlyExpense;
-  } else if (plan.replacementRatio) {
-    // Apply lifestyle-based replacement ratio to actual expenses
-    postRetirementExpense = actualMonthlyExpense * (plan.replacementRatio / 100);
-    console.log(`[LIFESTYLE ADJUSTMENT] Applying ${plan.replacementRatio}% replacement ratio to ₹${actualMonthlyExpense.toLocaleString('en-IN')} → ₹${Math.round(postRetirementExpense).toLocaleString('en-IN')}`);
-  } else {
-    postRetirementExpense = actualMonthlyExpense;
-  }
-  
+  const postRetirementExpense = plan.postRetirementMonthlyExpense || inferMonthlyExpense(plan.monthlyIncome, plan.dependents || 0);
   const riskTolerance = plan.riskTolerance || 'moderate';
-  
-  console.log(`[EXPENSE CALC] Using monthly expense: ₹${actualMonthlyExpense.toLocaleString('en-IN')} (from ${plan.inferredMonthlyExpense ? 'user input (5-step flow)' : 'AI inference'})`);
   
   // Calculate monthly expense at retirement with inflation
   const monthlyExpenseAtRetirement = postRetirementExpense * Math.pow(1 + INFLATION_RATE, yearsToRetirement);
@@ -170,23 +153,10 @@ export function calculateRetirementPlan(plan: RetirementPlan): CalculatedPlan {
     console.log(`[SAVINGS CALC] Using savingsRate: ${savingsRate}% of ₹${plan.monthlyIncome.toLocaleString('en-IN')} = ₹${Math.round(monthlySavings).toLocaleString('en-IN')} (NET of all expenses including loans)`);
     
     // Track loan info for projection purposes only (not for reducing savings)
-    // Check both new flow (loanEmi/loanYearsLeft) and legacy flow (homeLoanEmi/homeLoanTenure)
-    const effectiveLoanEmi = plan.loanEmi || plan.homeLoanEmi;
-    const effectiveLoanYears = plan.loanYearsLeft || plan.homeLoanTenure;
-    if (effectiveLoanEmi && effectiveLoanYears) {
-      loanEndYear = Math.min(effectiveLoanYears, yearsToRetirement);
-      additionalSavingsAfterLoan = effectiveLoanEmi;
-      console.log(`[LOAN INFO] User has loan EMI ₹${effectiveLoanEmi.toLocaleString('en-IN')} but NOT subtracting (already in savings rate)`);
-    }
-    
-    // EMI Validation: Check if user's expense input logically includes EMI
-    if (plan.loanEmi && plan.loanEmi > 0 && plan.inferredMonthlyExpense) {
-      const emiToExpenseRatio = plan.loanEmi / plan.inferredMonthlyExpense;
-      if (emiToExpenseRatio > 0.8) {
-        console.log(`[EMI WARNING] EMI (₹${plan.loanEmi.toLocaleString('en-IN')}) is ${Math.round(emiToExpenseRatio * 100)}% of total expenses (₹${plan.inferredMonthlyExpense.toLocaleString('en-IN')}). This seems high - user may have entered EMI separately instead of including it in expenses.`);
-      } else {
-        console.log(`[EMI CHECK] EMI appears to be included in expenses. EMI: ₹${plan.loanEmi.toLocaleString('en-IN')}, Total Expenses: ₹${plan.inferredMonthlyExpense.toLocaleString('en-IN')} (${Math.round(emiToExpenseRatio * 100)}%)`);
-      }
+    if (plan.hasHomeLoan && plan.homeLoanEmi && plan.homeLoanTenure) {
+      loanEndYear = Math.min(plan.homeLoanTenure, yearsToRetirement);
+      additionalSavingsAfterLoan = plan.homeLoanEmi;
+      console.log(`[LOAN INFO] User has loan EMI ₹${plan.homeLoanEmi.toLocaleString('en-IN')} but NOT subtracting (already in savings rate)`);
     }
   } else {
     // Backward compatibility: Calculate from income - expenses - tax
@@ -196,14 +166,11 @@ export function calculateRetirementPlan(plan: RetirementPlan): CalculatedPlan {
     console.log(`[SAVINGS CALC] Using legacy calculation: (₹${totalAnnualIncome.toLocaleString('en-IN')} - ₹${annualExpense.toLocaleString('en-IN')} - ₹${annualTax.toLocaleString('en-IN')}) / 12 = ₹${Math.round(monthlySavings).toLocaleString('en-IN')}`);
     
     // Legacy path: Subtract loan EMI from calculated savings
-    // Check both new flow (loanEmi/loanYearsLeft) and legacy flow (homeLoanEmi/homeLoanTenure)
-    const effectiveLoanEmi = plan.loanEmi || plan.homeLoanEmi;
-    const effectiveLoanYears = plan.loanYearsLeft || plan.homeLoanTenure;
-    if (effectiveLoanEmi && effectiveLoanYears) {
-      monthlySavings = monthlySavings - effectiveLoanEmi;
-      loanEndYear = Math.min(effectiveLoanYears, yearsToRetirement);
-      additionalSavingsAfterLoan = effectiveLoanEmi;
-      console.log(`[LOAN DEDUCTION] Subtracting loan EMI ₹${effectiveLoanEmi.toLocaleString('en-IN')} from savings (legacy path)`);
+    if (plan.hasHomeLoan && plan.homeLoanEmi && plan.homeLoanTenure) {
+      monthlySavings = monthlySavings - plan.homeLoanEmi;
+      loanEndYear = Math.min(plan.homeLoanTenure, yearsToRetirement);
+      additionalSavingsAfterLoan = plan.homeLoanEmi;
+      console.log(`[LOAN DEDUCTION] Subtracting loan EMI ₹${plan.homeLoanEmi.toLocaleString('en-IN')} from savings (legacy path)`);
     }
   }
   
