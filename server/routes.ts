@@ -1,12 +1,14 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertRetirementPlanSchema } from "@shared/schema";
+import { insertRetirementPlanSchema, insertOneTimeExpenseSchema } from "@shared/schema";
 import { calculateRetirementPlan } from "./calculations";
 import { generateFundRecommendations, generateCompleteRecommendations, type RecommendationInput } from "./fundRecommendations";
-import { setupAuth, isAuthenticated } from "./replitAuth";
+import { setupAuth, isAuthenticated, optionalAuth } from "./replitAuth";
 import { generateGPTRecommendations } from "./gptRecommendations";
 import { generateRetirementPDF } from "./pdfGenerator";
+import { callClaudeWithRetry } from "./utils/claude";
+import { WebSocketServer } from "ws";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication (Google login, GitHub, etc.)
@@ -217,6 +219,288 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       console.error("Error generating GPT recommendations:", error);
       res.status(500).json({ error: error.message || "Failed to generate AI recommendations" });
+    }
+  });
+
+  // ONE-TIME EXPENSES API ROUTES
+  
+  // Get all expenses for logged-in user
+  app.get("/api/expenses", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const expenses = await storage.getOneTimeExpensesByUserId(userId);
+      res.json(expenses);
+    } catch (error: any) {
+      console.error("Error fetching expenses:", error);
+      res.status(500).json({ error: "Failed to fetch expenses" });
+    }
+  });
+
+  // Get expenses for a specific plan
+  app.get("/api/expenses/plan/:planId", optionalAuth, async (req: any, res) => {
+    try {
+      const expenses = await storage.getOneTimeExpensesByPlanId(req.params.planId);
+      res.json(expenses);
+    } catch (error: any) {
+      console.error("Error fetching plan expenses:", error);
+      res.status(500).json({ error: "Failed to fetch plan expenses" });
+    }
+  });
+
+  // Create a new one-time expense
+  app.post("/api/expenses", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const validatedData = insertOneTimeExpenseSchema.parse({
+        ...req.body,
+        userId,
+      });
+      
+      // Calculate inflation-adjusted cost
+      const currentYear = new Date().getFullYear();
+      const yearsUntilExpense = (validatedData.targetYear || currentYear) - currentYear;
+      const inflationRate = 0.06;
+      const inflationAdjustedCost = Math.round(
+        validatedData.estimatedCost * Math.pow(1 + inflationRate, yearsUntilExpense)
+      );
+      
+      const expense = await storage.createOneTimeExpense(validatedData);
+      
+      // Update the expense with inflation-adjusted cost
+      await storage.updateOneTimeExpense(expense.id, userId, {
+        inflationAdjustedCost,
+      });
+      
+      // If expense is linked to a plan, recalculate the plan
+      if (expense.retirementPlanId) {
+        const plan = await storage.getRetirementPlan(expense.retirementPlanId);
+        if (plan) {
+          const calculatedPlan = calculateRetirementPlan(plan);
+          await storage.updateRetirementPlan(expense.retirementPlanId, {
+            calculatedPlan,
+          });
+        }
+      }
+      
+      res.json(expense);
+    } catch (error: any) {
+      console.error("Error creating expense:", error);
+      res.status(400).json({ error: error.message || "Failed to create expense" });
+    }
+  });
+
+  // Update an expense
+  app.put("/api/expenses/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const validatedData = insertOneTimeExpenseSchema.partial().parse(req.body);
+      
+      const expense = await storage.updateOneTimeExpense(req.params.id, userId, validatedData);
+      
+      // Recalculate inflation-adjusted cost if estimate or year changed
+      if (expense && (validatedData.estimatedCost || validatedData.targetYear)) {
+        const currentYear = new Date().getFullYear();
+        const targetYear = expense.targetYear || currentYear;
+        const yearsUntilExpense = targetYear - currentYear;
+        const inflationRate = 0.06;
+        const cost = expense.estimatedCost;
+        const inflationAdjustedCost = Math.round(
+          cost * Math.pow(1 + inflationRate, yearsUntilExpense)
+        );
+        
+        await storage.updateOneTimeExpense(req.params.id, userId, {
+          inflationAdjustedCost,
+        });
+      }
+      
+      if (!expense) {
+        return res.status(404).json({ error: "Expense not found" });
+      }
+      
+      // Recalculate plan if needed
+      if (expense.retirementPlanId) {
+        const plan = await storage.getRetirementPlan(expense.retirementPlanId);
+        if (plan) {
+          const calculatedPlan = calculateRetirementPlan(plan);
+          await storage.updateRetirementPlan(expense.retirementPlanId, {
+            calculatedPlan,
+          });
+        }
+      }
+      
+      res.json(expense);
+    } catch (error: any) {
+      console.error("Error updating expense:", error);
+      res.status(400).json({ error: error.message || "Failed to update expense" });
+    }
+  });
+
+  // Delete an expense
+  app.delete("/api/expenses/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      
+      // Get expense first to check plan association
+      const expenses = await storage.getOneTimeExpensesByUserId(userId);
+      const expense = expenses.find(e => e.id === req.params.id);
+      const planId = expense?.retirementPlanId;
+      
+      await storage.deleteOneTimeExpense(req.params.id, userId);
+      
+      // Recalculate plan if needed
+      if (planId) {
+        const plan = await storage.getRetirementPlan(planId);
+        if (plan) {
+          const calculatedPlan = calculateRetirementPlan(plan);
+          await storage.updateRetirementPlan(planId, {
+            calculatedPlan,
+          });
+        }
+      }
+      
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error("Error deleting expense:", error);
+      res.status(500).json({ error: "Failed to delete expense" });
+    }
+  });
+
+  // WHAT IF SIMULATOR API (Claude-powered)
+  app.post("/api/what-if", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { question, planId } = req.body;
+      
+      if (!question || !planId) {
+        return res.status(400).json({ error: "Missing question or planId" });
+      }
+      
+      const plan = await storage.getRetirementPlan(planId);
+      if (!plan) {
+        return res.status(404).json({ error: "Plan not found" });
+      }
+      
+      // Use Claude to interpret the scenario and provide analysis
+      const systemPrompt = `You are a retirement planning expert. Analyze "what if" scenarios for Indian users.
+You have access to the user's current retirement plan data. Provide detailed, accurate financial projections.
+Always use Indian formatting for currency (₹ with lakhs/crores) and consider Indian context (inflation ~6%, returns 9-12%).`;
+
+      const planSummary = `Current Plan:
+- Age: ${plan.currentAge}, Retirement Age: ${plan.retirementAge}
+- Monthly Income: ₹${plan.monthlyIncome?.toLocaleString('en-IN')}
+- Savings Rate: ${plan.savingsRate}%
+- Total Assets: ₹${plan.totalAssets?.toLocaleString('en-IN')}
+- Lifestyle: ${plan.lifestyleChoice}
+- Location: ${plan.retirementLocation}
+- Freedom Score: ${(plan.calculatedPlan as any)?.freedomScore || 'N/A'}
+- Required Corpus: ₹${((plan.calculatedPlan as any)?.totalCorpusNeeded / 10000000).toFixed(2)}Cr
+- Monthly SIP: ₹${(plan.calculatedPlan as any)?.sipAmount?.toLocaleString('en-IN')}`;
+
+      const userMessage = `User asks: "${question}"
+
+Based on the current plan, provide:
+1. Brief interpretation of what they're asking
+2. Numerical impact (corpus needed, SIP changes, retirement age shift)
+3. A clear recommendation
+4. Use bullet points and keep it concise but insightful
+
+Format your response in markdown.`;
+
+      const response = await callClaudeWithRetry([
+        { role: 'user', content: `${planSummary}\n\n${userMessage}` }
+      ], {
+        systemPrompt,
+        temperature: 0.3,
+        maxTokens: 1500,
+      });
+      
+      res.json({ analysis: response, question });
+    } catch (error: any) {
+      console.error("Error in what-if simulator:", error);
+      res.status(500).json({ error: "Failed to analyze scenario" });
+    }
+  });
+
+  // CHATBOT API (Claude-powered)
+  app.post("/api/chat", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { message, planId } = req.body;
+      
+      if (!message) {
+        return res.status(400).json({ error: "Message is required" });
+      }
+      
+      // Save user message
+      await storage.createChatMessage(userId, 'user', message);
+      
+      // Get recent chat history
+      const recentMessages = await storage.getChatMessagesByUserId(userId, 10);
+      const chatHistory = recentMessages.reverse().slice(-10); // Last 5 exchanges
+      
+      // Get user's plan if provided
+      let planContext = '';
+      if (planId) {
+        const plan = await storage.getRetirementPlan(planId);
+        if (plan && (plan.userId === userId || !plan.userId)) {
+          planContext = `User's Retirement Plan:
+- Age: ${plan.currentAge}, Retirement: ${plan.retirementAge}
+- Income: ₹${plan.monthlyIncome?.toLocaleString('en-IN')}/month
+- Savings: ${plan.savingsRate}%
+- Assets: ₹${plan.totalAssets?.toLocaleString('en-IN')}
+- Freedom Score: ${(plan.calculatedPlan as any)?.freedomScore || 'Not calculated'}
+- SIP: ₹${(plan.calculatedPlan as any)?.sipAmount?.toLocaleString('en-IN')}/month`;
+        }
+      }
+      
+      const systemPrompt = `You are Snowball's AI retirement assistant. You help Indian users (age 25-40) understand their retirement plans.
+
+Be:
+- Warm, encouraging, and practical
+- Use simple language (no jargon unless explaining it)
+- Give specific, actionable advice
+- Use Indian context (₹, inflation ~6%, corpus in Cr/L)
+- Keep responses concise (2-3 short paragraphs max)
+
+You can:
+- Explain calculations and concepts
+- Suggest SIP increases or lifestyle adjustments
+- Give nudges about compounding, patience, consistency
+- Answer "how" and "why" questions about their plan
+
+${planContext}`;
+
+      const claudeMessages = chatHistory.map(msg => ({
+        role: msg.role as 'user' | 'assistant',
+        content: msg.content
+      }));
+      
+      const response = await callClaudeWithRetry(claudeMessages, {
+        systemPrompt,
+        temperature: 0.7,
+        maxTokens: 500,
+      });
+      
+      // Save assistant response
+      await storage.createChatMessage(userId, 'assistant', response);
+      
+      res.json({ response });
+    } catch (error: any) {
+      console.error("Error in chatbot:", error);
+      res.status(500).json({ error: "Failed to get response from assistant" });
+    }
+  });
+
+  // Get chat history
+  app.get("/api/chat/history", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const limit = parseInt(req.query.limit as string) || 50;
+      const messages = await storage.getChatMessagesByUserId(userId, limit);
+      res.json(messages.reverse());
+    } catch (error: any) {
+      console.error("Error fetching chat history:", error);
+      res.status(500).json({ error: "Failed to fetch chat history" });
     }
   });
 
