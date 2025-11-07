@@ -11,6 +11,9 @@ import { motion } from "framer-motion";
 import { AdviceBot } from "@/components/AdviceBot";
 import { useToast } from "@/hooks/use-toast";
 import { useEffect } from "react";
+import { ExpensesManager } from "@/components/ExpensesManager";
+import { WhatIfSimulator } from "@/components/WhatIfSimulator";
+import { ChatbotWidget } from "@/components/ChatbotWidget";
 
 export default function Dashboard() {
   const { toast } = useToast();
@@ -29,7 +32,7 @@ export default function Dashboard() {
   useEffect(() => {
     if (plan?.calculatedPlan) {
       const calc = plan.calculatedPlan as CalculatedPlan;
-      if (calc.hasSubstantialAssets) {
+      if (calc?.hasSubstantialAssets) {
         toast({
           title: "Excellent Financial Position!",
           description: `Your existing assets cover ${calc.assetCoveragePercentage}% of your retirement corpus. The recommended SIP will build an even stronger cushion for your golden years.`,
@@ -38,7 +41,7 @@ export default function Dashboard() {
       }
     }
     // Trigger when hasSubstantialAssets flag changes, not just on plan ID change
-  }, [plan?.calculatedPlan?.hasSubstantialAssets, plan?.calculatedPlan?.assetCoveragePercentage, toast]);
+  }, [(plan?.calculatedPlan as CalculatedPlan | undefined)?.hasSubstantialAssets, (plan?.calculatedPlan as CalculatedPlan | undefined)?.assetCoveragePercentage, toast]);
 
   if (!planId) {
     return (
@@ -541,6 +544,15 @@ export default function Dashboard() {
           ))}
         </div>
 
+        {/* Advanced Features Section */}
+        <div className="mt-12">
+          <h2 className="text-2xl font-bold mb-6">Advanced Features</h2>
+          <div className="grid md:grid-cols-2 gap-6">
+            <ExpensesManager planId={planId} />
+            <WhatIfSimulator planId={planId} />
+          </div>
+        </div>
+
         {/* Disclaimer */}
         <div className="mt-12 bg-muted/50 border rounded-lg p-6">
           <p className="text-sm text-muted-foreground">
@@ -592,6 +604,9 @@ export default function Dashboard() {
           </Button>
         </div>
       </main>
+
+      {/* Floating Chatbot Widget */}
+      <ChatbotWidget planId={planId} />
     </div>
   );
 }
