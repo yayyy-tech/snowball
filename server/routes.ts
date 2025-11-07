@@ -42,8 +42,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         userId,
       });
       
-      // Calculate retirement plan
-      const calculatedPlan = calculateRetirementPlan(plan);
+      // Fetch one-time expenses for this plan (if any)
+      const expenses = await storage.getOneTimeExpensesByPlanId(plan.id);
+      
+      // Calculate retirement plan with expenses
+      const calculatedPlan = calculateRetirementPlan(plan, expenses);
       
       // Update plan with calculations
       await storage.updateRetirementPlan(plan.id, {
@@ -126,8 +129,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Retirement plan not found" });
       }
       
+      // Fetch expenses for this plan
+      const expenses = await storage.getOneTimeExpensesByPlanId(req.params.id);
+      
       // Recalculate if data changed
-      const calculatedPlan = calculateRetirementPlan(updatedPlan);
+      const calculatedPlan = calculateRetirementPlan(updatedPlan, expenses);
       
       await storage.updateRetirementPlan(req.params.id, {
         calculatedPlan: calculatedPlan,
@@ -275,7 +281,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (expense.retirementPlanId) {
         const plan = await storage.getRetirementPlan(expense.retirementPlanId);
         if (plan) {
-          const calculatedPlan = calculateRetirementPlan(plan);
+          const expenses = await storage.getOneTimeExpensesByPlanId(expense.retirementPlanId);
+          const calculatedPlan = calculateRetirementPlan(plan, expenses);
           await storage.updateRetirementPlan(expense.retirementPlanId, {
             calculatedPlan,
           });
@@ -321,7 +328,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (expense.retirementPlanId) {
         const plan = await storage.getRetirementPlan(expense.retirementPlanId);
         if (plan) {
-          const calculatedPlan = calculateRetirementPlan(plan);
+          const expenses = await storage.getOneTimeExpensesByPlanId(expense.retirementPlanId);
+          const calculatedPlan = calculateRetirementPlan(plan, expenses);
           await storage.updateRetirementPlan(expense.retirementPlanId, {
             calculatedPlan,
           });
@@ -351,7 +359,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (planId) {
         const plan = await storage.getRetirementPlan(planId);
         if (plan) {
-          const calculatedPlan = calculateRetirementPlan(plan);
+          const expenses = await storage.getOneTimeExpensesByPlanId(planId);
+          const calculatedPlan = calculateRetirementPlan(plan, expenses);
           await storage.updateRetirementPlan(planId, {
             calculatedPlan,
           });

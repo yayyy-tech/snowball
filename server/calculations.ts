@@ -1,4 +1,4 @@
-import { type RetirementPlan, type CalculatedPlan } from "@shared/schema";
+import { type RetirementPlan, type CalculatedPlan, type OneTimeExpense } from "@shared/schema";
 import { generateCompleteRecommendations, type RiskAppetite, type GrowthPreference } from "./fundRecommendations";
 import { 
   calculateFreedomScore, 
@@ -86,7 +86,7 @@ function getBlendedReturns(allocation: { equity: number; debt: number; gold: num
   return (allocation.equity * EQUITY_RETURNS + allocation.debt * DEBT_RETURNS + allocation.gold * GOLD_RETURNS) / 100;
 }
 
-export function calculateRetirementPlan(plan: RetirementPlan): CalculatedPlan {
+export function calculateRetirementPlan(plan: RetirementPlan, oneTimeExpenses: OneTimeExpense[] = []): CalculatedPlan {
   console.log('[CALC DEBUG] ===== USING FIXED SIP CALCULATION (Oct 15, 2025) =====');
   const yearsToRetirement = plan.retirementAge - plan.currentAge;
   const yearsInRetirement = plan.longevityYears || (LIFE_EXPECTANCY - plan.retirementAge);
@@ -113,8 +113,14 @@ export function calculateRetirementPlan(plan: RetirementPlan): CalculatedPlan {
     baseCorpusNeeded = annualExpenseAtRetirement * (1 - Math.pow((1 + g) / (1 + r), n)) / (r - g);
   }
   
+  // Add one-time expenses to corpus
+  const oneTimeExpensesTotal = oneTimeExpenses.reduce((sum, expense) => {
+    return sum + (expense.inflationAdjustedCost || 0);
+  }, 0);
+  console.log(`[ONE-TIME EXPENSES] Total: ₹${oneTimeExpensesTotal.toLocaleString('en-IN')} from ${oneTimeExpenses.length} expenses`);
+  
   const bufferAmount = baseCorpusNeeded * CORPUS_BUFFER;
-  const totalCorpusNeeded = baseCorpusNeeded + bufferAmount;
+  const totalCorpusNeeded = baseCorpusNeeded + bufferAmount + oneTimeExpensesTotal;
   
   // Calculate current assets - prioritize plan.totalAssets from 5-step flow
   const legacyTotalAssets = (plan.realEstateValue || 0) + (plan.stocksValue || 0) + 
@@ -364,6 +370,7 @@ export function calculateRetirementPlan(plan: RetirementPlan): CalculatedPlan {
     baseCorpusNeeded: Math.round(baseCorpusNeeded),
     bufferAmount: Math.round(bufferAmount),
     totalCorpusNeeded: Math.round(totalCorpusNeeded),
+    oneTimeExpensesTotal: Math.round(oneTimeExpensesTotal),
     totalAssets,
     projectedAssetValue: Math.round(projectedAssetValue),
     monthlySavings: Math.round(monthlySavings),
