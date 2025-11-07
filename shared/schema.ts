@@ -27,7 +27,7 @@ export const users = pgTable("users", {
 
 export const retirementPlans = pgTable("retirement_plans", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  userId: varchar("user_id"),
+  userId: varchar("user_id").references(() => users.id),
   
   // Step 1: Personal (OLD - keeping for backward compatibility)
   fullName: text("full_name").notNull(),
@@ -143,6 +143,41 @@ export interface GPTRecommendation {
   nextSteps: string[];
 }
 
+// One-time big expenses table (car, home, wedding, etc.)
+export const oneTimeExpenses = pgTable("one_time_expenses", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  retirementPlanId: varchar("retirement_plan_id").references(() => retirementPlans.id),
+  name: text("name").notNull(), // e.g., "Car purchase", "Home down payment", "Daughter's wedding"
+  estimatedCost: integer("estimated_cost").notNull(), // Current cost in ₹
+  targetYear: integer("target_year"), // Year when expense will occur
+  targetAge: integer("target_age"), // Or age when it will occur
+  inflationAdjustedCost: integer("inflation_adjusted_cost"), // Calculated cost after inflation
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertOneTimeExpenseSchema = createInsertSchema(oneTimeExpenses).omit({
+  id: true,
+  inflationAdjustedCost: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertOneTimeExpense = z.infer<typeof insertOneTimeExpenseSchema>;
+export type OneTimeExpense = typeof oneTimeExpenses.$inferSelect;
+
+// Chat messages table for AI assistant
+export const chatMessages = pgTable("chat_messages", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  role: text("role").notNull(), // 'user' or 'assistant'
+  content: text("content").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export type ChatMessage = typeof chatMessages.$inferSelect;
+
 export interface CalculatedPlan {
   yearsToRetirement: number;
   yearsInRetirement: number;
@@ -150,6 +185,7 @@ export interface CalculatedPlan {
   baseCorpusNeeded: number;
   bufferAmount: number;
   totalCorpusNeeded: number;
+  oneTimeExpensesTotal: number; // Total inflation-adjusted one-time expenses
   totalAssets: number;
   projectedAssetValue: number;
   monthlySavings: number;
