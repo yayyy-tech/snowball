@@ -1,13 +1,40 @@
 import passport from "passport";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
-import type { Express } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
 import { storage } from "../storage";
 import type { User } from "../../shared/schema";
 
+// Helper to get authenticated user with type safety
+export function getAuthenticatedUser(req: Request): User | null {
+  if (!req.isAuthenticated() || !req.user) {
+    return null;
+  }
+  return req.user as User;
+}
+
 // Google OAuth Configuration
 export function setupGoogleAuth(app: Express) {
+  // Validate required environment variables
+  const requiredEnvVars = ["DATABASE_URL", "SESSION_SECRET"];
+  const missingVars = requiredEnvVars.filter((varName) => !process.env[varName]);
+  
+  if (missingVars.length > 0) {
+    throw new Error(
+      `❌ Missing required environment variables: ${missingVars.join(", ")}\n` +
+      `   Please configure these in Replit Secrets.`
+    );
+  }
+
+  // Warn about missing Google OAuth credentials (won't crash, but auth won't work)
+  if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
+    console.warn(
+      "⚠️  Google OAuth credentials not configured.\n" +
+      "   Please set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in Replit Secrets.\n" +
+      "   Authentication will not work until these are set."
+    );
+  }
   // Session configuration with PostgreSQL store
   const sessionTtl = 7 * 24 * 60 * 60 * 1000; // 1 week
   const pgStore = connectPg(session);
@@ -18,10 +45,16 @@ export function setupGoogleAuth(app: Express) {
     tableName: "sessions",
   });
 
+  // Log session errors
+  sessionStore.on("error", (error) => {
+    console.error("❌ Session store error:", error);
+  });
+
   // Configure session middleware
   app.set("trust proxy", 1);
   app.use(
     session({
+      name: "snowball.sid", // Custom cookie name instead of default connect.sid
       secret: process.env.SESSION_SECRET!,
       store: sessionStore,
       resave: false,
@@ -97,23 +130,34 @@ export function setupGoogleAuth(app: Express) {
   passport.deserializeUser(async (id: string, done) => {
     try {
       const user = await storage.getUser(id);
+      if (!user) {
+        // Stale session - user no longer exists in database
+        console.warn(`⚠️  Session references non-existent user: ${id}`);
+        return done(null, false); // Force logout
+      }
       done(null, user);
     } catch (error) {
+      console.error("❌ Error deserializing user:", error);
       done(error);
     }
   });
 }
 
 // Middleware to check if user is authenticated
-export function isAuthenticated(req: any, res: any, next: any) {
-  if (req.isAuthenticated()) {
-    return next();
+export function isAuthenticated(req: Request, res: Response, next: NextFunction) {
+  if (!req.isAuthenticated() || !req.user) {
+    return res.status(401).json({ message: "Unauthorized" });
   }
-  res.status(401).json({ message: "Unauthorized" });
+  
+  // Add user to res.locals for downstream code
+  res.locals.currentUser = req.user as User;
+  next();
 }
 
 // Optional auth - doesn't block but adds user info if logged in
-export function optionalAuth(req: any, res: any, next: any) {
-  // Just continue - user info will be in req.user if authenticated
+export function optionalAuth(req: Request, res: Response, next: NextFunction) {
+  if (req.isAuthenticated() && req.user) {
+    res.locals.currentUser = req.user as User;
+  }
   next();
 }

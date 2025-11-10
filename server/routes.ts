@@ -4,21 +4,42 @@ import { storage } from "./storage";
 import { insertRetirementPlanSchema, insertOneTimeExpenseSchema } from "@shared/schema";
 import { calculateRetirementPlan } from "./calculations";
 import { generateFundRecommendations, generateCompleteRecommendations, type RecommendationInput } from "./fundRecommendations";
-import { setupAuth, isAuthenticated, optionalAuth } from "./replitAuth";
+import { setupGoogleAuth, isAuthenticated, optionalAuth, getAuthenticatedUser } from "./auth/googleAuth";
 import { generateGPTRecommendations } from "./gptRecommendations";
 import { generateRetirementPDF } from "./pdfGenerator";
 import { callClaudeWithRetry } from "./utils/claude";
 import { WebSocketServer } from "ws";
+import passport from "passport";
+import type { User } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Setup authentication (Google login, GitHub, etc.)
-  await setupAuth(app);
+  // Setup Google OAuth authentication
+  setupGoogleAuth(app);
+
+  // Google OAuth Routes
+  app.get("/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));
+
+  app.get("/auth/google/callback", 
+    passport.authenticate("google", { failureRedirect: "/" }),
+    (req, res) => {
+      // Successful authentication, redirect to dashboard or onboarding
+      res.redirect("/dashboard");
+    }
+  );
+
+  app.get("/auth/logout", (req, res) => {
+    req.logout((err) => {
+      if (err) {
+        return res.status(500).json({ message: "Logout failed" });
+      }
+      res.redirect("/");
+    });
+  });
 
   // Auth route - returns logged-in user data
   app.get("/api/auth/user", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
+      const user = req.user as User;
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
@@ -33,13 +54,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/retirement-plans", isAuthenticated, async (req: any, res) => {
     try {
       // userId is required (authentication mandatory)
-      const userId = req.user.claims.sub;
+      const user = getAuthenticatedUser(req);
+      if (!user) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
       const validatedData = insertRetirementPlanSchema.parse(req.body);
       
       // Associate plan with authenticated user
       const plan = await storage.createRetirementPlan({
         ...validatedData,
-        userId,
+        userId: user.id,
       });
       
       // Fetch one-time expenses for this plan (if any)
@@ -66,7 +90,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get a retirement plan by ID (authentication required)
   app.get("/api/retirement-plans/:id", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const user = getAuthenticatedUser(req);
+      if (!user) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
       const plan = await storage.getRetirementPlan(req.params.id);
       
       if (!plan) {
@@ -74,7 +101,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Verify ownership - users can only view their own plans
-      if (plan.userId !== userId) {
+      if (plan.userId !== user.id) {
         return res.status(403).json({ error: "You do not have permission to view this plan" });
       }
       
@@ -88,7 +115,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Download retirement plan as PDF (authentication required)
   app.get("/api/retirement-plans/:id/download-pdf", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const user = getAuthenticatedUser(req);
+      if (!user) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
       const plan = await storage.getRetirementPlan(req.params.id);
       
       if (!plan) {
@@ -96,7 +126,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Verify ownership - users can only download their own plans
-      if (plan.userId !== userId) {
+      if (plan.userId !== user.id) {
         return res.status(403).json({ error: "You do not have permission to download this plan" });
       }
       
@@ -122,7 +152,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Update a retirement plan (authentication required)
   app.put("/api/retirement-plans/:id", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const user = getAuthenticatedUser(req);
+      if (!user) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
       
       // First check if plan exists
       const existingPlan = await storage.getRetirementPlan(req.params.id);
@@ -131,7 +164,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Verify ownership - users can only update their own plans
-      if (existingPlan.userId !== userId) {
+      if (existingPlan.userId !== user.id) {
         return res.status(403).json({ error: "You do not have permission to update this plan" });
       }
       
@@ -229,7 +262,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // GPT-powered AI recommendations (authentication required)
   app.get("/api/gpt-recommendations/:planId", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const user = getAuthenticatedUser(req);
+      if (!user) return res.status(401).json({ error: "Unauthorized" });
       const plan = await storage.getRetirementPlan(req.params.planId);
       
       if (!plan) {
@@ -237,7 +271,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Verify ownership - users can only get recommendations for their own plans
-      if (plan.userId !== userId) {
+      if (plan.userId !== user.id) {
         return res.status(403).json({ error: "You do not have permission to access this plan" });
       }
       
@@ -255,8 +289,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all expenses for logged-in user
   app.get("/api/expenses", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
-      const expenses = await storage.getOneTimeExpensesByUserId(userId);
+      const user = getAuthenticatedUser(req);
+      if (!user) return res.status(401).json({ error: "Unauthorized" });
+      const expenses = await storage.getOneTimeExpensesByUserId(user.id);
       res.json(expenses);
     } catch (error: any) {
       console.error("Error fetching expenses:", error);
@@ -267,14 +302,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get expenses for a specific plan (authentication required)
   app.get("/api/expenses/plan/:planId", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const user = getAuthenticatedUser(req);
+      if (!user) return res.status(401).json({ error: "Unauthorized" });
       
       // Verify plan ownership
       const plan = await storage.getRetirementPlan(req.params.planId);
       if (!plan) {
         return res.status(404).json({ error: "Plan not found" });
       }
-      if (plan.userId !== userId) {
+      if (plan.userId !== user.id) {
         return res.status(403).json({ error: "You do not have permission to view expenses for this plan" });
       }
       
@@ -289,10 +325,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create a new one-time expense
   app.post("/api/expenses", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const user = getAuthenticatedUser(req);
+      if (!user) return res.status(401).json({ error: "Unauthorized" });
       const validatedData = insertOneTimeExpenseSchema.parse({
         ...req.body,
-        userId,
+        userId: user.id,
       });
       
       // Verify plan ownership if retirementPlanId is provided
@@ -301,7 +338,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (!plan) {
           return res.status(404).json({ error: "Retirement plan not found" });
         }
-        if (plan.userId !== userId) {
+        if (plan.userId !== user.id) {
           return res.status(403).json({ error: "You do not have permission to add expenses to this plan" });
         }
       }
@@ -317,7 +354,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const expense = await storage.createOneTimeExpense(validatedData);
       
       // Update the expense with inflation-adjusted cost
-      await storage.updateOneTimeExpense(expense.id, userId, {
+      await storage.updateOneTimeExpense(expense.id, user.id, {
         inflationAdjustedCost,
       } as any);
       
@@ -343,10 +380,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Update an expense
   app.put("/api/expenses/:id", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const user = getAuthenticatedUser(req);
+      if (!user) return res.status(401).json({ error: "Unauthorized" });
       const validatedData = insertOneTimeExpenseSchema.partial().parse(req.body);
       
-      const expense = await storage.updateOneTimeExpense(req.params.id, userId, validatedData);
+      const expense = await storage.updateOneTimeExpense(req.params.id, user.id, validatedData);
       
       // Recalculate inflation-adjusted cost if estimate or year changed
       if (expense && (validatedData.estimatedCost || validatedData.targetYear)) {
@@ -359,7 +397,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           cost * Math.pow(1 + inflationRate, yearsUntilExpense)
         );
         
-        await storage.updateOneTimeExpense(req.params.id, userId, {
+        await storage.updateOneTimeExpense(req.params.id, user.id, {
           inflationAdjustedCost,
         } as any);
       }
@@ -390,14 +428,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Delete an expense
   app.delete("/api/expenses/:id", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const user = getAuthenticatedUser(req);
+      if (!user) return res.status(401).json({ error: "Unauthorized" });
       
       // Get expense first to check plan association
-      const expenses = await storage.getOneTimeExpensesByUserId(userId);
+      const expenses = await storage.getOneTimeExpensesByUserId(user.id);
       const expense = expenses.find(e => e.id === req.params.id);
       const planId = expense?.retirementPlanId;
       
-      await storage.deleteOneTimeExpense(req.params.id, userId);
+      await storage.deleteOneTimeExpense(req.params.id, user.id);
       
       // Recalculate plan if needed
       if (planId) {
@@ -421,7 +460,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // WHAT IF SIMULATOR API (Claude-powered)
   app.post("/api/what-if", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const user = getAuthenticatedUser(req);
+      if (!user) return res.status(401).json({ error: "Unauthorized" });
       const { question, planId } = req.body;
       
       if (!question || !planId) {
@@ -434,7 +474,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Verify ownership - users can only simulate scenarios for their own plans
-      if (plan.userId !== userId) {
+      if (plan.userId !== user.id) {
         return res.status(403).json({ error: "You do not have permission to access this plan" });
       }
       
@@ -482,7 +522,8 @@ Format your response in markdown.`;
   // CHATBOT API (Claude-powered)
   app.post("/api/chat", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const user = getAuthenticatedUser(req);
+      if (!user) return res.status(401).json({ error: "Unauthorized" });
       const { message, planId } = req.body;
       
       if (!message) {
@@ -490,10 +531,10 @@ Format your response in markdown.`;
       }
       
       // Save user message
-      await storage.createChatMessage(userId, 'user', message);
+      await storage.createChatMessage(user.id, 'user', message);
       
       // Get recent chat history
-      const recentMessages = await storage.getChatMessagesByUserId(userId, 10);
+      const recentMessages = await storage.getChatMessagesByUserId(user.id, 10);
       const chatHistory = recentMessages.reverse().slice(-10); // Last 5 exchanges
       
       // Get user's plan if provided
@@ -501,7 +542,7 @@ Format your response in markdown.`;
       if (planId) {
         const plan = await storage.getRetirementPlan(planId);
         // Verify ownership - users can only chat about their own plans
-        if (plan && plan.userId === userId) {
+        if (plan && plan.userId === user.id) {
           planContext = `User's Retirement Plan:
 - Age: ${plan.currentAge}, Retirement: ${plan.retirementAge}
 - Income: ₹${plan.monthlyIncome?.toLocaleString('en-IN')}/month
@@ -541,7 +582,7 @@ ${planContext}`;
       });
       
       // Save assistant response
-      await storage.createChatMessage(userId, 'assistant', response);
+      await storage.createChatMessage(user.id, 'assistant', response);
       
       res.json({ response });
     } catch (error: any) {
@@ -553,9 +594,10 @@ ${planContext}`;
   // Get chat history
   app.get("/api/chat/history", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const user = getAuthenticatedUser(req);
+      if (!user) return res.status(401).json({ error: "Unauthorized" });
       const limit = parseInt(req.query.limit as string) || 50;
-      const messages = await storage.getChatMessagesByUserId(userId, limit);
+      const messages = await storage.getChatMessagesByUserId(user.id, limit);
       res.json(messages.reverse());
     } catch (error: any) {
       console.error("Error fetching chat history:", error);
