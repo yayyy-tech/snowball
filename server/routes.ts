@@ -30,9 +30,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/auth/logout", (req, res) => {
     req.logout((err) => {
       if (err) {
+        console.error("Logout error:", err);
         return res.status(500).json({ message: "Logout failed" });
       }
-      res.redirect("/");
+      
+      // Check if session exists before destroying
+      if (req.session) {
+        // Destroy the session completely
+        req.session.destroy((destroyErr) => {
+          if (destroyErr) {
+            console.error("Session destroy error:", destroyErr);
+            // Continue to clear cookie even if destroy fails
+          }
+          
+          // Clear the session cookie with exact same config as session middleware
+          res.clearCookie('snowball.sid', {
+            path: '/',
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
+          });
+          
+          res.redirect("/");
+        });
+      } else {
+        // No session exists, just clear cookie and redirect
+        res.clearCookie('snowball.sid', {
+          path: '/',
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
+        });
+        
+        res.redirect("/");
+      }
     });
   });
 
