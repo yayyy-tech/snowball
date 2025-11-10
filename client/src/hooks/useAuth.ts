@@ -10,11 +10,11 @@ export function useAuth() {
   });
 
   const login = () => {
-    window.location.href = '/api/login';
+    window.location.href = '/auth/google';
   };
 
   const logout = () => {
-    window.location.href = '/api/logout';
+    window.location.href = '/auth/logout';
   };
 
   return {
