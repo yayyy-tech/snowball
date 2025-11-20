@@ -7,7 +7,7 @@ export function Footer() {
   return (
     <footer className="border-t bg-muted/30 py-12">
       <div className="container mx-auto px-4 md:px-8">
-        <div className="grid md:grid-cols-4 gap-8 mb-8">
+        <div className="grid md:grid-cols-3 gap-8 mb-8">
           <div className="space-y-4">
             <div className="flex items-center gap-2">
               <Snowflake className="h-6 w-6 text-primary" />
@@ -53,15 +53,6 @@ export function Footer() {
                   About
                 </button>
               </li>
-              <li><button className="text-muted-foreground hover:text-foreground transition-colors">Contact</button></li>
-            </ul>
-          </div>
-
-          <div>
-            <h3 className="font-semibold mb-4">Legal</h3>
-            <ul className="space-y-2 text-sm">
-              <li><button className="text-muted-foreground hover:text-foreground transition-colors">Privacy</button></li>
-              <li><button className="text-muted-foreground hover:text-foreground transition-colors">Terms</button></li>
             </ul>
           </div>
         </div>
