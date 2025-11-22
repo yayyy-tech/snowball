@@ -21,6 +21,15 @@ export function Header() {
             >
               How It Works
             </button>
+            {isAuthenticated && (
+              <button 
+                onClick={() => setLocation("/previous-plans")}
+                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                data-testid="nav-previous-plans"
+              >
+                Previous Plans
+              </button>
+            )}
             <button 
               onClick={() => setLocation("/about-us")}
               className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
@@ -42,15 +51,6 @@ export function Header() {
             <ThemeToggle />
             {isAuthenticated ? (
               <>
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  onClick={() => setLocation("/previous-plans")}
-                  className="hidden md:inline-flex"
-                  data-testid="button-previous-plans"
-                >
-                  Previous Plans
-                </Button>
                 {user && (
                   <div className="flex items-center gap-2" data-testid="user-profile">
                     <Avatar className="h-8 w-8">
