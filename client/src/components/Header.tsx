@@ -42,6 +42,15 @@ export function Header() {
             <ThemeToggle />
             {isAuthenticated ? (
               <>
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => setLocation("/previous-plans")}
+                  className="hidden md:inline-flex"
+                  data-testid="button-previous-plans"
+                >
+                  Previous Plans
+                </Button>
                 {user && (
                   <div className="flex items-center gap-2" data-testid="user-profile">
                     <Avatar className="h-8 w-8">

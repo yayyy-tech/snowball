@@ -10,6 +10,7 @@ import Onboarding from "@/pages/Onboarding";
 import Dashboard from "@/pages/Dashboard";
 import HowItWorks from "@/pages/HowItWorks";
 import AboutUs from "@/pages/AboutUs";
+import PreviousPlans from "@/pages/PreviousPlans";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -18,6 +19,7 @@ function Router() {
       <Route path="/" component={Landing} />
       <Route path="/onboarding" component={Onboarding} />
       <Route path="/dashboard" component={Dashboard} />
+      <Route path="/previous-plans" component={PreviousPlans} />
       <Route path="/how-it-works" component={HowItWorks} />
       <Route path="/about-us" component={AboutUs} />
       <Route component={NotFound} />

@@ -34,6 +34,7 @@ Preferred communication style: Simple, everyday language.
 - **AI Inference Engine**: Infers monthly expenses, savings rate, lifestyle expenses, calculates Freedom Score, and generates advice triggers.
 - **Personalized Investment Recommendations**: Multi-factor engine considering age, risk tolerance, time horizon, investment size, and lifestyle goals to suggest specific mutual funds, bonds, and ETFs.
 - **Advanced Features**:
+    - **Previous Plans View**: Users can view all their previously created retirement plans with quick metrics (Freedom Score, age, years to retirement). Organized in a responsive grid with fast loading.
     - **One-Time Expenses Tracking**: Full CRUD API, inflation-adjusted, integrated into corpus calculation.
     - **What If Scenario Simulator**: Claude-powered analysis of user financial scenarios.
     - **Interactive Chatbot Assistant**: Claude-powered, context-aware advice, with persistent chat history.

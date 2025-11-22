@@ -118,6 +118,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get all retirement plans for authenticated user
+  app.get("/api/retirement-plans", isAuthenticated, async (req: any, res) => {
+    try {
+      const user = getAuthenticatedUser(req);
+      if (!user) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
+      const plans = await storage.getRetirementPlansByUserId(user.id);
+      res.json(plans);
+    } catch (error: any) {
+      console.error("Error fetching retirement plans:", error);
+      res.status(500).json({ error: "Failed to fetch retirement plans" });
+    }
+  });
+
   // Get a retirement plan by ID (authentication required)
   app.get("/api/retirement-plans/:id", isAuthenticated, async (req: any, res) => {
     try {
