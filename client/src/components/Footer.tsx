@@ -2,7 +2,6 @@ import { Snowflake } from "lucide-react";
 import { useLocation } from "wouter";
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
 
 const PRIVACY_POLICY = `Snowball Privacy Policy
 
@@ -227,17 +226,15 @@ export function Footer() {
       </div>
 
       <Dialog open={isPrivacyOpen} onOpenChange={setIsPrivacyOpen}>
-        <DialogContent className="max-w-2xl max-h-[80vh]">
+        <DialogContent className="max-w-2xl max-h-[80vh] flex flex-col">
           <DialogHeader>
             <DialogTitle>Privacy Policy</DialogTitle>
           </DialogHeader>
-          <ScrollArea className="h-full">
-            <div className="pr-4">
-              <p className="text-sm whitespace-pre-wrap text-muted-foreground leading-relaxed">
-                {PRIVACY_POLICY}
-              </p>
-            </div>
-          </ScrollArea>
+          <div className="overflow-y-auto flex-1 pr-4">
+            <p className="text-sm whitespace-pre-wrap text-muted-foreground leading-relaxed">
+              {PRIVACY_POLICY}
+            </p>
+          </div>
         </DialogContent>
       </Dialog>
     </footer>
