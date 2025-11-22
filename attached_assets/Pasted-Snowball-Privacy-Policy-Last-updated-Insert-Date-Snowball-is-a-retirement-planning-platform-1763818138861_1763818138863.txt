@@ -1,0 +1,169 @@
+Snowball Privacy Policy
+
+Last updated: [Insert Date]
+
+Snowball is a retirement-planning platform that helps users model, track and optimise their long-term financial plans using AI. Your privacy matters to us. This policy explains what we collect, why we collect it, how we use it, and the choices you have.
+
+By using Snowball, you agree to the practices described here.
+
+1. What We Collect
+
+We only collect information that is needed to provide and improve Snowball.
+
+a. Retirement Planning Data
+
+Inputs you share while creating or updating retirement plans, such as:
+
+savings amount
+
+expected retirement age
+
+expected returns
+
+financial assumptions
+
+edits or versions of your past plans
+
+b. Usage Data
+
+Information about how you use the product, like:
+
+actions taken inside the app
+
+timestamps for plan creation/edits
+
+general feature-usage patterns
+
+c. Technical Data
+
+Standard technical information such as:
+
+device type
+
+browser type
+
+IP address
+
+cookies that help us run the platform
+
+What We Don’t Collect
+
+We do not collect or store personal identity information like your address, Aadhaar, PAN, phone number, or anything that can directly identify you unless you provide it voluntarily for future features.
+
+2. Why We Collect It
+
+We use the data for the following reasons:
+
+To run Snowball
+Your plan inputs are needed to generate retirement projections and insights.
+
+To help you revisit past plans
+We save your historical plans so you can compare or track changes.
+
+To improve our AI models
+We use anonymised plan data to refine GPT-based suggestions and improve accuracy.
+
+To improve product performance
+Usage patterns help us understand what works and what needs improvement.
+
+To keep the experience secure
+Technical logs help detect bugs, fraud, or misuse.
+
+3. How We Process Your Data
+
+We only process data after obtaining clear consent from you.
+
+You can withdraw consent anytime from settings or by contacting us.
+
+Processing is limited to the specific purpose you agreed to.
+
+All data used for AI optimisation is anonymised or pseudonymised.
+
+4. How We Protect Your Data
+
+We use industry-standard security measures, including:
+
+encryption in transit and at rest
+
+access-control systems
+
+monitoring and audit logs
+
+routine security reviews
+
+Only authorised systems or personnel can access your data.
+
+5. How Long We Keep Your Data
+
+Retirement-plan data stays with us as long as your account is active or until you delete it.
+
+Usage and technical logs may be retained for a limited period for security, analytics or compliance.
+
+When you delete your account or request deletion, we remove your data unless we must keep some information for legal obligations.
+
+6. Sharing of Data
+
+We do not sell your data.
+
+We may share anonymised or aggregated data with:
+
+analytics partners
+
+infrastructure/service providers
+
+research or AI-training pipelines
+
+No third party receives information that can identify you personally.
+
+If we ever introduce integrations with external apps, we will ask for fresh consent.
+
+7. Your Rights
+
+Under the Digital Personal Data Protection Act (India), you have the right to:
+
+Access the data we hold about you
+
+Correct information that’s inaccurate
+
+Delete your data or your account
+
+Withdraw consent
+
+Know who we have shared your data with
+
+You can send a request to us at [insert contact email].
+
+8. Data Transfer
+
+If your data is processed or stored outside India, we ensure it is handled under protection standards aligned with Indian law.
+
+9. Cookies
+
+We use cookies for:
+
+login/session management
+
+analytics
+
+improving app performance
+
+You can disable cookies, but some features may not work properly.
+
+10. Children’s Data
+
+Snowball is not built for users under 18. We do not knowingly collect data from minors. If we learn that data belongs to a minor, we delete it.
+
+11. Updates to This Policy
+
+We may update this policy from time to time.
+If the changes are significant, we will notify you through the app or website.
+
+The latest version will always be available on our site.
+
+12. Contact Us
+
+If you have questions or want to exercise your rights, reach out to:
+
+Email: [support@getsnowball.in
+]
+Address: [Insert company address]
