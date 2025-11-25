@@ -1,8 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
+import { useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Calendar, TrendingUp } from "lucide-react";
+import { analytics, EVENTS } from "@/lib/mixpanel";
 import type { RetirementPlan } from "@shared/schema";
 
 export default function PreviousPlans() {
@@ -11,6 +13,12 @@ export default function PreviousPlans() {
   const { data: plans = [], isLoading } = useQuery<RetirementPlan[]>({
     queryKey: ["/api/retirement-plans"],
   });
+
+  useEffect(() => {
+    analytics.track(EVENTS.PREVIOUS_PLANS_VIEWED, {
+      planCount: plans.length,
+    });
+  }, [plans.length]);
 
   if (isLoading) {
     return (

@@ -1,6 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
+import { useEffect } from "react";
 import type { User } from "@shared/schema";
 import { getQueryFn } from "@/lib/queryClient";
+import { analytics, EVENTS } from "@/lib/mixpanel";
 
 export function useAuth() {
   const { data: user, isLoading } = useQuery<User>({
@@ -9,11 +11,26 @@ export function useAuth() {
     retry: false,
   });
 
+  useEffect(() => {
+    if (user) {
+      analytics.identify(user.id, {
+        $email: user.email,
+        $first_name: user.firstName,
+        $last_name: user.lastName,
+      });
+      analytics.track(EVENTS.USER_LOGGED_IN, {
+        method: 'google',
+      });
+    }
+  }, [user?.id]);
+
   const login = () => {
     window.location.href = '/auth/google';
   };
 
   const logout = () => {
+    analytics.track(EVENTS.USER_LOGGED_OUT);
+    analytics.reset();
     window.location.href = '/auth/logout';
   };
 

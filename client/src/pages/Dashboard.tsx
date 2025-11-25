@@ -14,6 +14,7 @@ import { useEffect } from "react";
 import { ExpensesManager } from "@/components/ExpensesManager";
 import { WhatIfSimulator } from "@/components/WhatIfSimulator";
 import { ChatbotWidget } from "@/components/ChatbotWidget";
+import { analytics, EVENTS } from "@/lib/mixpanel";
 
 export default function Dashboard() {
   const { toast } = useToast();
@@ -28,6 +29,18 @@ export default function Dashboard() {
     enabled: !!planId,
   });
   
+  // Track plan view
+  useEffect(() => {
+    if (plan) {
+      analytics.track(EVENTS.PLAN_VIEWED, {
+        planId: plan.id,
+        freedomScore: plan.freedomScore,
+        currentAge: plan.currentAge,
+        retirementAge: plan.retirementAge,
+      });
+    }
+  }, [plan?.id]);
+
   // Show substantial assets notification once when data loads
   useEffect(() => {
     if (plan?.calculatedPlan) {
