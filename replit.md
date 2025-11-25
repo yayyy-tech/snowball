@@ -73,6 +73,9 @@ Preferred communication style: Simple, everyday language.
 ### AI Integration
 - Claude 3.5 Sonnet (via `server/utils/claude.ts`)
 
+### Analytics Integration
+- Mixpanel (via `client/src/lib/mixpanel.ts`) - Tracks user logins, plan creation, page views, and key user actions. Requires `VITE_MIXPANEL_TOKEN` environment variable.
+
 ### Utility Libraries
 - `date-fns`
 - `clsx`, `tailwind-merge`

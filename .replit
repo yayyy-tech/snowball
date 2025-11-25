@@ -101,3 +101,8 @@ waitForPort = 5000
 
 [agent]
 integrations = ["javascript_database:1.0.0", "javascript_log_in_with_replit:1.0.0", "javascript_openai_ai_integrations:1.0.0"]
+
+[userenv]
+
+[userenv.shared]
+VITE_MIXPANEL_TOKEN = "5f12622eec40956f651d1c4fb73137ae"
