@@ -21,7 +21,7 @@ export async function callClaude(
   options: ClaudeOptions = {}
 ): Promise<string> {
   const {
-    model = 'claude-3-sonnet-20240229',
+    model = 'claude-opus-4-1',
     maxTokens = 4096,
     temperature = 0.7,
     systemPrompt,
@@ -81,7 +81,7 @@ export async function streamClaude(
   onChunk: (chunk: string) => void
 ): Promise<void> {
   const {
-    model = 'claude-3-sonnet-20240229',
+    model = 'claude-opus-4-1',
     maxTokens = 4096,
     temperature = 0.7,
     systemPrompt,
