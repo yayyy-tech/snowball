@@ -562,7 +562,8 @@ Format your response in markdown.`;
       res.json({ analysis: response, question });
     } catch (error: any) {
       console.error("Error in what-if simulator:", error);
-      res.status(500).json({ error: "Failed to analyze scenario" });
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      res.status(500).json({ error: "Failed to analyze scenario", details: errorMessage });
     }
   });
 

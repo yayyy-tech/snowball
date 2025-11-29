@@ -28,9 +28,10 @@ export function WhatIfSimulator({ planId }: WhatIfSimulatorProps) {
       setQuestion('');
     },
     onError: (error: any) => {
+      const errorMsg = error?.response?.data?.details || error?.message || 'Unknown error occurred';
       toast({
         title: 'Error analyzing scenario',
-        description: error.message,
+        description: errorMsg,
         variant: 'destructive',
       });
     },
