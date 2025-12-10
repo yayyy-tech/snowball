@@ -9,7 +9,8 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { useLocation } from "wouter";
-import { Heart, TrendingUp, Building, Palmtree, Target, Sparkles, ArrowRight, Lock } from "lucide-react";
+import { Heart, TrendingUp, Building, Palmtree, Target, Sparkles, ArrowRight, Lock, Baby, Users, AlertTriangle, Home, Wallet, CreditCard, PiggyBank, Shield, GraduationCap, HeartPulse } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -65,22 +66,68 @@ export default function Onboarding() {
 
   // Form state - simplified for 5-step flow (MUST be before early returns)
   const [formData, setFormData] = useState({
-    // Step 1: Life Snapshot
+    // Step 1: Life Snapshot - Basic
     fullName: "",
     age: "",
     retirementAge: "60",
     maritalStatus: "",
-    dependents: "0",
+    
+    // Step 1: Life Snapshot - Spouse/Partner
+    spouseHasIncome: "",  // "yes" or "no"
+    spouseIncome: "",
+    
+    // Step 1: Life Snapshot - Dependents Breakdown
+    numberOfChildren: "0",
+    childrenAges: [] as string[],
+    parentsFinanciallyDependent: "", // "yes" or "no"
+    
+    // Step 1: Life Snapshot - Major Life Expenses
+    expectMajorExpenses: "", // "yes" or "no"
+    weddingCount: "0",
+    weddingCost: "",
+    weddingYears: "",
+    educationCount: "0",
+    educationCost: "",
+    educationYears: "",
+    expectedMedicalCost: "",
+    
+    // Step 1: Life Snapshot - Health Risk
+    hasMajorHealthConditions: "", // "yes" or "no"
+    currentHealthRating: "", // "good", "average", "poor"
+    familyChronicIllnessHistory: "", // "yes" or "no"
     
     // Step 2: Money Flow
     monthlyIncome: "",
     monthlySavings: "", // direct amount instead of percentage
     monthlyExpenses: "", // direct amount instead of percentage
     
-    // Step 3: Assets & Obligations
+    // Step 3: Assets Breakdown
+    propertyPrimaryValue: "",
+    realEstateInvestmentValue: "",
+    stocksMutualFundsValue: "",
+    ppfNpsValue: "",
+    fdBondsValue: "",
+    goldJewelryValue: "",
+    cashLiquidValue: "",
+    excludePrimaryProperty: true,
+    
+    // Step 3: Emergency Fund
+    emergencyFundMonths: "",
+    
+    // Step 3: Liabilities Breakdown
+    homeLoanEmi: "",
+    homeLoanYearsLeft: "",
+    carLoanEmi: "",
+    carLoanYearsLeft: "",
+    personalLoanEmi: "",
+    personalLoanYearsLeft: "",
+    creditCardDebt: "",
+    
+    // Legacy fields for compatibility
     totalAssets: "",
     loanEmi: "",
     loanYearsLeft: "",
+    dependents: "0",
     
     // Step 4: Dream Retirement
     lifestyleChoice: "", // modest, comfortable, luxury, nomadic
@@ -192,28 +239,119 @@ export default function Onboarding() {
         formData.lifestyleChoice === 'luxury' ? 120 :
         formData.lifestyleChoice === 'nomadic' ? 110 : 90;
       
+      // Calculate total assets from breakdown
+      const propertyPrimaryValue = parseInt(parseIndianNumber(formData.propertyPrimaryValue)) || 0;
+      const realEstateInvestmentValue = parseInt(parseIndianNumber(formData.realEstateInvestmentValue)) || 0;
+      const stocksMutualFundsValue = parseInt(parseIndianNumber(formData.stocksMutualFundsValue)) || 0;
+      const ppfNpsValue = parseInt(parseIndianNumber(formData.ppfNpsValue)) || 0;
+      const fdBondsValue = parseInt(parseIndianNumber(formData.fdBondsValue)) || 0;
+      const goldJewelryValue = parseInt(parseIndianNumber(formData.goldJewelryValue)) || 0;
+      const cashLiquidValue = parseInt(parseIndianNumber(formData.cashLiquidValue)) || 0;
+      
+      // For retirement corpus: exclude primary property if flag is set
+      const calculatedTotalAssets = formData.excludePrimaryProperty
+        ? realEstateInvestmentValue + stocksMutualFundsValue + ppfNpsValue + fdBondsValue + goldJewelryValue + cashLiquidValue
+        : propertyPrimaryValue + realEstateInvestmentValue + stocksMutualFundsValue + ppfNpsValue + fdBondsValue + goldJewelryValue + cashLiquidValue;
+      
+      // Calculate total EMI from breakdown
+      const homeLoanEmiValue = parseInt(parseIndianNumber(formData.homeLoanEmi)) || 0;
+      const carLoanEmiValue = parseInt(parseIndianNumber(formData.carLoanEmi)) || 0;
+      const personalLoanEmiValue = parseInt(parseIndianNumber(formData.personalLoanEmi)) || 0;
+      const creditCardDebtValue = parseInt(parseIndianNumber(formData.creditCardDebt)) || 0;
+      const calculatedTotalEmi = homeLoanEmiValue + carLoanEmiValue + personalLoanEmiValue;
+      
+      // Calculate dependents from breakdown
+      const numberOfChildren = parseInt(formData.numberOfChildren) || 0;
+      const parentsDependent = formData.parentsFinanciallyDependent === "yes" ? 1 : 0;
+      const calculatedDependents = numberOfChildren + parentsDependent;
+      
+      // Build major life expenses object
+      const majorLifeExpenses: any = {};
+      if (formData.expectMajorExpenses === "yes") {
+        if (parseInt(formData.weddingCount) > 0) {
+          const weddingYearsArray = formData.weddingYears.split(',').map(y => parseInt(y.trim())).filter(y => !isNaN(y));
+          majorLifeExpenses.weddings = {
+            count: parseInt(formData.weddingCount),
+            avgCost: parseInt(parseIndianNumber(formData.weddingCost)) || 2000000,
+            yearsFromNow: weddingYearsArray.length > 0 ? weddingYearsArray : [10]
+          };
+        }
+        if (parseInt(formData.educationCount) > 0) {
+          const eduYearsArray = formData.educationYears.split(',').map(y => parseInt(y.trim())).filter(y => !isNaN(y));
+          majorLifeExpenses.education = {
+            count: parseInt(formData.educationCount),
+            avgCost: parseInt(parseIndianNumber(formData.educationCost)) || 1500000,
+            yearsFromNow: eduYearsArray.length > 0 ? eduYearsArray : [15]
+          };
+        }
+        if (formData.expectedMedicalCost) {
+          majorLifeExpenses.medical = {
+            estimatedCost: parseInt(parseIndianNumber(formData.expectedMedicalCost)) || 500000,
+            yearsFromNow: 5
+          };
+        }
+      }
+      
       const planData = {
         fullName: formData.fullName,
         currentAge,
         retirementAge,
         gender: 'male', // Default
         maritalStatus: formData.maritalStatus,
-        dependents: parseInt(formData.dependents) || 0,
+        dependents: calculatedDependents,
         
         monthlyIncome,
         employmentType: 'salaried',
         spouseName: null,
         spouseAge: null,
-        spouseWorking: false,
-        spouseIncome: null,
+        spouseWorking: formData.spouseHasIncome === "yes",
+        spouseIncome: formData.spouseHasIncome === "yes" ? parseInt(parseIndianNumber(formData.spouseIncome)) || 0 : null,
+        
+        // NEW: Life Snapshot - Spouse/Partner
+        spouseHasIncome: formData.spouseHasIncome === "yes",
+        
+        // NEW: Life Snapshot - Dependents Breakdown
+        numberOfChildren,
+        childrenAges: formData.childrenAges,
+        parentsFinanciallyDependent: formData.parentsFinanciallyDependent === "yes",
+        majorLifeExpenses: Object.keys(majorLifeExpenses).length > 0 ? majorLifeExpenses : null,
+        
+        // NEW: Life Snapshot - Health Risk
+        hasMajorHealthConditions: formData.hasMajorHealthConditions === "yes",
+        currentHealthRating: formData.currentHealthRating || "average",
+        familyChronicIllnessHistory: formData.familyChronicIllnessHistory === "yes",
         
         // New fields for 5-step flow
         savingsRate, // Calculated from monthlySavings / monthlyIncome
         essentialExpenseRatio, // Default 60% - for backend calculations
         lifestyleExpenseRatio,
-        totalAssets,
-        loanEmi,
-        loanYearsLeft,
+        totalAssets: calculatedTotalAssets,
+        loanEmi: calculatedTotalEmi,
+        loanYearsLeft: parseInt(formData.homeLoanYearsLeft) || 0,
+        
+        // NEW: Assets Breakdown
+        propertyPrimaryValue,
+        realEstateInvestmentValue,
+        stocksMutualFundsValue,
+        ppfNpsValue,
+        fdBondsValue,
+        goldJewelryValue,
+        cashLiquidValue,
+        excludePrimaryPropertyFromRetirement: formData.excludePrimaryProperty,
+        excludedAssets: [],
+        
+        // NEW: Emergency Fund
+        emergencyFundMonths: parseInt(formData.emergencyFundMonths) || 0,
+        
+        // NEW: Liabilities Breakdown
+        homeLoanEmiNew: homeLoanEmiValue,
+        homeLoanYearsLeft: parseInt(formData.homeLoanYearsLeft) || 0,
+        carLoanEmi: carLoanEmiValue,
+        carLoanYearsLeft: parseInt(formData.carLoanYearsLeft) || 0,
+        personalLoanEmi: personalLoanEmiValue,
+        personalLoanYearsLeft: parseInt(formData.personalLoanYearsLeft) || 0,
+        creditCardDebt: creditCardDebtValue,
+        
         lifestyleChoice: formData.lifestyleChoice,
         retirementLocation: formData.retirementLocation,
         longevityYears: formData.longevityYears,
@@ -223,9 +361,9 @@ export default function Onboarding() {
         replacementRatio,
         
         // Legacy fields (will be calculated on backend)
-        hasHomeLoan: loanEmi > 0,
-        homeLoanEmi: loanEmi,
-        homeLoanTenure: loanYearsLeft,
+        hasHomeLoan: calculatedTotalEmi > 0,
+        homeLoanEmi: calculatedTotalEmi,
+        homeLoanTenure: parseInt(formData.homeLoanYearsLeft) || 0,
         realEstateValue: 0,
         stocksValue: 0,
         mutualFundsValue: 0,
@@ -384,6 +522,7 @@ export default function Onboarding() {
                 </div>
 
                 <div className="space-y-5">
+                  {/* Basic Info */}
                   <div>
                     <Label htmlFor="fullName" className="text-base">What's your name?</Label>
                     <Input
@@ -454,21 +593,308 @@ export default function Onboarding() {
                     </RadioGroup>
                   </div>
 
-                  <div>
-                    <Label htmlFor="dependents" className="text-base">How many dependents? (kids, parents, etc.)</Label>
-                    <Select 
-                      value={formData.dependents} 
-                      onValueChange={(value) => setFormData({ ...formData, dependents: value })}
-                    >
-                      <SelectTrigger className="mt-2 h-12 text-lg" data-testid="select-dependents">
-                        <SelectValue placeholder="Select number of dependents" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {[0, 1, 2, 3, 4, 5, 6].map(num => (
-                          <SelectItem key={num} value={num.toString()}>{num}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                  {/* Spouse Income (shown if married) */}
+                  {formData.maritalStatus === "married" && (
+                    <div className="p-4 bg-muted/30 rounded-lg space-y-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Users className="h-5 w-5 text-primary" />
+                        <Label className="text-base font-medium">Spouse/Partner Details</Label>
+                      </div>
+                      <div>
+                        <Label className="text-sm">Does your spouse/partner have their own income?</Label>
+                        <RadioGroup 
+                          value={formData.spouseHasIncome} 
+                          onValueChange={(value) => setFormData({ ...formData, spouseHasIncome: value })}
+                          className="flex gap-4 mt-2"
+                        >
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="yes" id="spouse-income-yes" />
+                            <Label htmlFor="spouse-income-yes">Yes</Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="no" id="spouse-income-no" />
+                            <Label htmlFor="spouse-income-no">No</Label>
+                          </div>
+                        </RadioGroup>
+                      </div>
+                      {formData.spouseHasIncome === "yes" && (
+                        <div>
+                          <Label htmlFor="spouseIncome" className="text-sm">Spouse's monthly income</Label>
+                          <Input
+                            id="spouseIncome"
+                            value={formatIndianNumber(formData.spouseIncome)}
+                            onChange={(e) => setFormData({ ...formData, spouseIncome: parseIndianNumber(e.target.value) })}
+                            placeholder="e.g., 50,000"
+                            className="mt-1 h-10"
+                            data-testid="input-spouse-income"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Dependents Breakdown */}
+                  <div className="p-4 bg-muted/30 rounded-lg space-y-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Baby className="h-5 w-5 text-primary" />
+                      <Label className="text-base font-medium">Dependents</Label>
+                    </div>
+                    
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="numberOfChildren" className="text-sm">Number of children</Label>
+                        <Select 
+                          value={formData.numberOfChildren} 
+                          onValueChange={(value) => {
+                            const num = parseInt(value);
+                            const newAges = [...formData.childrenAges];
+                            while (newAges.length < num) newAges.push("");
+                            while (newAges.length > num) newAges.pop();
+                            setFormData({ ...formData, numberOfChildren: value, childrenAges: newAges });
+                          }}
+                        >
+                          <SelectTrigger className="mt-1 h-10" data-testid="select-children-count">
+                            <SelectValue placeholder="Select" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {[0, 1, 2, 3, 4, 5].map(num => (
+                              <SelectItem key={num} value={num.toString()}>{num}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      {parseInt(formData.numberOfChildren) > 0 && (
+                        <div>
+                          <Label className="text-sm">Children's ages</Label>
+                          <div className="flex gap-2 mt-1 flex-wrap">
+                            {formData.childrenAges.map((age, index) => (
+                              <Input
+                                key={index}
+                                type="number"
+                                value={age}
+                                onChange={(e) => {
+                                  const newAges = [...formData.childrenAges];
+                                  newAges[index] = e.target.value;
+                                  setFormData({ ...formData, childrenAges: newAges });
+                                }}
+                                placeholder={`Child ${index + 1}`}
+                                className="w-20 h-10"
+                                data-testid={`input-child-age-${index}`}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div>
+                      <Label className="text-sm">Are your parents financially dependent on you?</Label>
+                      <RadioGroup 
+                        value={formData.parentsFinanciallyDependent} 
+                        onValueChange={(value) => setFormData({ ...formData, parentsFinanciallyDependent: value })}
+                        className="flex gap-4 mt-2"
+                      >
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="yes" id="parents-yes" />
+                          <Label htmlFor="parents-yes">Yes</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="no" id="parents-no" />
+                          <Label htmlFor="parents-no">No</Label>
+                        </div>
+                      </RadioGroup>
+                    </div>
+                  </div>
+
+                  {/* Major Life Expenses */}
+                  <div className="p-4 bg-muted/30 rounded-lg space-y-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <GraduationCap className="h-5 w-5 text-primary" />
+                      <Label className="text-base font-medium">Major Life Expenses</Label>
+                    </div>
+                    
+                    <div>
+                      <Label className="text-sm">Any major life expenses expected in next 10-20 years? (weddings, education, medical)</Label>
+                      <RadioGroup 
+                        value={formData.expectMajorExpenses} 
+                        onValueChange={(value) => setFormData({ ...formData, expectMajorExpenses: value })}
+                        className="flex gap-4 mt-2"
+                      >
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="yes" id="major-exp-yes" />
+                          <Label htmlFor="major-exp-yes">Yes</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="no" id="major-exp-no" />
+                          <Label htmlFor="major-exp-no">No</Label>
+                        </div>
+                      </RadioGroup>
+                    </div>
+                    
+                    {formData.expectMajorExpenses === "yes" && (
+                      <div className="space-y-4 pt-2">
+                        <div className="grid md:grid-cols-3 gap-3">
+                          <div>
+                            <Label className="text-xs text-muted-foreground">Weddings</Label>
+                            <Select 
+                              value={formData.weddingCount} 
+                              onValueChange={(value) => setFormData({ ...formData, weddingCount: value })}
+                            >
+                              <SelectTrigger className="mt-1 h-9 text-sm">
+                                <SelectValue placeholder="Count" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {[0, 1, 2, 3].map(num => (
+                                  <SelectItem key={num} value={num.toString()}>{num}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          {parseInt(formData.weddingCount) > 0 && (
+                            <>
+                              <div>
+                                <Label className="text-xs text-muted-foreground">Avg cost each</Label>
+                                <Input
+                                  value={formatIndianNumber(formData.weddingCost)}
+                                  onChange={(e) => setFormData({ ...formData, weddingCost: parseIndianNumber(e.target.value) })}
+                                  placeholder="20,00,000"
+                                  className="mt-1 h-9 text-sm"
+                                />
+                              </div>
+                              <div>
+                                <Label className="text-xs text-muted-foreground">Years from now</Label>
+                                <Input
+                                  value={formData.weddingYears}
+                                  onChange={(e) => setFormData({ ...formData, weddingYears: e.target.value })}
+                                  placeholder="10, 15"
+                                  className="mt-1 h-9 text-sm"
+                                />
+                              </div>
+                            </>
+                          )}
+                        </div>
+                        
+                        <div className="grid md:grid-cols-3 gap-3">
+                          <div>
+                            <Label className="text-xs text-muted-foreground">Education (college/abroad)</Label>
+                            <Select 
+                              value={formData.educationCount} 
+                              onValueChange={(value) => setFormData({ ...formData, educationCount: value })}
+                            >
+                              <SelectTrigger className="mt-1 h-9 text-sm">
+                                <SelectValue placeholder="Count" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {[0, 1, 2, 3].map(num => (
+                                  <SelectItem key={num} value={num.toString()}>{num}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          {parseInt(formData.educationCount) > 0 && (
+                            <>
+                              <div>
+                                <Label className="text-xs text-muted-foreground">Avg cost each</Label>
+                                <Input
+                                  value={formatIndianNumber(formData.educationCost)}
+                                  onChange={(e) => setFormData({ ...formData, educationCost: parseIndianNumber(e.target.value) })}
+                                  placeholder="15,00,000"
+                                  className="mt-1 h-9 text-sm"
+                                />
+                              </div>
+                              <div>
+                                <Label className="text-xs text-muted-foreground">Years from now</Label>
+                                <Input
+                                  value={formData.educationYears}
+                                  onChange={(e) => setFormData({ ...formData, educationYears: e.target.value })}
+                                  placeholder="8, 12"
+                                  className="mt-1 h-9 text-sm"
+                                />
+                              </div>
+                            </>
+                          )}
+                        </div>
+                        
+                        <div>
+                          <Label className="text-xs text-muted-foreground">Expected medical expenses (if any)</Label>
+                          <Input
+                            value={formatIndianNumber(formData.expectedMedicalCost)}
+                            onChange={(e) => setFormData({ ...formData, expectedMedicalCost: parseIndianNumber(e.target.value) })}
+                            placeholder="e.g., 5,00,000 (optional)"
+                            className="mt-1 h-9 text-sm"
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Health Risk Questions */}
+                  <div className="p-4 bg-muted/30 rounded-lg space-y-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <HeartPulse className="h-5 w-5 text-primary" />
+                      <Label className="text-base font-medium">Health Profile</Label>
+                    </div>
+                    <p className="text-xs text-muted-foreground -mt-2">This helps us adjust life expectancy and healthcare costs in your plan</p>
+                    
+                    <div>
+                      <Label className="text-sm">How would you rate your current health?</Label>
+                      <RadioGroup 
+                        value={formData.currentHealthRating} 
+                        onValueChange={(value) => setFormData({ ...formData, currentHealthRating: value })}
+                        className="flex gap-4 mt-2"
+                      >
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="good" id="health-good" />
+                          <Label htmlFor="health-good" className="text-green-600">Good</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="average" id="health-average" />
+                          <Label htmlFor="health-average">Average</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="poor" id="health-poor" />
+                          <Label htmlFor="health-poor" className="text-orange-600">Poor</Label>
+                        </div>
+                      </RadioGroup>
+                    </div>
+                    
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div>
+                        <Label className="text-sm">Any major health conditions?</Label>
+                        <RadioGroup 
+                          value={formData.hasMajorHealthConditions} 
+                          onValueChange={(value) => setFormData({ ...formData, hasMajorHealthConditions: value })}
+                          className="flex gap-4 mt-2"
+                        >
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="yes" id="health-cond-yes" />
+                            <Label htmlFor="health-cond-yes">Yes</Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="no" id="health-cond-no" />
+                            <Label htmlFor="health-cond-no">No</Label>
+                          </div>
+                        </RadioGroup>
+                      </div>
+                      <div>
+                        <Label className="text-sm">Family history of chronic illness?</Label>
+                        <RadioGroup 
+                          value={formData.familyChronicIllnessHistory} 
+                          onValueChange={(value) => setFormData({ ...formData, familyChronicIllnessHistory: value })}
+                          className="flex gap-4 mt-2"
+                        >
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="yes" id="family-history-yes" />
+                            <Label htmlFor="family-history-yes">Yes</Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="no" id="family-history-no" />
+                            <Label htmlFor="family-history-no">No</Label>
+                          </div>
+                        </RadioGroup>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </motion.div>
@@ -625,73 +1051,297 @@ export default function Onboarding() {
                 </div>
 
                 <div className="space-y-6">
-                  <div>
-                    <Label htmlFor="totalAssets" className="text-base">Total value of all your assets</Label>
-                    <Input
-                      id="totalAssets"
-                      value={formatIndianNumber(formData.totalAssets)}
-                      onChange={(e) => setFormData({ ...formData, totalAssets: parseIndianNumber(e.target.value) })}
-                      placeholder="e.g., 50,00,000"
-                      className="mt-2 h-12 text-lg"
-                      data-testid="input-total-assets"
-                    />
-                    <p className="text-sm text-muted-foreground mt-2">
-                      Include: Property, stocks, mutual funds, PPF, NPS, FD, gold, PF balance, etc.
-                    </p>
+                  {/* Assets Breakdown */}
+                  <div className="p-4 bg-muted/30 rounded-lg space-y-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Wallet className="h-5 w-5 text-primary" />
+                      <Label className="text-base font-medium">Assets Breakdown</Label>
+                    </div>
+                    <p className="text-xs text-muted-foreground -mt-2">Each asset class grows at different rates. This helps us calculate more accurately.</p>
+                    
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="propertyPrimaryValue" className="text-sm flex items-center gap-1">
+                          <Home className="h-3 w-3" /> Primary Home
+                        </Label>
+                        <Input
+                          id="propertyPrimaryValue"
+                          value={formatIndianNumber(formData.propertyPrimaryValue)}
+                          onChange={(e) => setFormData({ ...formData, propertyPrimaryValue: parseIndianNumber(e.target.value) })}
+                          placeholder="e.g., 80,00,000"
+                          className="mt-1 h-10"
+                          data-testid="input-property-primary"
+                        />
+                        <div className="flex items-center gap-2 mt-2">
+                          <Checkbox 
+                            id="excludePrimaryProperty"
+                            checked={formData.excludePrimaryProperty}
+                            onCheckedChange={(checked) => setFormData({ ...formData, excludePrimaryProperty: checked as boolean })}
+                            data-testid="checkbox-exclude-primary"
+                          />
+                          <Label htmlFor="excludePrimaryProperty" className="text-xs text-muted-foreground cursor-pointer">
+                            Exclude from retirement corpus (you'll live here)
+                          </Label>
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="realEstateInvestmentValue" className="text-sm">Investment Property</Label>
+                        <Input
+                          id="realEstateInvestmentValue"
+                          value={formatIndianNumber(formData.realEstateInvestmentValue)}
+                          onChange={(e) => setFormData({ ...formData, realEstateInvestmentValue: parseIndianNumber(e.target.value) })}
+                          placeholder="e.g., 50,00,000"
+                          className="mt-1 h-10"
+                          data-testid="input-real-estate-investment"
+                        />
+                        <p className="text-[10px] text-muted-foreground mt-1">Grows ~10%/yr</p>
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="stocksMutualFundsValue" className="text-sm">Stocks & Mutual Funds</Label>
+                        <Input
+                          id="stocksMutualFundsValue"
+                          value={formatIndianNumber(formData.stocksMutualFundsValue)}
+                          onChange={(e) => setFormData({ ...formData, stocksMutualFundsValue: parseIndianNumber(e.target.value) })}
+                          placeholder="e.g., 15,00,000"
+                          className="mt-1 h-10"
+                          data-testid="input-stocks-mf"
+                        />
+                        <p className="text-[10px] text-muted-foreground mt-1">Grows ~12%/yr</p>
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="ppfNpsValue" className="text-sm">PPF / NPS / EPF (locked-in)</Label>
+                        <Input
+                          id="ppfNpsValue"
+                          value={formatIndianNumber(formData.ppfNpsValue)}
+                          onChange={(e) => setFormData({ ...formData, ppfNpsValue: parseIndianNumber(e.target.value) })}
+                          placeholder="e.g., 10,00,000"
+                          className="mt-1 h-10"
+                          data-testid="input-ppf-nps"
+                        />
+                        <p className="text-[10px] text-muted-foreground mt-1">Grows ~7.5%/yr</p>
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="fdBondsValue" className="text-sm">FD / Bonds (liquid)</Label>
+                        <Input
+                          id="fdBondsValue"
+                          value={formatIndianNumber(formData.fdBondsValue)}
+                          onChange={(e) => setFormData({ ...formData, fdBondsValue: parseIndianNumber(e.target.value) })}
+                          placeholder="e.g., 5,00,000"
+                          className="mt-1 h-10"
+                          data-testid="input-fd-bonds"
+                        />
+                        <p className="text-[10px] text-muted-foreground mt-1">Grows ~6%/yr</p>
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="goldJewelryValue" className="text-sm">Gold / Jewelry</Label>
+                        <Input
+                          id="goldJewelryValue"
+                          value={formatIndianNumber(formData.goldJewelryValue)}
+                          onChange={(e) => setFormData({ ...formData, goldJewelryValue: parseIndianNumber(e.target.value) })}
+                          placeholder="e.g., 3,00,000"
+                          className="mt-1 h-10"
+                          data-testid="input-gold"
+                        />
+                        <p className="text-[10px] text-muted-foreground mt-1">Grows ~8%/yr</p>
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="cashLiquidValue" className="text-sm">Cash / Savings Account</Label>
+                        <Input
+                          id="cashLiquidValue"
+                          value={formatIndianNumber(formData.cashLiquidValue)}
+                          onChange={(e) => setFormData({ ...formData, cashLiquidValue: parseIndianNumber(e.target.value) })}
+                          placeholder="e.g., 2,00,000"
+                          className="mt-1 h-10"
+                          data-testid="input-cash"
+                        />
+                        <p className="text-[10px] text-muted-foreground mt-1">Grows ~4%/yr</p>
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="border-t pt-6">
-                    <h3 className="text-lg font-semibold mb-4">Do you have any loans?</h3>
+                  {/* Emergency Fund */}
+                  <div className="p-4 bg-muted/30 rounded-lg space-y-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Shield className="h-5 w-5 text-primary" />
+                      <Label className="text-base font-medium">Emergency Fund</Label>
+                    </div>
                     
-                    <div className="space-y-4">
-                      <div>
-                        <Label htmlFor="loanEmi" className="text-base">Total monthly EMI (all loans combined)</Label>
-                        <Input
-                          id="loanEmi"
-                          value={formatIndianNumber(formData.loanEmi)}
-                          onChange={(e) => setFormData({ ...formData, loanEmi: parseIndianNumber(e.target.value) })}
-                          placeholder="e.g., 25,000 (or 0 if no loans)"
-                          className="mt-2 h-12 text-lg"
-                          data-testid="input-loan-emi"
-                        />
-                      </div>
-
-                      {formData.loanEmi && parseInt(parseIndianNumber(formData.loanEmi)) > 0 && (
-                        <div>
-                          <Label htmlFor="loanYearsLeft" className="text-base">How many years until loans are paid off?</Label>
-                          <Input
-                            id="loanYearsLeft"
-                            type="number"
-                            value={formData.loanYearsLeft}
-                            onChange={(e) => setFormData({ ...formData, loanYearsLeft: e.target.value })}
-                            placeholder="e.g., 15"
-                            className="mt-2 h-12 text-lg"
-                            data-testid="input-loan-years"
-                          />
+                    <div>
+                      <Label htmlFor="emergencyFundMonths" className="text-sm">How many months of expenses do you have saved as emergency fund?</Label>
+                      <Select 
+                        value={formData.emergencyFundMonths} 
+                        onValueChange={(value) => setFormData({ ...formData, emergencyFundMonths: value })}
+                      >
+                        <SelectTrigger className="mt-1 h-10" data-testid="select-emergency-fund">
+                          <SelectValue placeholder="Select months" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {[0, 1, 2, 3, 4, 5, 6, 9, 12, 18, 24].map(num => (
+                            <SelectItem key={num} value={num.toString()}>{num} months</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {formData.emergencyFundMonths && parseInt(formData.emergencyFundMonths) < 6 && (
+                        <div className="flex items-center gap-2 mt-2 p-2 bg-amber-100 dark:bg-amber-900/30 rounded-md">
+                          <AlertTriangle className="h-4 w-4 text-amber-600" />
+                          <p className="text-xs text-amber-700 dark:text-amber-400">
+                            Less than 6 months emergency fund will limit equity exposure to 30%
+                          </p>
                         </div>
                       )}
                     </div>
                   </div>
 
-                  {/* Summary */}
-                  {(formData.totalAssets || formData.loanEmi) && (
-                    <div className="p-6 bg-gradient-to-br from-purple-50 to-violet-50 dark:from-purple-950/20 dark:to-violet-950/20 rounded-xl border border-purple-200 dark:border-purple-900">
-                      <div className="grid md:grid-cols-2 gap-4">
+                  {/* Liabilities Breakdown */}
+                  <div className="p-4 bg-muted/30 rounded-lg space-y-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <CreditCard className="h-5 w-5 text-primary" />
+                      <Label className="text-base font-medium">Liabilities</Label>
+                    </div>
+                    
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="homeLoanEmi" className="text-sm">Home Loan EMI</Label>
+                        <Input
+                          id="homeLoanEmi"
+                          value={formatIndianNumber(formData.homeLoanEmi)}
+                          onChange={(e) => setFormData({ ...formData, homeLoanEmi: parseIndianNumber(e.target.value) })}
+                          placeholder="e.g., 25,000"
+                          className="mt-1 h-10"
+                          data-testid="input-home-loan-emi"
+                        />
+                      </div>
+                      {formData.homeLoanEmi && parseInt(parseIndianNumber(formData.homeLoanEmi)) > 0 && (
                         <div>
-                          <p className="text-sm text-muted-foreground mb-1">Total Assets</p>
-                          <div className="text-2xl font-bold text-purple-600 dark:text-purple-400" data-testid="text-total-assets">
-                            ₹{formatIndianNumber(formData.totalAssets || "0")}
-                          </div>
+                          <Label htmlFor="homeLoanYearsLeft" className="text-sm">Years left</Label>
+                          <Input
+                            id="homeLoanYearsLeft"
+                            type="number"
+                            value={formData.homeLoanYearsLeft}
+                            onChange={(e) => setFormData({ ...formData, homeLoanYearsLeft: e.target.value })}
+                            placeholder="15"
+                            className="mt-1 h-10"
+                            data-testid="input-home-loan-years"
+                          />
                         </div>
+                      )}
+                      
+                      <div>
+                        <Label htmlFor="carLoanEmi" className="text-sm">Car Loan EMI</Label>
+                        <Input
+                          id="carLoanEmi"
+                          value={formatIndianNumber(formData.carLoanEmi)}
+                          onChange={(e) => setFormData({ ...formData, carLoanEmi: parseIndianNumber(e.target.value) })}
+                          placeholder="e.g., 15,000"
+                          className="mt-1 h-10"
+                          data-testid="input-car-loan-emi"
+                        />
+                      </div>
+                      {formData.carLoanEmi && parseInt(parseIndianNumber(formData.carLoanEmi)) > 0 && (
                         <div>
-                          <p className="text-sm text-muted-foreground mb-1">Monthly EMI</p>
-                          <div className="text-2xl font-bold text-foreground" data-testid="text-monthly-emi">
-                            ₹{formatIndianNumber(formData.loanEmi || "0")}
-                          </div>
+                          <Label htmlFor="carLoanYearsLeft" className="text-sm">Years left</Label>
+                          <Input
+                            id="carLoanYearsLeft"
+                            type="number"
+                            value={formData.carLoanYearsLeft}
+                            onChange={(e) => setFormData({ ...formData, carLoanYearsLeft: e.target.value })}
+                            placeholder="3"
+                            className="mt-1 h-10"
+                            data-testid="input-car-loan-years"
+                          />
                         </div>
+                      )}
+                      
+                      <div>
+                        <Label htmlFor="personalLoanEmi" className="text-sm">Personal Loan EMI</Label>
+                        <Input
+                          id="personalLoanEmi"
+                          value={formatIndianNumber(formData.personalLoanEmi)}
+                          onChange={(e) => setFormData({ ...formData, personalLoanEmi: parseIndianNumber(e.target.value) })}
+                          placeholder="e.g., 10,000"
+                          className="mt-1 h-10"
+                          data-testid="input-personal-loan-emi"
+                        />
+                      </div>
+                      {formData.personalLoanEmi && parseInt(parseIndianNumber(formData.personalLoanEmi)) > 0 && (
+                        <div>
+                          <Label htmlFor="personalLoanYearsLeft" className="text-sm">Years left</Label>
+                          <Input
+                            id="personalLoanYearsLeft"
+                            type="number"
+                            value={formData.personalLoanYearsLeft}
+                            onChange={(e) => setFormData({ ...formData, personalLoanYearsLeft: e.target.value })}
+                            placeholder="2"
+                            className="mt-1 h-10"
+                            data-testid="input-personal-loan-years"
+                          />
+                        </div>
+                      )}
+                      
+                      <div className="md:col-span-2">
+                        <Label htmlFor="creditCardDebt" className="text-sm">Credit Card Outstanding Balance</Label>
+                        <Input
+                          id="creditCardDebt"
+                          value={formatIndianNumber(formData.creditCardDebt)}
+                          onChange={(e) => setFormData({ ...formData, creditCardDebt: parseIndianNumber(e.target.value) })}
+                          placeholder="e.g., 50,000 (or 0)"
+                          className="mt-1 h-10"
+                          data-testid="input-credit-card-debt"
+                        />
                       </div>
                     </div>
-                  )}
+                  </div>
+
+                  {/* Summary */}
+                  {(() => {
+                    const totalAssetsCalc = 
+                      (parseInt(parseIndianNumber(formData.realEstateInvestmentValue)) || 0) +
+                      (parseInt(parseIndianNumber(formData.stocksMutualFundsValue)) || 0) +
+                      (parseInt(parseIndianNumber(formData.ppfNpsValue)) || 0) +
+                      (parseInt(parseIndianNumber(formData.fdBondsValue)) || 0) +
+                      (parseInt(parseIndianNumber(formData.goldJewelryValue)) || 0) +
+                      (parseInt(parseIndianNumber(formData.cashLiquidValue)) || 0);
+                    const totalEmiCalc = 
+                      (parseInt(parseIndianNumber(formData.homeLoanEmi)) || 0) +
+                      (parseInt(parseIndianNumber(formData.carLoanEmi)) || 0) +
+                      (parseInt(parseIndianNumber(formData.personalLoanEmi)) || 0);
+                    const primaryProperty = parseInt(parseIndianNumber(formData.propertyPrimaryValue)) || 0;
+                    
+                    if (totalAssetsCalc > 0 || totalEmiCalc > 0 || primaryProperty > 0) {
+                      return (
+                        <div className="p-6 bg-gradient-to-br from-purple-50 to-violet-50 dark:from-purple-950/20 dark:to-violet-950/20 rounded-xl border border-purple-200 dark:border-purple-900">
+                          <div className="grid md:grid-cols-3 gap-4">
+                            <div>
+                              <p className="text-sm text-muted-foreground mb-1">Retirement Assets</p>
+                              <div className="text-2xl font-bold text-purple-600 dark:text-purple-400" data-testid="text-retirement-assets">
+                                ₹{formatIndianNumber(totalAssetsCalc.toString())}
+                              </div>
+                              <p className="text-xs text-muted-foreground">(Excluding primary home)</p>
+                            </div>
+                            <div>
+                              <p className="text-sm text-muted-foreground mb-1">Primary Home</p>
+                              <div className="text-xl font-semibold text-muted-foreground" data-testid="text-primary-home">
+                                ₹{formatIndianNumber(primaryProperty.toString())}
+                              </div>
+                            </div>
+                            <div>
+                              <p className="text-sm text-muted-foreground mb-1">Monthly EMI</p>
+                              <div className="text-2xl font-bold text-foreground" data-testid="text-monthly-emi">
+                                ₹{formatIndianNumber(totalEmiCalc.toString())}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    }
+                    return null;
+                  })()}
                 </div>
               </motion.div>
             )}

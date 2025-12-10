@@ -1,4 +1,12 @@
-import { type RetirementPlan, type CalculatedPlan, type OneTimeExpense } from "@shared/schema";
+import { 
+  type RetirementPlan, 
+  type CalculatedPlan, 
+  type OneTimeExpense,
+  type MajorLifeExpenses,
+  ASSET_COMPOUNDING_RATES,
+  HEALTHCARE_INFLATION_RATES,
+  LIFE_EXPECTANCY_ADJUSTMENTS
+} from "@shared/schema";
 import { generateCompleteRecommendations, type RiskAppetite, type GrowthPreference } from "./fundRecommendations";
 import { 
   calculateFreedomScore, 
@@ -16,7 +24,230 @@ const CORPUS_BUFFER = 0.12; // 12% buffer
 const EQUITY_RETURNS = 0.12; // 12% assumed equity returns
 const DEBT_RETURNS = 0.07; // 7% assumed debt returns
 const GOLD_RETURNS = 0.08; // 8% assumed gold returns
-const LIFE_EXPECTANCY = 85; // Assumed life expectancy
+const BASE_LIFE_EXPECTANCY = 85; // Base life expectancy (adjusted by health)
+
+// Calculate adjusted life expectancy based on health factors
+function calculateAdjustedLifeExpectancy(
+  healthRating: string | null | undefined,
+  hasMajorHealthConditions: boolean | null | undefined,
+  familyChronicIllnessHistory: boolean | null | undefined
+): number {
+  let lifeExpectancy = BASE_LIFE_EXPECTANCY;
+  
+  // Adjust based on health rating
+  if (healthRating === 'good') {
+    lifeExpectancy += LIFE_EXPECTANCY_ADJUSTMENTS.good;
+  } else if (healthRating === 'poor') {
+    lifeExpectancy += LIFE_EXPECTANCY_ADJUSTMENTS.poor;
+  }
+  // 'average' adds 0
+  
+  // Adjust for major health conditions
+  if (hasMajorHealthConditions) {
+    lifeExpectancy += LIFE_EXPECTANCY_ADJUSTMENTS.majorHealthConditions;
+  }
+  
+  // Adjust for family history
+  if (familyChronicIllnessHistory) {
+    lifeExpectancy += LIFE_EXPECTANCY_ADJUSTMENTS.familyChronicIllness;
+  }
+  
+  // Minimum life expectancy of 70
+  return Math.max(70, lifeExpectancy);
+}
+
+// Get healthcare inflation rate based on health status
+function getHealthcareInflationRate(healthRating: string | null | undefined): number {
+  if (healthRating === 'good') return HEALTHCARE_INFLATION_RATES.good;
+  if (healthRating === 'poor') return HEALTHCARE_INFLATION_RATES.poor;
+  return HEALTHCARE_INFLATION_RATES.average;
+}
+
+// Calculate total projected assets using individual asset class compounding rates
+function calculateProjectedAssetsWithBreakdown(
+  plan: RetirementPlan,
+  yearsToRetirement: number,
+  excludedAssets: string[] = []
+): {
+  totalCurrent: number;
+  totalProjected: number;
+  breakdown: { [key: string]: { currentValue: number; projectedValue: number; rate: number } };
+} {
+  const breakdown: { [key: string]: { currentValue: number; projectedValue: number; rate: number } } = {};
+  
+  // Check if we have new asset breakdown fields
+  const hasNewAssetBreakdown = plan.stocksMutualFundsValue !== null && plan.stocksMutualFundsValue !== undefined;
+  
+  if (hasNewAssetBreakdown) {
+    // Use new granular asset breakdown with individual compounding rates
+    const assetClasses = [
+      { key: 'stocksMutualFunds', value: plan.stocksMutualFundsValue || 0, rate: ASSET_COMPOUNDING_RATES.stocksMutualFunds },
+      { key: 'ppfNps', value: plan.ppfNpsValue || 0, rate: ASSET_COMPOUNDING_RATES.ppfNps },
+      { key: 'realEstateInvestment', value: plan.realEstateInvestmentValue || 0, rate: ASSET_COMPOUNDING_RATES.realEstateInvestment },
+      { key: 'fdBonds', value: plan.fdBondsValue || 0, rate: ASSET_COMPOUNDING_RATES.fdBonds },
+      { key: 'goldJewelry', value: plan.goldJewelryValue || 0, rate: ASSET_COMPOUNDING_RATES.goldJewelry },
+      { key: 'cashLiquid', value: plan.cashLiquidValue || 0, rate: ASSET_COMPOUNDING_RATES.cashLiquid },
+    ];
+    
+    // Primary property is tracked but NOT included in retirement corpus by default
+    if (plan.propertyPrimaryValue && !plan.excludePrimaryPropertyFromRetirement) {
+      assetClasses.push({ 
+        key: 'propertyPrimary', 
+        value: plan.propertyPrimaryValue, 
+        rate: ASSET_COMPOUNDING_RATES.propertyPrimary 
+      });
+    }
+    
+    let totalCurrent = 0;
+    let totalProjected = 0;
+    
+    for (const asset of assetClasses) {
+      // Skip if asset is in excluded list
+      if (excludedAssets.includes(asset.key)) continue;
+      
+      const projectedValue = asset.value * Math.pow(1 + asset.rate, yearsToRetirement);
+      breakdown[asset.key] = {
+        currentValue: asset.value,
+        projectedValue: Math.round(projectedValue),
+        rate: asset.rate
+      };
+      totalCurrent += asset.value;
+      totalProjected += projectedValue;
+    }
+    
+    console.log(`[ASSETS BREAKDOWN] Using granular asset breakdown. Total current: ₹${totalCurrent.toLocaleString('en-IN')}, Projected: ₹${Math.round(totalProjected).toLocaleString('en-IN')}`);
+    
+    return { totalCurrent, totalProjected: Math.round(totalProjected), breakdown };
+  }
+  
+  // Fallback to legacy calculation (single totalAssets field with blended rate)
+  const legacyTotalAssets = (plan.realEstateValue || 0) + (plan.stocksValue || 0) + 
+    (plan.mutualFundsValue || 0) + (plan.ppfEpfNps || 0) + 
+    (plan.bankDeposits || 0) + (plan.goldAssets || 0);
+  const totalAssets = plan.totalAssets !== null && plan.totalAssets !== undefined ? plan.totalAssets : legacyTotalAssets;
+  
+  // Use average blended rate for legacy
+  const avgRate = 0.09; // ~9% blended average
+  const projectedValue = totalAssets * Math.pow(1 + avgRate, yearsToRetirement);
+  
+  breakdown['legacy'] = {
+    currentValue: totalAssets,
+    projectedValue: Math.round(projectedValue),
+    rate: avgRate
+  };
+  
+  console.log(`[ASSETS] Using legacy asset calculation. Total: ₹${totalAssets.toLocaleString('en-IN')}, Projected: ₹${Math.round(projectedValue).toLocaleString('en-IN')}`);
+  
+  return { totalCurrent: totalAssets, totalProjected: Math.round(projectedValue), breakdown };
+}
+
+// Calculate total liabilities
+function calculateTotalLiabilities(plan: RetirementPlan): {
+  totalMonthlyEmi: number;
+  totalOutstanding: number;
+  breakdown: { homeLoan: number; carLoan: number; personalLoan: number; creditCard: number };
+} {
+  // Use new liabilities breakdown if available
+  const homeLoanEmi = plan.homeLoanEmiNew || plan.homeLoanEmi || 0;
+  const carLoanEmi = plan.carLoanEmi || 0;
+  const personalLoanEmi = plan.personalLoanEmi || 0;
+  const creditCardDebt = plan.creditCardDebt || 0;
+  
+  const totalMonthlyEmi = homeLoanEmi + carLoanEmi + personalLoanEmi;
+  
+  // Estimate outstanding amounts (EMI * months remaining)
+  const homeOutstanding = homeLoanEmi * (plan.homeLoanYearsLeft || plan.homeLoanTenure || 0) * 12;
+  const carOutstanding = carLoanEmi * (plan.carLoanYearsLeft || 0) * 12;
+  const personalOutstanding = personalLoanEmi * (plan.personalLoanYearsLeft || 0) * 12;
+  
+  const totalOutstanding = homeOutstanding + carOutstanding + personalOutstanding + creditCardDebt;
+  
+  console.log(`[LIABILITIES] Total EMI: ₹${totalMonthlyEmi.toLocaleString('en-IN')}/month, Outstanding: ₹${totalOutstanding.toLocaleString('en-IN')}`);
+  
+  return {
+    totalMonthlyEmi,
+    totalOutstanding,
+    breakdown: {
+      homeLoan: homeLoanEmi,
+      carLoan: carLoanEmi,
+      personalLoan: personalLoanEmi,
+      creditCard: creditCardDebt
+    }
+  };
+}
+
+// Calculate major life expenses (inflation-adjusted future value)
+function calculateMajorLifeExpenses(
+  majorLifeExpenses: MajorLifeExpenses | null | undefined,
+  inflationRate: number = INFLATION_RATE
+): number {
+  if (!majorLifeExpenses) return 0;
+  
+  let total = 0;
+  
+  // Weddings
+  if (majorLifeExpenses.weddings) {
+    const { count, avgCost, yearsFromNow } = majorLifeExpenses.weddings;
+    for (let i = 0; i < count && i < yearsFromNow.length; i++) {
+      const years = yearsFromNow[i];
+      const futureValue = avgCost * Math.pow(1 + inflationRate, years);
+      total += futureValue;
+      console.log(`[MAJOR EXPENSE] Wedding ${i + 1} in ${years} years: ₹${avgCost.toLocaleString('en-IN')} → ₹${Math.round(futureValue).toLocaleString('en-IN')}`);
+    }
+  }
+  
+  // Education
+  if (majorLifeExpenses.education) {
+    const { count, avgCost, yearsFromNow } = majorLifeExpenses.education;
+    const eduInflation = 0.10; // Education inflation is typically 10%
+    for (let i = 0; i < count && i < yearsFromNow.length; i++) {
+      const years = yearsFromNow[i];
+      const futureValue = avgCost * Math.pow(1 + eduInflation, years);
+      total += futureValue;
+      console.log(`[MAJOR EXPENSE] Education ${i + 1} in ${years} years: ₹${avgCost.toLocaleString('en-IN')} → ₹${Math.round(futureValue).toLocaleString('en-IN')}`);
+    }
+  }
+  
+  // Medical
+  if (majorLifeExpenses.medical) {
+    const { estimatedCost, yearsFromNow } = majorLifeExpenses.medical;
+    const years = yearsFromNow || 5; // Default to 5 years if not specified
+    const medicalInflation = 0.12; // Medical inflation is typically 12%
+    const futureValue = estimatedCost * Math.pow(1 + medicalInflation, years);
+    total += futureValue;
+    console.log(`[MAJOR EXPENSE] Medical in ${years} years: ₹${estimatedCost.toLocaleString('en-IN')} → ₹${Math.round(futureValue).toLocaleString('en-IN')}`);
+  }
+  
+  return Math.round(total);
+}
+
+// Check emergency fund status and determine equity cap
+function checkEmergencyFundStatus(
+  emergencyFundMonths: number | null | undefined,
+  monthlyExpense: number
+): {
+  status: 'adequate' | 'low' | 'critical';
+  warning?: string;
+  capEquityAt30: boolean;
+} {
+  const months = emergencyFundMonths || 0;
+  
+  if (months >= 6) {
+    return { status: 'adequate', capEquityAt30: false };
+  } else if (months >= 3) {
+    return {
+      status: 'low',
+      warning: `You have only ${months} months of expenses saved as emergency fund. Consider building up to 6 months before aggressive investing.`,
+      capEquityAt30: true
+    };
+  } else {
+    return {
+      status: 'critical',
+      warning: `Critical: You have only ${months} months of emergency fund. Build at least 3-6 months of expenses (₹${(monthlyExpense * 6).toLocaleString('en-IN')}) before investing in equities.`,
+      capEquityAt30: true
+    };
+  }
+}
 
 // Indian new tax regime (2024-25 - FY 2024-25, AY 2025-26)
 // Updated per Union Budget 2024
@@ -87,9 +318,21 @@ function getBlendedReturns(allocation: { equity: number; debt: number; gold: num
 }
 
 export function calculateRetirementPlan(plan: RetirementPlan, oneTimeExpenses: OneTimeExpense[] = []): CalculatedPlan {
-  console.log('[CALC DEBUG] ===== USING FIXED SIP CALCULATION (Oct 15, 2025) =====');
+  console.log('[CALC DEBUG] ===== ENHANCED CALCULATION WITH ASSET BREAKDOWN (Dec 10, 2025) =====');
   const yearsToRetirement = plan.retirementAge - plan.currentAge;
-  const yearsInRetirement = plan.longevityYears || (LIFE_EXPECTANCY - plan.retirementAge);
+  
+  // Calculate adjusted life expectancy based on health factors
+  const adjustedLifeExpectancy = calculateAdjustedLifeExpectancy(
+    plan.currentHealthRating,
+    plan.hasMajorHealthConditions,
+    plan.familyChronicIllnessHistory
+  );
+  const yearsInRetirement = plan.longevityYears || (adjustedLifeExpectancy - plan.retirementAge);
+  console.log(`[LIFE EXPECTANCY] Adjusted: ${adjustedLifeExpectancy} years (Base: ${BASE_LIFE_EXPECTANCY}, Health Rating: ${plan.currentHealthRating || 'average'})`);
+  
+  // Get healthcare inflation rate based on health status
+  const healthcareInflationRate = getHealthcareInflationRate(plan.currentHealthRating);
+  console.log(`[HEALTHCARE INFLATION] Rate: ${(healthcareInflationRate * 100).toFixed(1)}% based on health rating`);
   
   // Handle null/missing values with defaults
   const postRetirementExpense = plan.postRetirementMonthlyExpense || inferMonthlyExpense(plan.monthlyIncome, plan.dependents || 0);
@@ -119,23 +362,45 @@ export function calculateRetirementPlan(plan: RetirementPlan, oneTimeExpenses: O
   }, 0);
   console.log(`[ONE-TIME EXPENSES] Total: ₹${oneTimeExpensesTotal.toLocaleString('en-IN')} from ${oneTimeExpenses.length} expenses`);
   
+  // Calculate major life expenses (weddings, education, medical)
+  const majorLifeExpensesFuture = calculateMajorLifeExpenses(plan.majorLifeExpenses as MajorLifeExpenses | null);
+  console.log(`[MAJOR LIFE EXPENSES] Total future cost: ₹${majorLifeExpensesFuture.toLocaleString('en-IN')}`);
+  
   const bufferAmount = baseCorpusNeeded * CORPUS_BUFFER;
-  const totalCorpusNeeded = baseCorpusNeeded + bufferAmount + oneTimeExpensesTotal;
+  const totalCorpusNeeded = baseCorpusNeeded + bufferAmount + oneTimeExpensesTotal + majorLifeExpensesFuture;
   
-  // Calculate current assets - prioritize plan.totalAssets from 5-step flow
-  const legacyTotalAssets = (plan.realEstateValue || 0) + (plan.stocksValue || 0) + 
-    (plan.mutualFundsValue || 0) + (plan.ppfEpfNps || 0) + 
-    (plan.bankDeposits || 0) + (plan.goldAssets || 0);
-  const totalAssets = plan.totalAssets !== null && plan.totalAssets !== undefined ? plan.totalAssets : legacyTotalAssets;
+  // Calculate assets with granular breakdown and individual compounding rates
+  const excludedAssets = plan.excludedAssets || [];
+  const assetProjection = calculateProjectedAssetsWithBreakdown(plan, yearsToRetirement, excludedAssets);
+  const totalAssets = assetProjection.totalCurrent;
+  const projectedAssetValue = assetProjection.totalProjected;
   
-  console.log(`[ASSETS] Using totalAssets: ₹${totalAssets.toLocaleString('en-IN')} (from ${plan.totalAssets !== null && plan.totalAssets !== undefined ? '5-step flow' : 'legacy calculation'})`);
+  // Calculate liabilities breakdown
+  const liabilities = calculateTotalLiabilities(plan);
+  const netWorth = totalAssets - liabilities.totalOutstanding;
+  console.log(`[NET WORTH] Assets: ₹${totalAssets.toLocaleString('en-IN')} - Liabilities: ₹${liabilities.totalOutstanding.toLocaleString('en-IN')} = ₹${netWorth.toLocaleString('en-IN')}`);
   
-  // Asset allocation
-  const assetAllocation = getAssetAllocation(plan.currentAge, riskTolerance, plan.preferredAssetMix || 'balanced-growth');
+  // Check emergency fund status
+  const emergencyFundCheck = checkEmergencyFundStatus(plan.emergencyFundMonths, postRetirementExpense);
+  if (emergencyFundCheck.warning) {
+    console.log(`[EMERGENCY FUND] ${emergencyFundCheck.warning}`);
+  }
+  
+  // Asset allocation - apply equity cap if emergency fund is low
+  let assetAllocation = getAssetAllocation(plan.currentAge, riskTolerance, plan.preferredAssetMix || 'balanced-growth');
+  
+  // Cap equity at 30% if emergency fund < 6 months
+  if (emergencyFundCheck.capEquityAt30 && assetAllocation.equity > 30) {
+    console.log(`[ASSET ALLOCATION] Capping equity from ${assetAllocation.equity}% to 30% due to low emergency fund`);
+    const equityReduction = assetAllocation.equity - 30;
+    assetAllocation = {
+      equity: 30,
+      debt: assetAllocation.debt + equityReduction, // Move excess to debt
+      gold: assetAllocation.gold
+    };
+  }
+  
   const blendedReturns = getBlendedReturns(assetAllocation);
-  
-  // Project current assets to retirement
-  const projectedAssetValue = totalAssets * Math.pow(1 + blendedReturns, yearsToRetirement);
   
   // Calculate monthly savings (include spouse income if working)
   const primaryAnnualIncome = plan.monthlyIncome * 12;
@@ -390,6 +655,16 @@ export function calculateRetirementPlan(plan: RetirementPlan, oneTimeExpenses: O
     adviceTriggers,
     assetCoveragePercentage,
     hasSubstantialAssets,
+    // NEW: Enhanced calculation fields
+    assetBreakdownProjected: assetProjection.breakdown,
+    lifeExpectancyAdjusted: adjustedLifeExpectancy,
+    healthcareInflationRate,
+    majorLifeExpensesFuture,
+    emergencyFundStatus: emergencyFundCheck.status,
+    emergencyFundWarning: emergencyFundCheck.warning,
+    equityCapApplied: emergencyFundCheck.capEquityAt30,
+    totalLiabilities: liabilities.totalOutstanding,
+    netWorth,
   };
 }
 
