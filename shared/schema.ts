@@ -41,6 +41,20 @@ export const retirementPlans = pgTable("retirement_plans", {
   spouseWorking: boolean("spouse_working"),
   spouseIncome: integer("spouse_income"),
   
+  // NEW: Life Snapshot - Spouse/Partner
+  spouseHasIncome: boolean("spouse_has_income"),
+  
+  // NEW: Life Snapshot - Dependents Breakdown
+  numberOfChildren: integer("number_of_children"),
+  childrenAges: text("children_ages").array(), // Array of ages as strings
+  parentsFinanciallyDependent: boolean("parents_financially_dependent"),
+  majorLifeExpenses: jsonb("major_life_expenses"), // {weddings: {count, avgCost, years}, education: {...}, medical: {...}}
+  
+  // NEW: Life Snapshot - Health Risk Questions
+  hasMajorHealthConditions: boolean("has_major_health_conditions"),
+  currentHealthRating: text("current_health_rating"), // good, average, poor
+  familyChronicIllnessHistory: boolean("family_chronic_illness_history"),
+  
   // Step 2: Income (OLD)
   monthlyIncome: integer("monthly_income").notNull(),
   employmentType: text("employment_type"),
@@ -55,6 +69,20 @@ export const retirementPlans = pgTable("retirement_plans", {
   ppfEpfNps: integer("ppf_epf_nps"),
   bankDeposits: integer("bank_deposits"),
   goldAssets: integer("gold_assets"),
+  
+  // NEW: Assets Breakdown (with individual asset class tracking)
+  propertyPrimaryValue: integer("property_primary_value"), // Primary home - NOT included in retirement
+  realEstateInvestmentValue: integer("real_estate_investment_value"), // Investment properties
+  stocksMutualFundsValue: integer("stocks_mutual_funds_value"), // Combined stocks + MF
+  ppfNpsValue: integer("ppf_nps_value"), // Locked-in retirement accounts
+  fdBondsValue: integer("fd_bonds_value"), // Fixed deposits + bonds
+  goldJewelryValue: integer("gold_jewelry_value"), // Physical gold + jewelry
+  cashLiquidValue: integer("cash_liquid_value"), // Savings accounts, liquid funds
+  excludePrimaryPropertyFromRetirement: boolean("exclude_primary_property").default(true),
+  excludedAssets: text("excluded_assets").array(), // Asset types user explicitly excludes
+  
+  // NEW: Emergency Fund
+  emergencyFundMonths: integer("emergency_fund_months"), // Months of expenses saved
   
   // Step 4: Goals (OLD)
   retirementLifestyle: text("retirement_lifestyle"),
@@ -77,10 +105,19 @@ export const retirementPlans = pgTable("retirement_plans", {
   essentialExpenseRatio: integer("essential_expense_ratio"), // Default 60
   lifestyleExpenseRatio: integer("lifestyle_expense_ratio"), // Default 40
   
-  // Step 3: Assets & Obligations (simplified)
+  // Step 3: Assets & Obligations (simplified - kept for backward compatibility)
   totalAssets: integer("total_assets"), // Combined assets value
-  loanEmi: integer("loan_emi"), // Combined EMI
+  loanEmi: integer("loan_emi"), // Combined EMI (legacy)
   loanYearsLeft: integer("loan_years_left"),
+  
+  // NEW: Liabilities Breakdown
+  homeLoanEmiNew: integer("home_loan_emi_new"),
+  homeLoanYearsLeft: integer("home_loan_years_left"),
+  carLoanEmi: integer("car_loan_emi"),
+  carLoanYearsLeft: integer("car_loan_years_left"),
+  personalLoanEmi: integer("personal_loan_emi"),
+  personalLoanYearsLeft: integer("personal_loan_years_left"),
+  creditCardDebt: integer("credit_card_debt"), // Outstanding balance
   
   // Step 4: Dream Retirement
   lifestyleChoice: text("lifestyle_choice"), // modest, comfortable, luxury, nomadic
@@ -178,6 +215,60 @@ export const chatMessages = pgTable("chat_messages", {
 
 export type ChatMessage = typeof chatMessages.$inferSelect;
 
+// Asset class compounding rates (10-year India average)
+export const ASSET_COMPOUNDING_RATES = {
+  stocksMutualFunds: 0.12, // 12% - Equity
+  ppfNps: 0.075, // 7.5% - Government schemes
+  realEstateInvestment: 0.10, // 10% - Investment property
+  fdBonds: 0.06, // 6% - Fixed income
+  goldJewelry: 0.08, // 8% - Gold
+  cashLiquid: 0.04, // 4% - Savings account
+  propertyPrimary: 0.08, // 8% - Primary home (NOT for retirement)
+} as const;
+
+// Healthcare inflation rates based on health status
+export const HEALTHCARE_INFLATION_RATES = {
+  good: 0.10, // 10% for healthy individuals
+  average: 0.11, // 11% for average health
+  poor: 0.12, // 12% for poor health
+} as const;
+
+// Life expectancy adjustments based on health
+export const LIFE_EXPECTANCY_ADJUSTMENTS = {
+  good: 5, // Add 5 years for good health
+  average: 0, // No adjustment
+  poor: -5, // Reduce 5 years for poor health
+  familyChronicIllness: -3, // Reduce if family history
+  majorHealthConditions: -5, // Reduce for existing conditions
+} as const;
+
+export interface MajorLifeExpenses {
+  weddings?: { count: number; avgCost: number; yearsFromNow: number[] };
+  education?: { count: number; avgCost: number; yearsFromNow: number[] };
+  medical?: { estimatedCost: number; yearsFromNow?: number };
+}
+
+export interface AssetBreakdown {
+  propertyPrimary: number;
+  realEstateInvestment: number;
+  stocksMutualFunds: number;
+  ppfNps: number;
+  fdBonds: number;
+  goldJewelry: number;
+  cashLiquid: number;
+  excludedFromRetirement: string[];
+}
+
+export interface LiabilitiesBreakdown {
+  homeLoanEmi: number;
+  homeLoanYearsLeft: number;
+  carLoanEmi: number;
+  carLoanYearsLeft: number;
+  personalLoanEmi: number;
+  personalLoanYearsLeft: number;
+  creditCardDebt: number;
+}
+
 export interface CalculatedPlan {
   yearsToRetirement: number;
   yearsInRetirement: number;
@@ -215,4 +306,17 @@ export interface CalculatedPlan {
   adviceTriggers: string[];
   assetCoveragePercentage: number;
   hasSubstantialAssets: boolean;
+  
+  // NEW: Enhanced calculations
+  assetBreakdownProjected?: {
+    [key: string]: { currentValue: number; projectedValue: number; rate: number };
+  };
+  lifeExpectancyAdjusted?: number;
+  healthcareInflationRate?: number;
+  majorLifeExpensesFuture?: number; // Total inflation-adjusted major expenses
+  emergencyFundStatus?: 'adequate' | 'low' | 'critical';
+  emergencyFundWarning?: string;
+  equityCapApplied?: boolean;
+  totalLiabilities?: number;
+  netWorth?: number;
 }
