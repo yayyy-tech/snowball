@@ -13,10 +13,10 @@ export function Header() {
     <header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-lg">
       <div className="container mx-auto px-4 md:px-8">
         <div className="flex h-16 items-center justify-between md:grid md:grid-cols-3">
-          <nav className="hidden md:flex items-center gap-6">
+          <nav className="hidden md:flex items-center gap-8">
             <button 
               onClick={() => setLocation("/how-it-works")}
-              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors duration-200 link-underline"
               data-testid="nav-how-it-works"
             >
               How It Works
@@ -24,7 +24,7 @@ export function Header() {
             {isAuthenticated && (
               <button 
                 onClick={() => setLocation("/previous-plans")}
-                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors duration-200 link-underline"
                 data-testid="nav-previous-plans"
               >
                 Previous Plans
@@ -32,7 +32,7 @@ export function Header() {
             )}
             <button 
               onClick={() => setLocation("/about-us")}
-              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors duration-200 link-underline"
               data-testid="nav-about-us"
             >
               About Us

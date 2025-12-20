@@ -6,26 +6,61 @@ import { motion } from "framer-motion";
 export function PreviewSection() {
   const { ref, isVisible } = useScrollAnimation();
 
+  const containerVariants = {
+    hidden: {},
+    visible: {
+      transition: {
+        staggerChildren: 0.2,
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 50, scale: 0.98 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      scale: 1,
+      transition: {
+        duration: 0.7,
+        ease: [0.4, 0, 0.2, 1],
+      },
+    },
+  };
+
+  const headingVariants = {
+    hidden: { opacity: 0, y: 30 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.6,
+        ease: [0.4, 0, 0.2, 1],
+      },
+    },
+  };
+
   return (
-    <section className="py-16 relative overflow-hidden">
+    <section className="py-20 md:py-28 relative overflow-hidden">
       <div className="absolute inset-0 gradient-mesh" />
-      <div className="container mx-auto px-4 relative z-10" ref={ref}>
-        <div className="max-w-6xl mx-auto space-y-8">
+      <div className="container mx-auto px-4 md:px-8 relative z-10" ref={ref}>
+        <motion.div 
+          className="max-w-6xl mx-auto space-y-10"
+          initial="hidden"
+          animate={isVisible ? "visible" : "hidden"}
+          variants={containerVariants}
+        >
           <motion.h2
-            initial={{ opacity: 0, y: 20 }}
-            animate={isVisible ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 0.6 }}
-            className="text-3xl font-bold text-center mb-8"
+            variants={headingVariants}
+            className="text-3xl md:text-4xl font-bold text-center text-balance"
             data-testid="heading-sample-roadmap"
           >
             Sample <span className="gradient-text">Roadmap</span>
           </motion.h2>
           
           <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            animate={isVisible ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="rounded-2xl overflow-hidden glass-card border-2 border-border shadow-2xl card-hover"
+            variants={itemVariants}
+            className="rounded-2xl overflow-hidden glass-card border-2 border-border/50 shadow-xl card-premium"
           >
             <img 
               src={assetAllocationImage} 
@@ -36,10 +71,8 @@ export function PreviewSection() {
           </motion.div>
           
           <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            animate={isVisible ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 0.6, delay: 0.4 }}
-            className="rounded-2xl overflow-hidden glass-card border-2 border-border shadow-2xl card-hover"
+            variants={itemVariants}
+            className="rounded-2xl overflow-hidden glass-card border-2 border-border/50 shadow-xl card-premium"
           >
             <img 
               src={recommendedInvestmentsImage} 
@@ -48,7 +81,7 @@ export function PreviewSection() {
               data-testid="img-recommended-investments-preview"
             />
           </motion.div>
-        </div>
+        </motion.div>
       </div>
     </section>
   );

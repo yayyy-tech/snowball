@@ -697,7 +697,7 @@
   }
 }
 
-/* Reduced motion support */
+/* Reduced motion support - respects user preferences */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -708,25 +708,60 @@
     scroll-behavior: auto !important;
   }
 
+  .animate-fade-in,
+  .animate-slide-up,
+  .animate-scale-in {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
   .stagger-children > * {
     transition-delay: 0ms !important;
-    opacity: 1;
-    transform: none;
+    opacity: 1 !important;
+    transform: none !important;
   }
 
   .card-hover:hover,
   .card-premium:hover,
   .card-glow:hover {
-    transform: none;
+    transform: none !important;
+    box-shadow: none !important;
+  }
+
+  .card-glow::before {
+    display: none !important;
   }
 
   .reveal-section {
-    opacity: 1;
-    transform: none;
+    opacity: 1 !important;
+    transform: none !important;
   }
 
   .img-reveal {
-    opacity: 1;
-    transform: none;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .link-underline::after {
+    display: none !important;
+  }
+
+  .icon-float {
+    transform: none !important;
+  }
+
+  .pulse-glow {
+    animation: none !important;
+  }
+
+  .shimmer {
+    animation: none !important;
+    background: hsl(var(--muted)) !important;
+  }
+
+  .gradient-button:hover,
+  .gradient-button:active {
+    transform: none !important;
   }
 }

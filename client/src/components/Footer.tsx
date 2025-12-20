@@ -2,6 +2,8 @@ import { Snowflake } from "lucide-react";
 import { useLocation } from "wouter";
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useScrollAnimation } from "@/hooks/useScrollAnimation";
+import { motion } from "framer-motion";
 
 const PRIVACY_POLICY = `Snowball Privacy Policy
 
@@ -148,9 +150,27 @@ Address: Wework Bannerghatta, Arekere Main Rd, Bengaluru, Karnataka 560076`;
 export function Footer() {
   const [, setLocation] = useLocation();
   const [isPrivacyOpen, setIsPrivacyOpen] = useState(false);
+  const { ref, isVisible } = useScrollAnimation();
+
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        duration: 0.6,
+        ease: [0.4, 0, 0.2, 1],
+      },
+    },
+  };
 
   return (
-    <footer className="border-t bg-muted/30 py-12">
+    <motion.footer 
+      className="border-t bg-muted/30 py-12"
+      ref={ref}
+      initial="hidden"
+      animate={isVisible ? "visible" : "hidden"}
+      variants={containerVariants}
+    >
       <div className="container mx-auto px-4 md:px-8">
         <div className="grid md:grid-cols-3 gap-8 mb-8">
           <div className="space-y-4">
@@ -158,18 +178,18 @@ export function Footer() {
               <Snowflake className="h-6 w-6 text-primary" />
               <span className="text-lg font-semibold">Snowball</span>
             </div>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-muted-foreground leading-relaxed">
               Your trusted retirement planning partner for a secure financial future.
             </p>
           </div>
 
           <div>
             <h3 className="font-semibold mb-4">Product</h3>
-            <ul className="space-y-2 text-sm">
+            <ul className="space-y-3 text-sm">
               <li>
                 <button 
                   onClick={() => setLocation("/#features")} 
-                  className="text-muted-foreground hover:text-foreground transition-colors"
+                  className="text-muted-foreground hover:text-foreground transition-colors link-underline"
                 >
                   Features
                 </button>
@@ -177,7 +197,7 @@ export function Footer() {
               <li>
                 <button 
                   onClick={() => setLocation("/how-it-works")} 
-                  className="text-muted-foreground hover:text-foreground transition-colors"
+                  className="text-muted-foreground hover:text-foreground transition-colors link-underline"
                   data-testid="footer-how-it-works"
                 >
                   How It Works
@@ -188,11 +208,11 @@ export function Footer() {
 
           <div>
             <h3 className="font-semibold mb-4">Company</h3>
-            <ul className="space-y-2 text-sm">
+            <ul className="space-y-3 text-sm">
               <li>
                 <button 
                   onClick={() => setLocation("/about-us")} 
-                  className="text-muted-foreground hover:text-foreground transition-colors"
+                  className="text-muted-foreground hover:text-foreground transition-colors link-underline"
                   data-testid="footer-about-us"
                 >
                   About
@@ -201,7 +221,7 @@ export function Footer() {
               <li>
                 <button 
                   onClick={() => setIsPrivacyOpen(true)}
-                  className="text-muted-foreground hover:text-foreground transition-colors"
+                  className="text-muted-foreground hover:text-foreground transition-colors link-underline"
                   data-testid="footer-privacy-policy"
                 >
                   Privacy Policy
@@ -213,7 +233,7 @@ export function Footer() {
 
         <div className="border-t pt-8 space-y-4">
           <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/40 rounded-lg p-4">
-            <p className="text-sm text-amber-900 dark:text-amber-200">
+            <p className="text-sm text-amber-900 dark:text-amber-200 leading-relaxed">
               <strong>Disclaimer:</strong> This platform provides educational financial insights. We are not a SEBI-registered advisor. 
               Recommendations are for informational purposes only. Mutual fund and bond data sourced from public APIs. 
               Verify all instruments before investing.
@@ -237,6 +257,6 @@ export function Footer() {
           </div>
         </DialogContent>
       </Dialog>
-    </footer>
+    </motion.footer>
   );
 }

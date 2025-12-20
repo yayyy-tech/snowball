@@ -5,7 +5,6 @@ import { useState, useEffect } from "react";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { motion } from "framer-motion";
 
-//todo: remove mock functionality
 const testimonials = [
   {
     name: "Rajesh Kumar",
@@ -41,17 +40,51 @@ export function TestimonialsSection() {
     return () => clearInterval(timer);
   }, []);
 
+  const headingVariants = {
+    hidden: { opacity: 0, y: 25 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.6,
+        ease: [0.4, 0, 0.2, 1],
+      },
+    },
+  };
+
+  const containerVariants = {
+    hidden: { opacity: 0, scale: 0.97 },
+    visible: {
+      opacity: 1,
+      scale: 1,
+      transition: {
+        duration: 0.6,
+        delay: 0.2,
+        ease: [0.4, 0, 0.2, 1],
+      },
+    },
+  };
+
+  const getVisibleTestimonials = () => {
+    const result = [];
+    for (let i = 0; i < 2; i++) {
+      const index = (currentIndex + i) % testimonials.length;
+      result.push({ ...testimonials[index], displayIndex: index });
+    }
+    return result;
+  };
+
   return (
-    <section className="py-20 md:py-24 relative overflow-hidden">
+    <section className="py-24 md:py-32 relative overflow-hidden">
       <div className="absolute inset-0 gradient-mesh" />
       <div className="container mx-auto px-4 md:px-8 relative z-10" ref={ref}>
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={isVisible ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.6 }}
+          initial="hidden"
+          animate={isVisible ? "visible" : "hidden"}
+          variants={headingVariants}
           className="text-center space-y-4 mb-16"
         >
-          <h2 className="text-3xl md:text-4xl font-semibold">
+          <h2 className="text-3xl md:text-4xl font-semibold text-balance">
             What Our <span className="gradient-text">Users Say</span>
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
@@ -60,45 +93,55 @@ export function TestimonialsSection() {
         </motion.div>
 
         <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={isVisible ? { opacity: 1, scale: 1 } : {}}
-          transition={{ duration: 0.6, delay: 0.2 }}
+          initial="hidden"
+          animate={isVisible ? "visible" : "hidden"}
+          variants={containerVariants}
           className="max-w-4xl mx-auto"
         >
           <div className="grid md:grid-cols-2 gap-6">
-            {testimonials.slice(currentIndex, currentIndex + 2).map((testimonial, index) => (
-              <Card 
-                key={index} 
-                className="p-6 space-y-4 card-hover border-2 shadow-xl"
-                data-testid={`testimonial-${index}`}
+            {getVisibleTestimonials().map((testimonial, index) => (
+              <motion.div
+                key={`${testimonial.displayIndex}-${currentIndex}`}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ 
+                  duration: 0.4, 
+                  delay: index * 0.1,
+                  ease: [0.4, 0, 0.2, 1] 
+                }}
               >
-                <div className="flex gap-1">
-                  {[...Array(testimonial.rating)].map((_, i) => (
-                    <Star key={i} className="h-5 w-5 fill-chart-4 text-chart-4" />
-                  ))}
-                </div>
-                <p className="text-muted-foreground italic text-lg">"{testimonial.quote}"</p>
-                <div className="flex items-center gap-3">
-                  <Avatar className="h-12 w-12">
-                    <AvatarFallback className="bg-primary/10 text-primary font-semibold text-lg">
-                      {testimonial.name.split(' ').map(n => n[0]).join('')}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <p className="font-semibold">{testimonial.name}</p>
-                    <p className="text-sm text-muted-foreground">{testimonial.role}, {testimonial.age} years</p>
+                <Card 
+                  className="p-6 space-y-4 card-premium border-border/50 quote-card h-full"
+                  data-testid={`testimonial-${index}`}
+                >
+                  <div className="flex gap-1">
+                    {[...Array(testimonial.rating)].map((_, i) => (
+                      <Star key={i} className="h-5 w-5 fill-chart-4 text-chart-4" />
+                    ))}
                   </div>
-                </div>
-              </Card>
+                  <p className="text-muted-foreground italic text-lg leading-relaxed">"{testimonial.quote}"</p>
+                  <div className="flex items-center gap-3">
+                    <Avatar className="h-12 w-12 ring-2 ring-primary/10 ring-offset-2 ring-offset-background">
+                      <AvatarFallback className="bg-primary/10 text-primary font-semibold text-lg">
+                        {testimonial.name.split(' ').map(n => n[0]).join('')}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <p className="font-semibold">{testimonial.name}</p>
+                      <p className="text-sm text-muted-foreground">{testimonial.role}, {testimonial.age} years</p>
+                    </div>
+                  </div>
+                </Card>
+              </motion.div>
             ))}
           </div>
           
-          <div className="flex justify-center gap-2 mt-6">
+          <div className="flex justify-center gap-2 mt-8">
             {testimonials.map((_, index) => (
               <button
                 key={index}
-                className={`h-2 rounded-full transition-all ${
-                  index === currentIndex ? "w-8 bg-primary" : "w-2 bg-muted-foreground/30"
+                className={`h-2 rounded-full transition-all duration-300 ${
+                  index === currentIndex ? "w-8 bg-primary" : "w-2 bg-muted-foreground/30 hover:bg-muted-foreground/50"
                 }`}
                 onClick={() => setCurrentIndex(index)}
                 data-testid={`testimonial-dot-${index}`}
