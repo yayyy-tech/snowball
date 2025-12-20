@@ -39,7 +39,7 @@ Preferred communication style: Simple, everyday language.
     - **What If Scenario Simulator**: Claude-powered analysis of user financial scenarios.
     - **Interactive Chatbot Assistant**: Claude-powered, context-aware advice, with persistent chat history.
     - **Interactive Charts**: Recharts integration for asset allocation visualization.
-    - **PDF Download**: Generates personalized retirement plan PDFs with summary, strategy, and quotes.
+    - **PDF Download**: Premium 4-page dark-themed PDF with branded Snowball design. Includes: Page 1 (Freedom Score hero with progress ring, key metrics), Page 2 (Detailed calculation breakdown with accumulation/withdrawal phases), Page 3 (Asset allocation with visual bars and rationale), Page 4 (SIP recommendations and investment suggestions). Features compounding wisdom quotes from Buffett, Munger, and Housel.
 
 ### Design Philosophy
 - **Hybrid Design**: Reference-based marketing pages with systematic design tokens for the dashboard.

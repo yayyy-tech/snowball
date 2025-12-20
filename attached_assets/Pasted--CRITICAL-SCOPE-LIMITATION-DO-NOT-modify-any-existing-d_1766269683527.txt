@@ -1,0 +1,277 @@
+ CRITICAL: SCOPE LIMITATION
+DO NOT modify any existing dashboard UI, components, or functionality. ONLY create/modify the PDF generation feature. All changes must be isolated to PDF generation code only.
+Objective
+Create a PDF generation system that converts the user's retirement dashboard into a visually appealing, branded document matching the Snowball interface design shown in the screenshots.
+Requirements
+1. PDF Library Selection
+
+Use a library that supports advanced styling and layouts (recommendations: pdfkit, puppeteer for HTML-to-PDF, or react-pdf)
+Must support custom fonts, colors, gradients, and complex layouts
+Should handle dynamic data injection
+
+2. Design Specifications
+Overall Style
+
+Dark theme background (#1a1d2e or similar)
+Snowball brand colors: Blue (#5b7ee5), Green (#4ade80), Orange/Gold (#f59e0b)
+Modern, clean typography with proper spacing
+Match the exact visual hierarchy from the dashboard
+
+Document Structure
+Page 1: Header & Freedom Score
+
+Snowball logo at top
+"Hi, [User Name]!" personalized greeting
+"Here's your personalized retirement roadmap" subtitle
+Freedom Score section with:
+
+Large score display (46/100)
+Circular progress indicator (partial orange ring)
+"Needs attention - But achievable!" status message
+
+
+Alert box: "You're closer than you think!" with action items
+Precision calculation notice (yellow warning box)
+Three key metrics cards:
+
+Years to Retirement (15 years left)
+Retirement Corpus Needed (₹14.23Cr with 12% buffer)
+Monthly SIP Required (₹75K with 7% step-up)
+
+
+
+Page 2: Detailed Calculation Breakdown
+
+Two-column layout:
+
+Accumulation Phase (left column):
+
+Current Age, Starting Monthly SIP, Annual Step-up
+Years to Retirement, Current Assets
+Projected Asset Value, Annual Tax
+Buffer for Unexpected (12%)
+Total Corpus Needed (highlighted in blue)
+
+
+Withdrawal Phase (right column):
+
+Retirement Age, Post-Retirement Years
+Longevity Age, Current Monthly Expense
+Inflation Rate Used
+Monthly Expense @ Retirement (highlighted)
+Monthly SWP Withdrawal (large green text: ₹4,31,380)
+Inflation adjustment note
+
+
+
+
+
+Page 3: Asset Allocation
+
+Section title: "Your Asset Allocation"
+Donut chart showing:
+
+Equity: 55% (blue)
+Debt: 35% (green)
+Gold: 10% (orange)
+
+
+Horizontal bar representation
+Risk profile note: "Based on your moderate risk profile and 15 years to retirement"
+Explanation text about balanced growth and risk management
+
+Page 4: Recommended Monthly SIP
+
+Large display: ₹75,000/month
+"Starting Today" badge with timeline (15 years to retirement)
+7% annual step-up explanation
+Target corpus reminder
+
+Page 5-6: Recommended Investments
+
+Equity Mutual Funds section with cards showing:
+
+Fund name, cap type, risk level
+Allocation percentage
+Expected returns
+Brief description
+
+
+Debt Funds & Bonds section with similar card layout
+Gold & Alternative Assets section
+
+3. Dynamic Data Integration
+Required Data Object Structure:
+javascriptconst retirementData = {
+  user: {
+    name: string,
+    currentAge: number,
+    retirementAge: number,
+    currentMonthlyExpense: number
+  },
+  freedomScore: {
+    score: number,
+    status: string,
+    actionMessage: string
+  },
+  timeline: {
+    yearsToRetirement: number,
+    postRetirementYears: number,
+    longevityAge: number
+  },
+  finances: {
+    currentAssets: number,
+    projectedAssetValue: number,
+    targetCorpus: number,
+    bufferPercentage: number,
+    monthlyExpenseAtRetirement: number,
+    monthlySWP: number
+  },
+  investment: {
+    monthlySIP: number,
+    annualStepUp: number,
+    inflationRate: number,
+    annualTax: number
+  },
+  allocation: {
+    equity: number,
+    debt: number,
+    gold: number,
+    riskProfile: string
+  },
+  recommendations: {
+    equityFunds: [{
+      name: string,
+      type: string,
+      risk: string,
+      allocation: number,
+      expectedReturns: number,
+      description: string
+    }],
+    debtFunds: [...],
+    goldAssets: [...]
+  }
+}
+4. Technical Implementation
+Step-by-step approach:
+
+Create an HTML template that mirrors the dashboard design
+Inject dynamic data using template literals or a templating engine
+Apply CSS styling matching the dark theme and brand colors
+Use the chosen library to convert HTML to PDF
+Add page breaks appropriately
+Include the Snowball logo (ensure you have the asset)
+Generate filename: Snowball_Retirement_Plan_[userName]_[date].pdf
+
+5. Code Structure
+IMPORTANT: Create separate files for PDF generation. Do not modify existing components.
+javascript// Create new file: utils/pdfGenerator.js or services/pdfService.js
+
+// Main function - ONLY for PDF generation
+async function generateRetirementPDF(userData, dashboardData) {
+  // 1. Build complete data object
+  const pdfData = buildPDFData(userData, dashboardData);
+  
+  // 2. Generate HTML from template
+  const htmlContent = generateHTMLTemplate(pdfData);
+  
+  // 3. Apply styling
+  const styledHTML = applyStyles(htmlContent);
+  
+  // 4. Convert to PDF
+  const pdf = await convertToPDF(styledHTML);
+  
+  // 5. Return or download
+  return pdf;
+}
+
+// Export only PDF-related functions
+export { generateRetirementPDF };
+Integration Point:
+
+Find the existing "Download" button in the dashboard
+Only modify its onClick handler to call the new PDF generation function
+Example: onClick={() => generateRetirementPDF(userData, dashboardData)}
+DO NOT change the button's styling, position, or any other properties
+
+6. Styling Guidelines
+Typography:
+
+Headers: Bold, 24-32px
+Body text: 14-16px
+Metrics/Numbers: Bold, 20-48px depending on importance
+Use sans-serif font (Inter, Poppins, or similar)
+
+Colors:
+
+Background: #0f1117 to #1a1d2e (gradient)
+Primary text: #ffffff
+Secondary text: #9ca3af
+Accent colors: Use brand colors for highlights
+Success/positive: #4ade80
+Warning: #fbbf24
+Cards background: #1e2238 with subtle border
+
+Spacing:
+
+Consistent padding: 20-40px
+Section gaps: 40-60px
+Card margins: 16-24px
+
+7. Additional Features
+
+Add footer with: "Generated on [date]" and disclaimer text
+Include page numbers (optional)
+Add Morgan Housel quote in a styled callout box
+Ensure all currency values use Indian format (₹ symbol, Cr/L notation)
+Make charts/graphs using SVG for crisp rendering
+
+8. Testing Checklist
+
+ PDF generates with all sections
+ Dynamic data populates correctly
+ Styling matches dashboard exactly
+ Charts render properly
+ Text is readable and not cut off
+ File size is reasonable (< 2MB)
+ Works across different browsers
+ Mobile-responsive preview before PDF generation
+
+9. Error Handling
+
+Validate all input data before generation
+Provide fallback values for missing data
+Show loading indicator during generation
+Handle generation failures gracefully
+Log errors for debugging
+
+
+Note to Replit Agent:
+Please implement this PDF generation system ensuring the output exactly matches the visual design shown in the dashboard. Pay special attention to the dark theme, circular progress indicators, and card-based layout. The PDF should feel like a premium, branded document that users would be proud to save and share.
+🚨 MANDATORY CONSTRAINTS:
+
+Create NEW files only - Make new files like pdfGenerator.js, pdfTemplate.js, pdfStyles.js in a utils or services folder
+DO NOT modify existing dashboard components, pages, or UI elements
+DO NOT change any existing styling, layouts, or CSS files
+DO NOT alter routing, state management, or other features
+ONLY modify the download button's onClick handler to call your new PDF function
+Pass existing data - Use whatever data structure is already available in the dashboard, don't restructure existing state
+Add dependencies carefully - Only add PDF-related npm packages (like jspdf, html2pdf.js, pdfkit, etc.)
+Test in isolation - Ensure PDF generation works without breaking any existing functionality
+
+What you CAN do:
+
+Create new PDF generation utility files
+Install PDF-related npm packages
+Create HTML/CSS templates specifically for PDF rendering
+Add a single function call to the existing download button
+Create helper functions for data formatting
+
+What you CANNOT do:
+
+Modify dashboard components
+Change existing state management
+Alter routing or navigation
+Modify any existing UI/styling
+Restructure existing data flow
+Change API calls or data fetching logic
