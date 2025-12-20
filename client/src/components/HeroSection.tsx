@@ -19,7 +19,7 @@ export function HeroSection() {
             </div>
             
             <h1 className="text-display">
-              Because your golden years deserves the <span className="text-primary">snowball effect</span>
+              Because your golden years deserve the <span className="text-primary">snowball effect</span>
             </h1>
           </div>
 
