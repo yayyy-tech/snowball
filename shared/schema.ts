@@ -222,7 +222,7 @@ export const ASSET_COMPOUNDING_RATES = {
   realEstateInvestment: 0.10, // 10% - Investment property
   fdBonds: 0.06, // 6% - Fixed income
   goldJewelry: 0.08, // 8% - Gold
-  cashLiquid: 0.04, // 4% - Savings account
+  cashLiquid: 0, // 0% - Cash does not compound
   propertyPrimary: 0.08, // 8% - Primary home (NOT for retirement)
 } as const;
 
