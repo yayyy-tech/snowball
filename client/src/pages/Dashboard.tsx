@@ -315,12 +315,23 @@ export default function Dashboard() {
           ))}
         </motion.div>
 
-        {/* Recalculate Button */}
-        <div className="mb-8">
+        {/* Action Buttons Row */}
+        <div className="mb-8 flex flex-wrap gap-4">
           <Button size="lg" data-testid="button-recalculate">
             <RefreshCw className="h-4 w-4 mr-2" />
             Recalculate Plan
           </Button>
+          <Link href={`/retirement-roadmap?planId=${planId}`}>
+            <Button
+              size="lg"
+              variant="outline"
+              className="border-primary text-primary font-semibold"
+              data-testid="button-view-roadmap"
+            >
+              <Map className="h-5 w-5 mr-2" />
+              View Detailed Roadmap
+            </Button>
+          </Link>
         </div>
 
         {/* Detailed Calculation Breakdown */}
@@ -576,19 +587,8 @@ export default function Dashboard() {
           </p>
         </div>
 
-        {/* View Roadmap & Download Plan Buttons */}
+        {/* Download Plan Button */}
         <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center items-center">
-          <Link href={`/retirement-roadmap?planId=${planId}`}>
-            <Button
-              size="lg"
-              variant="outline"
-              className="border-primary text-primary font-semibold"
-              data-testid="button-view-roadmap"
-            >
-              <Map className="h-5 w-5 mr-2" />
-              View Detailed Roadmap
-            </Button>
-          </Link>
           <Button
             onClick={async () => {
               try {

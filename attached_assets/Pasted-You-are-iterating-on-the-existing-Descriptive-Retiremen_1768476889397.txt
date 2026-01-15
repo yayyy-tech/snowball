@@ -1,0 +1,136 @@
+You are iterating on the existing "Descriptive Retirement Roadmap" feature in Snowball. The feature is already implemented but needs specific fixes and structural changes. Make these exact changes:
+SECTION 1 - GROWTH SECTION FIXES:
+
+FIX QUARTERLY TOGGLE:
+
+The graph currently shows yearly corpus growth correctly
+When user switches to "Quarterly" view, the graph does not render
+Debug the quarterly data generation logic
+Ensure quarterly timeline data is being correctly derived from the existing retirement plan
+The quarterly view should show data points every 3 months with interpolated or calculated values for SIP, cumulative invested, and corpus
+Make sure the chart component re-renders properly when toggle switches to quarterly
+Test that both yearly and quarterly views display the graph correctly
+
+
+MOVE SIP BREAKDOWN BELOW GRAPH:
+
+The SIP Breakdown currently exists as a separate section
+Move the entire SIP Breakdown component to appear directly below the Corpus Growth chart within the same Growth section
+The layout should be: Growth Section Header → Toggle (Yearly/Quarterly) → Corpus Growth Graph → SIP Breakdown Table/Accordion
+Maintain all existing functionality of the SIP breakdown (yearly/monthly toggle, drilldown, etc.)
+Ensure visual hierarchy is clear and the breakdown feels connected to the graph above it
+
+
+
+SECTION 2 - REMOVE TIMELINE:
+
+Completely remove the Timeline-Based Narrative section
+Remove the component, route references, and any related code
+Do NOT remove milestone data if it's being used elsewhere
+
+SECTION 3 - ALLOCATION SECTION ENHANCEMENT:
+Current state: The allocation section shows current asset allocation (equity/debt split)
+New requirements:
+
+Keep the existing allocation visualization (equity/debt percentages)
+ADD a new subsection: "Recommended Funds"
+This subsection must show:
+
+List of specific mutual funds recommended for this user's plan (fetch from existing plan data if available, or add to plan generation if not currently included)
+For EACH fund display:
+
+Fund name
+Fund category (equity/debt/hybrid)
+Recommended allocation percentage or amount
+Projected investment in this fund over the accumulation phase (total amount user will invest in this specific fund)
+Projected value of this fund at retirement (how much this fund will grow to)
+
+
+
+
+Use a table or card-based layout
+If fund recommendations don't currently exist in the retirement plan data:
+
+Check server/utils/retirementCalculations.ts and server/routes/retirement-plan.ts for any fund selection logic
+If logic exists, expose it in the API response
+If logic does NOT exist, you need to ADD fund recommendation logic that:
+
+Takes the user's equity/debt allocation split
+Recommends 3-5 specific Indian mutual funds (mix of equity and debt funds based on allocation)
+Calculates how much will be invested in each fund based on the split
+Projects each fund's growth using the same return assumptions already in the plan
+
+
+This is an EXCEPTION to the no-calculation rule because fund-level breakdown is a view-layer detail, not changing the overall plan math
+Total across all funds must equal the total corpus - do not create divergence
+
+
+Display this clearly with good formatting
+
+SECTION 4 - WITHDRAWAL SECTION BUG FIX:
+Critical bug identified:
+
+User's longevity age is set to 90
+Corpus projections are ending at age 75
+This is a 15-year discrepancy
+
+Your task:
+
+Investigate the withdrawal phase calculation in server/utils/retirementCalculations.ts
+Check the loop or logic that generates post-retirement corpus decay
+Common issues to check:
+
+Is the loop terminating early?
+Is longevity age being read correctly from user input?
+Is there a hardcoded age limit?
+Are withdrawal calculations stopping prematurely?
+
+
+Fix the bug so corpus projections and withdrawal schedule extend to the user's actual longevity age (90 in this case)
+Ensure the withdrawal phase visualization shows all years from retirement age to longevity age
+Verify the corpus decay calculation accounts for:
+
+Monthly withdrawals
+Inflation adjustment on withdrawals
+Continued returns on remaining corpus
+All years until longevity age
+
+
+
+SECTION 5 - FINAL STRUCTURE:
+After all changes, the Descriptive Retirement Roadmap should have exactly THREE sections in this order:
+
+Growth (with graph and SIP breakdown embedded)
+Allocation (with equity/debt split + recommended funds with projections)
+Withdrawal (bug-fixed to show full timeline to longevity age)
+
+Remove any other sections.
+SECTION 6 - BUTTON REPOSITIONING:
+Current state: "View Detailed Breakdown" button is at the bottom of some section
+New requirement:
+
+Move the "View Detailed Breakdown" button to the RIGHT SIDE of the "Recalculate Plan" button
+They should be horizontally aligned, likely in the header or top action bar of the retirement plan view
+Maintain consistent button styling
+Ensure both buttons are clearly visible and accessible
+Use flexbox or grid to align them properly with appropriate spacing
+
+IMPLEMENTATION PRIORITIES:
+
+Fix the quarterly graph toggle (highest priority - this is broken functionality)
+Fix the withdrawal age bug (critical data accuracy issue)
+Move SIP breakdown below graph (structural change)
+Enhance allocation with fund recommendations (new feature)
+Remove timeline section (cleanup)
+Reposition button (UI polish)
+
+VALIDATION CHECKLIST:
+□ Quarterly toggle shows graph correctly
+□ SIP breakdown appears below graph in Growth section
+□ Timeline section is completely removed
+□ Allocation section shows recommended funds with investment and growth projections per fund
+□ Withdrawal projections extend to longevity age (90), not stopping at 75
+□ Only three sections remain: Growth, Allocation, Withdrawal
+□ "View Detailed Breakdown" button is positioned to the right of "Recalculate Plan" button
+□ All existing functionality still works
+□ No calculation errors or data inconsistencies introduced

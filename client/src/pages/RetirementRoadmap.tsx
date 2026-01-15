@@ -4,13 +4,20 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
-import { ArrowLeft, Map, TrendingUp, Calendar, PieChart, Wallet } from "lucide-react";
+import { ArrowLeft, Map, TrendingUp, PieChart, Wallet } from "lucide-react";
 import { CorpusGrowthChart } from "@/components/RetirementRoadmap/CorpusGrowthChart";
 import { SIPBreakdownDrilldown } from "@/components/RetirementRoadmap/SIPBreakdownDrilldown";
-import { TimelineNarrative } from "@/components/RetirementRoadmap/TimelineNarrative";
 import { AssetAllocationTimeline } from "@/components/RetirementRoadmap/AssetAllocationTimeline";
 import { WithdrawalPhaseView } from "@/components/RetirementRoadmap/WithdrawalPhaseView";
 import type { RetirementPlan } from "@shared/schema";
+
+interface RecommendedFund {
+  name: string;
+  category: string;
+  allocationPercent: number;
+  projectedInvestment: number;
+  projectedValue: number;
+}
 
 interface TimelineData {
   planId: string;
@@ -43,6 +50,7 @@ interface TimelineData {
     corpusValue: number;
     description: string;
   }>;
+  recommendedFunds: RecommendedFund[];
 }
 
 export default function RetirementRoadmap() {
@@ -156,25 +164,17 @@ export default function RetirementRoadmap() {
         </Card>
 
         <Tabs defaultValue="growth" className="space-y-6">
-          <TabsList className="grid grid-cols-5 w-full max-w-2xl mx-auto">
+          <TabsList className="grid grid-cols-3 w-full max-w-lg mx-auto">
             <TabsTrigger value="growth" className="flex items-center gap-2" data-testid="tab-growth">
               <TrendingUp className="h-4 w-4" />
               <span className="hidden sm:inline">Growth</span>
-            </TabsTrigger>
-            <TabsTrigger value="sip" className="flex items-center gap-2" data-testid="tab-sip">
-              <Wallet className="h-4 w-4" />
-              <span className="hidden sm:inline">SIP</span>
-            </TabsTrigger>
-            <TabsTrigger value="timeline" className="flex items-center gap-2" data-testid="tab-timeline">
-              <Calendar className="h-4 w-4" />
-              <span className="hidden sm:inline">Timeline</span>
             </TabsTrigger>
             <TabsTrigger value="allocation" className="flex items-center gap-2" data-testid="tab-allocation">
               <PieChart className="h-4 w-4" />
               <span className="hidden sm:inline">Allocation</span>
             </TabsTrigger>
             <TabsTrigger value="withdrawal" className="flex items-center gap-2" data-testid="tab-withdrawal">
-              <ArrowLeft className="h-4 w-4 rotate-180" />
+              <Wallet className="h-4 w-4" />
               <span className="hidden sm:inline">Withdrawal</span>
             </TabsTrigger>
           </TabsList>
@@ -187,9 +187,6 @@ export default function RetirementRoadmap() {
               targetCorpus={timeline.targetCorpus}
               planId={planId}
             />
-          </TabsContent>
-
-          <TabsContent value="sip" className="space-y-6">
             <SIPBreakdownDrilldown 
               accumulationYears={timeline.accumulationYears}
               initialSip={timeline.initialSip}
@@ -198,22 +195,13 @@ export default function RetirementRoadmap() {
             />
           </TabsContent>
 
-          <TabsContent value="timeline" className="space-y-6">
-            <TimelineNarrative 
-              milestones={timeline.milestones}
-              currentAge={timeline.currentAge}
-              retirementAge={timeline.retirementAge}
-              longevityAge={timeline.longevityAge}
-              yearsToRetirement={timeline.yearsToRetirement}
-              yearsInRetirement={timeline.yearsInRetirement}
-            />
-          </TabsContent>
-
           <TabsContent value="allocation" className="space-y-6">
             <AssetAllocationTimeline 
               assetAllocation={timeline.assetAllocation}
               yearsToRetirement={timeline.yearsToRetirement}
               planId={planId}
+              recommendedFunds={timeline.recommendedFunds}
+              targetCorpus={timeline.targetCorpus}
             />
           </TabsContent>
 

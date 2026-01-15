@@ -707,7 +707,8 @@ ${planContext}`;
       const retirementCorpusStart = portfolioValue;
       let withdrawalAmount = calc.swpMonthlyWithdrawal;
       const inflationRate = 0.06;
-      const yearsInRetirement = calc.yearsInRetirement;
+      // Use plan's longevityYears if set, otherwise use calculated yearsInRetirement
+      const yearsInRetirement = plan.longevityYears || calc.yearsInRetirement || 30;
       
       for (let year = 1; year <= yearsInRetirement; year++) {
         for (let month = 1; month <= 12; month++) {
@@ -778,6 +779,59 @@ ${planContext}`;
           : `Corpus depletes around age ${longevityAge}`
       });
       
+      // Generate recommended funds based on asset allocation
+      const totalMonthlyInvestment = calc.sipAmount;
+      const equityAlloc = calc.assetAllocation.equity / 100;
+      const debtAlloc = calc.assetAllocation.debt / 100;
+      const goldAlloc = calc.assetAllocation.gold / 100;
+      
+      // Calculate total investment over accumulation phase
+      let totalSipInvested = 0;
+      let tempSip = calc.sipAmount;
+      for (let y = 1; y <= yearsToRetirement; y++) {
+        totalSipInvested += tempSip * 12;
+        tempSip *= 1.07; // 7% step-up
+      }
+      
+      // Define recommended funds with projected values
+      const recommendedFunds = [
+        {
+          name: "Nifty 50 Index Fund",
+          category: "Equity",
+          allocationPercent: Math.round(equityAlloc * 50),
+          projectedInvestment: Math.round(totalSipInvested * equityAlloc * 0.5),
+          projectedValue: Math.round(totalSipInvested * equityAlloc * 0.5 * Math.pow(1.12, yearsToRetirement))
+        },
+        {
+          name: "Flexi Cap Growth Fund",
+          category: "Equity",
+          allocationPercent: Math.round(equityAlloc * 50),
+          projectedInvestment: Math.round(totalSipInvested * equityAlloc * 0.5),
+          projectedValue: Math.round(totalSipInvested * equityAlloc * 0.5 * Math.pow(1.13, yearsToRetirement))
+        },
+        {
+          name: "Corporate Bond Fund",
+          category: "Debt",
+          allocationPercent: Math.round(debtAlloc * 60),
+          projectedInvestment: Math.round(totalSipInvested * debtAlloc * 0.6),
+          projectedValue: Math.round(totalSipInvested * debtAlloc * 0.6 * Math.pow(1.07, yearsToRetirement))
+        },
+        {
+          name: "Gilt Fund (Long Duration)",
+          category: "Debt",
+          allocationPercent: Math.round(debtAlloc * 40),
+          projectedInvestment: Math.round(totalSipInvested * debtAlloc * 0.4),
+          projectedValue: Math.round(totalSipInvested * debtAlloc * 0.4 * Math.pow(1.065, yearsToRetirement))
+        },
+        {
+          name: "Gold ETF/Sovereign Gold Bond",
+          category: "Gold",
+          allocationPercent: Math.round(goldAlloc * 100),
+          projectedInvestment: Math.round(totalSipInvested * goldAlloc),
+          projectedValue: Math.round(totalSipInvested * goldAlloc * Math.pow(1.08, yearsToRetirement))
+        }
+      ].filter(f => f.allocationPercent > 0);
+      
       res.json({
         planId: plan.id,
         currentAge: plan.currentAge,
@@ -793,8 +847,10 @@ ${planContext}`;
         freedomScore: calc.freedomScore,
         accumulationYears: calc.accumulationYears,
         withdrawalYears: calc.withdrawalYears,
-        monthlyProjections: monthlyProjections.filter((_, i) => i % 3 === 0), // Every 3 months for performance
+        // Filter to keep end-of-quarter months (3, 6, 9, 12) for quarterly view
+        monthlyProjections: monthlyProjections.filter(m => m.month === 3 || m.month === 6 || m.month === 9 || m.month === 12),
         milestones: milestones.sort((a, b) => a.year - b.year),
+        recommendedFunds,
       });
     } catch (error: any) {
       console.error("Error fetching timeline:", error);
