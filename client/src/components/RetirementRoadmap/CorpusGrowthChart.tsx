@@ -62,9 +62,9 @@ export function CorpusGrowthChart({
   ];
 
   const quarterlyData = monthlyProjections
-    .filter((_, i) => i % 4 === 0) 
+    .filter(m => m.month === 3 || m.month === 6 || m.month === 9 || m.month === 12)
     .map(m => ({
-      label: `${m.year} Q${Math.ceil(m.month / 3)}`,
+      label: `${m.year} Q${m.month === 3 ? 1 : m.month === 6 ? 2 : m.month === 9 ? 3 : 4}`,
       year: m.year,
       totalInvested: Math.round(m.totalInvested / 100000),
       corpusValue: Math.round(m.corpusValue / 100000),

@@ -40,6 +40,13 @@ Preferred communication style: Simple, everyday language.
     - **Interactive Chatbot Assistant**: Claude-powered, context-aware advice, with persistent chat history.
     - **Interactive Charts**: Recharts integration for asset allocation visualization.
     - **PDF Download**: Premium 4-page dark-themed PDF with branded Snowball design. Includes: Page 1 (Freedom Score hero with progress ring, key metrics), Page 2 (Detailed calculation breakdown with accumulation/withdrawal phases), Page 3 (Asset allocation with visual bars and rationale), Page 4 (SIP recommendations and investment suggestions). Features compounding wisdom quotes from Buffett, Munger, and Housel.
+    - **Descriptive Retirement Roadmap**: Comprehensive timeline visualization at `/retirement-roadmap` with 5 interactive tabs:
+      - **Corpus Growth Chart**: Interactive area chart with yearly/quarterly toggle showing invested vs corpus growth
+      - **SIP Breakdown Drilldown**: Expandable table with year-by-year and month-by-month SIP details
+      - **Timeline Narrative**: Visual milestone timeline with 25%/50%/75%/100% corpus achievements and retirement/longevity markers
+      - **Asset Allocation Timeline**: Pie chart visualization with expected returns and risk profiles per asset class
+      - **Withdrawal Phase View**: Post-retirement SWP projections with corpus depletion chart
+      - **AI Explanation Cards**: Claude-powered explanations for each section (SIP growth, compound growth, asset allocation, withdrawal)
 
 ### Design Philosophy
 - **Hybrid Design**: Reference-based marketing pages with systematic design tokens for the dashboard.

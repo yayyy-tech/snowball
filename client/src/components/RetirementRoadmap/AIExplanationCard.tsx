@@ -16,6 +16,8 @@ export function AIExplanationCard({ planId, section, title }: AIExplanationCardP
   const [isExpanded, setIsExpanded] = useState(false);
   const [explanation, setExplanation] = useState<string | null>(null);
 
+  const [error, setError] = useState<string | null>(null);
+
   const { mutate: fetchExplanation, isPending } = useMutation({
     mutationFn: async () => {
       const response = await apiRequest('POST', `/api/retirement-plans/${planId}/explain`, { section });
@@ -23,6 +25,11 @@ export function AIExplanationCard({ planId, section, title }: AIExplanationCardP
     },
     onSuccess: (data) => {
       setExplanation(data.explanation);
+      setError(null);
+    },
+    onError: () => {
+      setError("Unable to generate explanation. Please try again.");
+      setExplanation(null);
     }
   });
 
@@ -67,6 +74,22 @@ export function AIExplanationCard({ planId, section, title }: AIExplanationCardP
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <Loader2 className="h-4 w-4 animate-spin" />
                   <span className="text-sm">Generating explanation...</span>
+                </div>
+              ) : error ? (
+                <div className="text-sm text-destructive">
+                  <p>{error}</p>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="mt-2"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setError(null);
+                      fetchExplanation();
+                    }}
+                  >
+                    Try Again
+                  </Button>
                 </div>
               ) : explanation ? (
                 <div className="prose prose-sm dark:prose-invert max-w-none">
