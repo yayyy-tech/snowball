@@ -186,6 +186,20 @@ export function WithdrawalPhaseView({
         </div>
       </div>
 
+      <div className="mt-4 p-4 bg-amber-50 dark:bg-amber-950/30 rounded-lg border border-amber-200 dark:border-amber-800">
+        <div className="flex items-start gap-2">
+          <TrendingDown className="h-5 w-5 text-amber-600 dark:text-amber-400 mt-0.5" />
+          <div>
+            <p className="text-sm font-medium text-amber-900 dark:text-amber-200 mb-1">Post-Retirement Return Assumptions</p>
+            <p className="text-sm text-amber-800 dark:text-amber-300">
+              During retirement, your portfolio shifts to a more conservative debt-heavy allocation. 
+              We assume a <strong>6.5% annual return</strong> (vs ~10-12% during accumulation) to protect your corpus 
+              and ensure sustainable withdrawals throughout your retirement years.
+            </p>
+          </div>
+        </div>
+      </div>
+
       <AIExplanationCard 
         planId={planId} 
         section="withdrawal" 

@@ -151,17 +151,35 @@ export function AssetAllocationTimeline({
           </div>
         </div>
 
-        <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-900">
-          <div className="flex items-start gap-2">
-            <Info className="h-5 w-5 text-blue-600 dark:text-blue-400 mt-0.5" />
-            <div>
-              <p className="text-sm font-medium text-blue-900 dark:text-blue-200 mb-1">
-                Current Allocation Strategy
-              </p>
-              <p className="text-sm text-blue-800 dark:text-blue-300">
-                This allocation is based on your {yearsToRetirement}-year investment horizon and risk profile. 
-                As you approach retirement, the plan recommends gradually shifting to a more conservative allocation.
-              </p>
+        <div className="mt-6 space-y-4">
+          <div className="p-4 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-900">
+            <div className="flex items-start gap-2">
+              <Info className="h-5 w-5 text-blue-600 dark:text-blue-400 mt-0.5" />
+              <div>
+                <p className="text-sm font-medium text-blue-900 dark:text-blue-200 mb-1">
+                  Accumulation Phase ({yearsToRetirement} years)
+                </p>
+                <p className="text-sm text-blue-800 dark:text-blue-300">
+                  This allocation is optimized for your {yearsToRetirement}-year investment horizon and risk profile, 
+                  targeting a blended return of ~{blendedReturn}% p.a. through diversification across asset classes.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="p-4 bg-amber-50 dark:bg-amber-950/30 rounded-lg border border-amber-200 dark:border-amber-800">
+            <div className="flex items-start gap-2">
+              <TrendingUp className="h-5 w-5 text-amber-600 dark:text-amber-400 mt-0.5 rotate-180" />
+              <div>
+                <p className="text-sm font-medium text-amber-900 dark:text-amber-200 mb-1">
+                  Post-Retirement Shift
+                </p>
+                <p className="text-sm text-amber-800 dark:text-amber-300">
+                  After retirement, your portfolio gradually shifts to a conservative debt-heavy allocation 
+                  (~70% debt, 20% equity, 10% gold) with expected returns of <strong>6.5% p.a.</strong> to 
+                  protect your corpus while generating stable income for withdrawals.
+                </p>
+              </div>
             </div>
           </div>
         </div>
