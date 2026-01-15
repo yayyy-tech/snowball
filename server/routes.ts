@@ -704,6 +704,10 @@ ${planContext}`;
       }
       
       // Withdrawal Phase - Month by month
+      // Use CONSERVATIVE post-retirement return rate (6.5%) since portfolio shifts to debt-heavy
+      const POST_RETIREMENT_RETURN = 0.065;
+      const monthlyRetirementRate = POST_RETIREMENT_RETURN / 12;
+      
       const retirementCorpusStart = portfolioValue;
       let withdrawalAmount = calc.swpMonthlyWithdrawal;
       const inflationRate = 0.06;
@@ -712,8 +716,8 @@ ${planContext}`;
       
       for (let year = 1; year <= yearsInRetirement; year++) {
         for (let month = 1; month <= 12; month++) {
-          // Corpus earns returns and withdrawal is made
-          portfolioValue = portfolioValue * (1 + monthlyRate) - withdrawalAmount;
+          // Corpus earns conservative returns (6.5%) and withdrawal is made
+          portfolioValue = portfolioValue * (1 + monthlyRetirementRate) - withdrawalAmount;
           if (portfolioValue < 0) portfolioValue = 0;
           
           monthlyProjections.push({

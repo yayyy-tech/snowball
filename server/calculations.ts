@@ -551,8 +551,69 @@ export function calculateRetirementPlan(plan: RetirementPlan, oneTimeExpenses: O
   const accumulatedVsTarget = (projectedSipValue / totalCorpusNeeded) * 100;
   console.log(`[VERIFICATION] Target Corpus: ₹${(totalCorpusNeeded/10000000).toFixed(2)}Cr, Accumulated: ₹${(projectedSipValue/10000000).toFixed(2)}Cr, Achievement: ${accumulatedVsTarget.toFixed(1)}%, SIP Source: ${sipCalculationSource}`);
   
-  // Withdrawal phase (SWP)
-  const swpMonthlyWithdrawal = monthlyExpenseAtRetirement;
+  // Withdrawal phase (SWP) using GROWING ANNUITY formula for inflation-adjusted withdrawals
+  // Post-retirement return rate should be conservative (6.5%) since portfolio shifts to debt-heavy
+  const POST_RETIREMENT_RETURN = 0.065; // 6.5% - conservative for retirement
+  
+  // Calculate sustainable INITIAL monthly SWP using Growing Annuity formula
+  // This accounts for withdrawals increasing by inflation each year
+  // Formula: P = PV * (r - g) / (1 - ((1+g)/(1+r))^n)
+  // Where: r = return rate, g = inflation (growth of withdrawals), n = years
+  function calculateInflationAdjustedSWP(
+    corpus: number,
+    yearsInRetirement: number,
+    annualReturnRate: number,
+    inflationRate: number
+  ): number {
+    const r = annualReturnRate;
+    const g = inflationRate;
+    const n = yearsInRetirement;
+    
+    // Edge case: if r is very close to g, compute real return and use simplified formula
+    // Real return = (1+r)/(1+g) - 1, which approaches 0 when r≈g
+    if (Math.abs(r - g) < 0.001) {
+      // When r≈g, each year's real growth is near 0, so we simply divide corpus by years
+      // This is the limit of the growing annuity formula as (r-g) approaches 0
+      const realRate = (1 + r) / (1 + g) - 1;
+      const monthlyRealRate = realRate / 12;
+      const totalMonths = n * 12;
+      // Use simple PMT with real rate
+      if (monthlyRealRate > 0.00001) {
+        return corpus * (monthlyRealRate * Math.pow(1 + monthlyRealRate, totalMonths)) / 
+               (Math.pow(1 + monthlyRealRate, totalMonths) - 1);
+      }
+      return corpus / totalMonths;
+    }
+    
+    // Growing annuity formula for annual initial payment
+    const annualInitialPayment = corpus * (r - g) / (1 - Math.pow((1 + g) / (1 + r), n));
+    
+    // Convert to monthly
+    return annualInitialPayment / 12;
+  }
+  
+  // Calculate base SWP using growing annuity formula with conservative returns
+  const sustainableSWP = calculateInflationAdjustedSWP(
+    projectedSipValue, 
+    yearsInRetirement, 
+    POST_RETIREMENT_RETURN, 
+    INFLATION_RATE
+  );
+  
+  // BEHAVIOR DECISION: Use the LOWER of sustainable withdrawal OR desired expense
+  // - If sustainable > desired: user has built MORE than needed! They can spend their desired amount
+  //   and have a legacy fund at end (surplus scenario - this is GOOD for the user)
+  // - If sustainable < desired: user's corpus is insufficient, cap at sustainable maximum
+  //   to prevent early depletion (they may need to adjust retirement expectations)
+  const swpMonthlyWithdrawal = Math.min(sustainableSWP, monthlyExpenseAtRetirement);
+  const hasSurplus = sustainableSWP > monthlyExpenseAtRetirement;
+  const surplusAmount = hasSurplus ? sustainableSWP - monthlyExpenseAtRetirement : 0;
+  
+  console.log(`[SWP CALC] Corpus: ₹${(projectedSipValue/10000000).toFixed(2)}Cr, Years: ${yearsInRetirement}`);
+  console.log(`[SWP CALC] Sustainable SWP (depletes corpus): ₹${Math.round(sustainableSWP).toLocaleString('en-IN')}/mo`);
+  console.log(`[SWP CALC] Desired Expense at retirement: ₹${Math.round(monthlyExpenseAtRetirement).toLocaleString('en-IN')}/mo`);
+  console.log(`[SWP CALC] Using SWP: ₹${Math.round(swpMonthlyWithdrawal).toLocaleString('en-IN')}/mo, Scenario: ${hasSurplus ? 'SURPLUS (will leave legacy fund)' : 'FULL DEPLETION'}`);
+  
   const withdrawalYears: { year: number; withdrawal: number; balance: number }[] = [];
   let retirementCorpus = projectedSipValue;
   let monthlyWithdrawal = swpMonthlyWithdrawal;
@@ -560,8 +621,8 @@ export function calculateRetirementPlan(plan: RetirementPlan, oneTimeExpenses: O
   for (let year = 1; year <= yearsInRetirement; year++) {
     const annualWithdrawal = monthlyWithdrawal * 12;
     
-    // Calculate year-end balance
-    retirementCorpus = retirementCorpus * (1 + DEBT_RETURNS) - annualWithdrawal;
+    // Calculate year-end balance using conservative post-retirement returns (6.5%)
+    retirementCorpus = retirementCorpus * (1 + POST_RETIREMENT_RETURN) - annualWithdrawal;
     
     withdrawalYears.push({
       year: plan.retirementAge + year,
