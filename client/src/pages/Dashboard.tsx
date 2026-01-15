@@ -3,7 +3,8 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
-import { TrendingUp, Download, RefreshCw, AlertTriangle, Wallet, Calculator, Target, TrendingDown, Sparkles } from "lucide-react";
+import { TrendingUp, Download, RefreshCw, AlertTriangle, Wallet, Calculator, Target, TrendingDown, Sparkles, Map } from "lucide-react";
+import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import type { RetirementPlan, CalculatedPlan } from "@shared/schema";
 import { AnimatedCounter } from "@/components/AnimatedCounter";
@@ -575,8 +576,19 @@ export default function Dashboard() {
           </p>
         </div>
 
-        {/* Download Plan Button */}
-        <div className="mt-8 flex justify-center">
+        {/* View Roadmap & Download Plan Buttons */}
+        <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center items-center">
+          <Link href={`/retirement-roadmap?planId=${planId}`}>
+            <Button
+              size="lg"
+              variant="outline"
+              className="border-primary text-primary font-semibold"
+              data-testid="button-view-roadmap"
+            >
+              <Map className="h-5 w-5 mr-2" />
+              View Detailed Roadmap
+            </Button>
+          </Link>
           <Button
             onClick={async () => {
               try {

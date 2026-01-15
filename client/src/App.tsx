@@ -12,6 +12,7 @@ import Dashboard from "@/pages/Dashboard";
 import HowItWorks from "@/pages/HowItWorks";
 import AboutUs from "@/pages/AboutUs";
 import PreviousPlans from "@/pages/PreviousPlans";
+import RetirementRoadmap from "@/pages/RetirementRoadmap";
 import NotFound from "@/pages/not-found";
 
 initMixpanel();
@@ -23,6 +24,7 @@ function Router() {
       <Route path="/onboarding" component={Onboarding} />
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/previous-plans" component={PreviousPlans} />
+      <Route path="/retirement-roadmap" component={RetirementRoadmap} />
       <Route path="/how-it-works" component={HowItWorks} />
       <Route path="/about-us" component={AboutUs} />
       <Route component={NotFound} />

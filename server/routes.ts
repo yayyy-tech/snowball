@@ -639,6 +639,223 @@ ${planContext}`;
     }
   });
 
+  // RETIREMENT ROADMAP TIMELINE API
+  // Returns detailed timeline data with month-by-month projections and milestones
+  app.get("/api/retirement-plans/:id/timeline", isAuthenticated, async (req: any, res) => {
+    try {
+      const user = getAuthenticatedUser(req);
+      if (!user) return res.status(401).json({ error: "Unauthorized" });
+      
+      const plan = await storage.getRetirementPlan(req.params.id);
+      if (!plan) {
+        return res.status(404).json({ error: "Retirement plan not found" });
+      }
+      
+      // Verify ownership
+      if (plan.userId !== user.id) {
+        return res.status(403).json({ error: "You do not have permission to view this plan" });
+      }
+      
+      const calc = plan.calculatedPlan as any;
+      if (!calc) {
+        return res.status(400).json({ error: "Plan has not been calculated yet" });
+      }
+      
+      // Generate month-by-month projections from existing yearly data
+      const monthlyProjections: Array<{
+        month: number;
+        year: number;
+        age: number;
+        sipAmount: number;
+        totalInvested: number;
+        corpusValue: number;
+        phase: 'accumulation' | 'withdrawal';
+      }> = [];
+      
+      const yearsToRetirement = calc.yearsToRetirement;
+      const blendedReturns = (calc.assetAllocation.equity * 0.12 + calc.assetAllocation.debt * 0.07 + calc.assetAllocation.gold * 0.08) / 100;
+      const monthlyRate = blendedReturns / 12;
+      const annualStepUp = 0.07;
+      
+      let currentSip = calc.sipAmount;
+      let portfolioValue = calc.totalAssets;
+      let totalInvested = calc.totalAssets;
+      const currentYear = new Date().getFullYear();
+      const currentAge = plan.currentAge;
+      
+      // Accumulation Phase - Month by month
+      for (let year = 1; year <= yearsToRetirement; year++) {
+        for (let month = 1; month <= 12; month++) {
+          portfolioValue = portfolioValue * (1 + monthlyRate) + currentSip;
+          totalInvested += currentSip;
+          
+          monthlyProjections.push({
+            month,
+            year: currentYear + year - 1,
+            age: currentAge + year - 1 + (month > 6 ? 1 : 0),
+            sipAmount: Math.round(currentSip),
+            totalInvested: Math.round(totalInvested),
+            corpusValue: Math.round(portfolioValue),
+            phase: 'accumulation'
+          });
+        }
+        // Step up SIP annually
+        currentSip = currentSip * (1 + annualStepUp);
+      }
+      
+      // Withdrawal Phase - Month by month
+      const retirementCorpusStart = portfolioValue;
+      let withdrawalAmount = calc.swpMonthlyWithdrawal;
+      const inflationRate = 0.06;
+      const yearsInRetirement = calc.yearsInRetirement;
+      
+      for (let year = 1; year <= yearsInRetirement; year++) {
+        for (let month = 1; month <= 12; month++) {
+          // Corpus earns returns and withdrawal is made
+          portfolioValue = portfolioValue * (1 + monthlyRate) - withdrawalAmount;
+          if (portfolioValue < 0) portfolioValue = 0;
+          
+          monthlyProjections.push({
+            month,
+            year: currentYear + yearsToRetirement + year - 1,
+            age: plan.retirementAge + year - 1 + (month > 6 ? 1 : 0),
+            sipAmount: 0,
+            totalInvested: Math.round(totalInvested),
+            corpusValue: Math.round(portfolioValue),
+            phase: 'withdrawal'
+          });
+        }
+        // Increase withdrawal for inflation annually
+        withdrawalAmount = withdrawalAmount * (1 + inflationRate);
+      }
+      
+      // Calculate milestones
+      const targetCorpus = calc.totalCorpusNeeded;
+      const milestones: Array<{
+        type: string;
+        year: number;
+        age: number;
+        corpusValue: number;
+        description: string;
+      }> = [];
+      
+      // Find 25%, 50%, 75% corpus milestones
+      [0.25, 0.50, 0.75, 1.0].forEach((percentage) => {
+        const targetValue = targetCorpus * percentage;
+        const milestone = monthlyProjections.find(m => 
+          m.phase === 'accumulation' && m.corpusValue >= targetValue
+        );
+        if (milestone && !milestones.find(m => m.type === `${percentage * 100}%`)) {
+          milestones.push({
+            type: `${percentage * 100}%`,
+            year: milestone.year,
+            age: milestone.age,
+            corpusValue: milestone.corpusValue,
+            description: `Corpus reaches ${percentage * 100}% of retirement goal (₹${(targetValue / 10000000).toFixed(2)}Cr)`
+          });
+        }
+      });
+      
+      // Add retirement milestone
+      milestones.push({
+        type: 'retirement',
+        year: currentYear + yearsToRetirement,
+        age: plan.retirementAge,
+        corpusValue: Math.round(retirementCorpusStart),
+        description: `Retirement begins with corpus of ₹${(retirementCorpusStart / 10000000).toFixed(2)}Cr`
+      });
+      
+      // Add longevity milestone
+      const longevityAge = plan.retirementAge + yearsInRetirement;
+      const finalCorpus = monthlyProjections[monthlyProjections.length - 1]?.corpusValue || 0;
+      milestones.push({
+        type: 'longevity',
+        year: currentYear + yearsToRetirement + yearsInRetirement,
+        age: longevityAge,
+        corpusValue: finalCorpus,
+        description: finalCorpus > 0 
+          ? `At age ${longevityAge}, remaining corpus: ₹${(finalCorpus / 10000000).toFixed(2)}Cr (legacy fund)`
+          : `Corpus depletes around age ${longevityAge}`
+      });
+      
+      res.json({
+        planId: plan.id,
+        currentAge: plan.currentAge,
+        retirementAge: plan.retirementAge,
+        longevityAge,
+        yearsToRetirement,
+        yearsInRetirement,
+        targetCorpus,
+        initialSip: calc.sipAmount,
+        sipStepUp: 7,
+        assetAllocation: calc.assetAllocation,
+        swpMonthlyWithdrawal: calc.swpMonthlyWithdrawal,
+        freedomScore: calc.freedomScore,
+        accumulationYears: calc.accumulationYears,
+        withdrawalYears: calc.withdrawalYears,
+        monthlyProjections: monthlyProjections.filter((_, i) => i % 3 === 0), // Every 3 months for performance
+        milestones: milestones.sort((a, b) => a.year - b.year),
+      });
+    } catch (error: any) {
+      console.error("Error fetching timeline:", error);
+      res.status(500).json({ error: "Failed to fetch timeline data" });
+    }
+  });
+
+  // AI Explanation for timeline sections
+  app.post("/api/retirement-plans/:id/explain", isAuthenticated, async (req: any, res) => {
+    try {
+      const user = getAuthenticatedUser(req);
+      if (!user) return res.status(401).json({ error: "Unauthorized" });
+      
+      const plan = await storage.getRetirementPlan(req.params.id);
+      if (!plan || plan.userId !== user.id) {
+        return res.status(403).json({ error: "Unauthorized" });
+      }
+      
+      const { section, data } = req.body;
+      if (!section) {
+        return res.status(400).json({ error: "Section is required" });
+      }
+      
+      const calc = plan.calculatedPlan as any;
+      
+      const systemPrompt = `You are Snowball's AI retirement expert. Explain financial concepts in simple, encouraging terms for Indian users (age 25-40).
+Keep explanations to 2-3 sentences. Be specific to the user's data. Use ₹ and Indian formatting.`;
+      
+      let contextPrompt = '';
+      switch (section) {
+        case 'sip_growth':
+          contextPrompt = `Explain why the SIP increases from ₹${calc.sipAmount?.toLocaleString('en-IN')} by 7% annually and how this helps fight inflation. User has ${calc.yearsToRetirement} years to retirement.`;
+          break;
+        case 'compound_growth':
+          contextPrompt = `Explain how compounding accelerates corpus growth. User starts with ₹${(calc.totalAssets/100000).toFixed(1)}L assets, and their corpus grows to ₹${(calc.projectedSipValue/10000000).toFixed(2)}Cr by retirement.`;
+          break;
+        case 'asset_allocation':
+          contextPrompt = `Explain the ${calc.assetAllocation?.equity}% equity, ${calc.assetAllocation?.debt}% debt, ${calc.assetAllocation?.gold}% gold allocation for someone with ${calc.yearsToRetirement} years to retirement and ${plan.riskTolerance || 'moderate'} risk tolerance.`;
+          break;
+        case 'withdrawal':
+          contextPrompt = `Explain how the SWP withdrawal of ₹${calc.swpMonthlyWithdrawal?.toLocaleString('en-IN')}/month is calculated with 6% inflation adjustment over ${calc.yearsInRetirement} years of retirement.`;
+          break;
+        default:
+          contextPrompt = `Provide a brief overview of the user's retirement plan with Freedom Score ${calc.freedomScore}.`;
+      }
+      
+      const response = await callClaudeWithRetry([
+        { role: 'user', content: contextPrompt }
+      ], {
+        systemPrompt,
+        temperature: 0.4,
+        maxTokens: 300,
+      });
+      
+      res.json({ explanation: response, section });
+    } catch (error: any) {
+      console.error("Error generating explanation:", error);
+      res.status(500).json({ error: "Failed to generate explanation" });
+    }
+  });
+
   // Get chat history
   app.get("/api/chat/history", isAuthenticated, async (req: any, res) => {
     try {

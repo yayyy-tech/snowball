@@ -1,0 +1,142 @@
+You are implementing a new feature called "Descriptive Retirement Roadmap" in the Snowball fintech web app. This is a view and explanation layer that visualizes and narrates the already-computed retirement plan. You must NOT recalculate any financial logic, duplicate backend math, or create new assumptions.
+ARCHITECTURE CONTEXT:
+
+Snowball is a retirement planning app for Indian users built with React frontend and Node.js backend
+Retirement calculations already exist in server/utils/retirementCalculations.ts and server/routes/retirement-plan.ts
+The retirement plan data structure is defined in shared/schema.ts
+The existing UI already renders retirement summary cards, charts, and asset allocation from this plan
+The plan includes: SIP amounts, corpus projections, asset allocation, withdrawal schedules, retirement age, longevity age, inflation rates, and expected returns
+AI inference for explanations may already be integrated but you must verify before adding new calls
+
+CRITICAL CONSTRAINTS (NON-NEGOTIABLE):
+
+Do NOT modify or duplicate any retirement calculation logic
+Do NOT create new financial assumptions or inputs
+Do NOT ask users for additional data beyond what's already in their plan
+ONLY fetch and visualize data that already exists in the generated retirement plan
+If using AI (Anthropic) for explanations, it must ONLY explain existing data, never compute new values
+Read from the exact same data object/API that powers the current retirement summary UI
+
+YOUR TASK:
+Create a new section/page called "Descriptive Retirement Roadmap" that presents the existing retirement plan in a deep, time-based, descriptive format.
+IMPLEMENTATION STEPS:
+
+DATA LAYER:
+
+Identify the existing API endpoint or data structure that returns the retirement plan
+If the existing endpoint doesn't return month-by-month or year-by-year projections, create a NEW read-only endpoint that derives this timeline data from the already-calculated plan parameters (do NOT recalculate the plan itself)
+The timeline data should include for each time period: date/month/year, SIP amount for that period, cumulative invested amount, projected corpus value
+Ensure you're reading the same plan data that the current UI uses
+
+
+FRONTEND ROUTE:
+
+Add a new route (e.g., /retirement-roadmap or a tab within the existing retirement plan view)
+This should be accessible after a user has generated their retirement plan
+
+
+UI COMPONENTS TO BUILD:
+A. Corpus Growth Over Time Graph:
+
+Interactive line/area chart with two lines: "Total Invested" and "Corpus Value"
+Toggle switch: Monthly view / Yearly view
+On hover: Show tooltip with time period, SIP amount, cumulative invested, corpus value
+Use a charting library like Recharts or Chart.js
+Default to yearly view for cleaner initial load
+
+B. SIP Breakdown Drilldown:
+
+Toggle: Monthly / Yearly
+Yearly view: Table showing Year | Monthly SIP | Total Invested That Year | Corpus at Year End
+Monthly view: Accordion/expandable year rows, clicking a year shows month-by-month data (Month | SIP | Cumulative Invested | Corpus End of Month)
+Default to yearly view
+
+C. Timeline-Based Narrative:
+
+Visual timeline divided into two phases:
+
+Accumulation Phase: Now → Retirement Age
+Withdrawal Phase: Retirement Age → Longevity Age
+
+
+Mark key milestones on the timeline:
+
+First major corpus milestone (e.g., when corpus hits 25% of retirement goal)
+Midpoint of accumulation journey
+Retirement year (with projected corpus at retirement)
+End of withdrawal phase (corpus depletion point or longevity age)
+
+
+Each milestone should show: Year, Age, Corpus Value, brief description
+
+D. Asset Allocation Over Time:
+
+Show current asset allocation (equity/debt split)
+If the existing plan includes allocation shifts over time (e.g., equity reduces as retirement approaches), visualize this as a stacked area chart or similar
+If allocation shift logic doesn't exist in the plan, show only current allocation and mark this clearly
+Do NOT create new allocation shift logic
+
+E. Post-Retirement Withdrawal View:
+
+Monthly withdrawal amount (from existing plan)
+Table or chart showing: Year | Age | Monthly Withdrawal (inflation-adjusted) | Remaining Corpus
+Visualization of corpus decay over withdrawal phase
+Indicate whether corpus lasts until longevity age or depletes earlier
+
+
+AI EXPLANATION LAYER (OPTIONAL BUT RECOMMENDED):
+
+Check if Anthropic API integration already exists in the codebase
+If yes, use it to generate contextual explanations for:
+
+Why the SIP amount increases over time (if it does)
+How compound growth accelerates corpus growth
+What the asset allocation strategy means for risk/returns
+How inflation affects withdrawal amounts
+
+
+If no existing integration, add Anthropic API calls with this strict rule: Pass existing plan data to Anthropic and ask it to EXPLAIN the data, never to COMPUTE new values
+Explanations should be:
+
+Time-based and phase-aware (accumulation vs withdrawal)
+Cause-and-effect driven (e.g., "Your SIP increases by X% yearly because...")
+Calm, factual, and educational
+Contextual to the section they appear in
+
+
+Place explanations in collapsible info cards or tooltips to avoid clutter
+
+
+UX/UI PRINCIPLES:
+
+Premium, clean design with good spacing
+Default views should be simple (yearly, collapsed, high-level)
+Progressive disclosure: Users can drill down into monthly data, expand accordions, toggle views
+No information overload on initial page load
+Use smooth transitions and loading states
+Responsive design for mobile
+
+
+ERROR HANDLING:
+
+If retirement plan data is not available (user hasn't completed onboarding), show appropriate message and redirect to onboarding
+Handle API errors gracefully
+Show loading skeletons while fetching data
+
+
+CODE ORGANIZATION:
+
+Create new components in a logical structure (e.g., components/RetirementRoadmap/)
+Reuse existing UI components, utilities, and styles where possible
+Follow existing code style and patterns in the Snowball codebase
+Add proper TypeScript types based on shared/schema.ts
+
+
+
+DELIVERABLES:
+
+New route/page for Descriptive Retirement Roadmap
+All five visualization components (A-E above) fully functional
+Data fetching logic that reads from existing retirement plan
+Optional: AI-generated explanations integrated safely
+Clean, premium UI that matches Snowball's existing design language
