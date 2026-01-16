@@ -317,15 +317,14 @@ export default function Dashboard() {
 
         {/* Action Buttons Row */}
         <div className="mb-8 flex flex-wrap gap-4">
-          <Button size="lg" data-testid="button-recalculate">
+          <Button size="lg" variant="outline" className="border-foreground/20 text-foreground" data-testid="button-recalculate">
             <RefreshCw className="h-4 w-4 mr-2" />
             Recalculate Plan
           </Button>
           <Link href={`/retirement-roadmap?planId=${planId}`}>
             <Button
               size="lg"
-              variant="outline"
-              className="border-primary text-primary font-semibold"
+              className="font-semibold"
               data-testid="button-view-roadmap"
             >
               <Map className="h-5 w-5 mr-2" />
