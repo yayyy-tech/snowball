@@ -1,0 +1,96 @@
+There's a beforeunload event listener in the codebase that's showing a "Leave site? Changes that you made may not be saved" browser popup whenever users try to login with Google OAuth. This is killing user conversion because it appears even when there are no unsaved changes.
+Problem:
+Users click "Login with Google" → Browser shows "Leave site?" popup → Users have to click "Leave" → Then Google OAuth opens. This extra step is unnecessary and confusing.
+Required Fix:
+Step 1: Find the beforeunload listener
+Search the entire codebase for:
+
+window.addEventListener('beforeunload'
+window.onbeforeunload
+useBeforeUnload (if using a hook)
+
+Likely locations:
+
+client/src/App.tsx
+client/src/main.tsx
+client/src/components/Layout.tsx
+Any form/onboarding components
+
+Step 2: Implement smart beforeunload handling
+Replace the current beforeunload implementation with this logic:
+typescript// Add flag to track intentional navigations
+let isIntentionalNavigation = false;
+
+window.addEventListener('beforeunload', (e) => {
+  // Skip warning for intentional navigations (OAuth, logout, etc.)
+  if (isIntentionalNavigation) {
+    return;
+  }
+  
+  // Skip warning on login/auth pages
+  if (window.location.pathname.includes('/login') || 
+      window.location.pathname.includes('/auth')) {
+    return;
+  }
+  
+  // Only show warning if there are actual unsaved changes
+  // Check if user has filled out forms, made edits, etc.
+  const hasUnsavedChanges = checkForUnsavedChanges(); // Implement this based on your forms
+  
+  if (hasUnsavedChanges) {
+    e.preventDefault();
+    e.returnValue = '';
+  }
+});
+
+function checkForUnsavedChanges() {
+  // Example: Check if forms are dirty
+  // Return true only if there are actual unsaved changes
+  // This depends on your state management (React state, form libraries, etc.)
+  return false; // Modify based on your app's logic
+}
+Step 3: Disable warning before OAuth redirect
+Find the Google OAuth login handler (likely in your login component or auth service) and add:
+typescriptfunction handleGoogleLogin() {
+  // Disable beforeunload warning for intentional navigation
+  window.isIntentionalNavigation = true;
+  
+  // Or remove the listener entirely
+  window.onbeforeunload = null;
+  
+  // Proceed with OAuth
+  window.location.href = '/auth/google'; // Or your OAuth endpoint
+}
+Step 4: Alternative - Use OAuth Popup (Better UX)
+Instead of redirecting the entire page, open OAuth in a popup:
+typescriptfunction handleGoogleLogin() {
+  const width = 500;
+  const height = 600;
+  const left = (window.screen.width - width) / 2;
+  const top = (window.screen.height - height) / 2;
+  
+  const popup = window.open(
+    '/auth/google',
+    'Google Login',
+    `width=${width},height=${height},left=${left},top=${top},popup=1`
+  );
+  
+  // Listen for successful login
+  window.addEventListener('message', (event) => {
+    if (event.data.type === 'oauth-success') {
+      popup?.close();
+      window.location.reload(); // Or update auth state
+    }
+  });
+}
+Requirements:
+
+Remove the "Leave site?" popup specifically for Google OAuth login
+Keep the warning for pages where users actually have unsaved form data (like onboarding, profile editing, etc.)
+Only show beforeunload warning when there are legitimate unsaved changes
+Test that the fix works: Click "Login with Google" should immediately open OAuth without any popup
+
+Expected Behavior After Fix:
+❌ Before: User clicks "Login with Google" → "Leave site?" popup → User clicks "Leave" → OAuth opens
+✅ After: User clicks "Login with Google" → OAuth opens immediately
+Make sure this doesn't break any legitimate unsaved changes warnings on forms/onboarding flows. Only disable it for authentication navigation.
