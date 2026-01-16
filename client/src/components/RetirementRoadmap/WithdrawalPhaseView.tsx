@@ -11,6 +11,7 @@ import {
   ReferenceLine
 } from "recharts";
 import { AIExplanationCard } from "./AIExplanationCard";
+import { CollapsibleBreakdown } from "./CollapsibleBreakdown";
 
 interface WithdrawalPhaseViewProps {
   withdrawalYears: Array<{ year: number; withdrawal: number; balance: number }>;
@@ -138,39 +139,83 @@ export function WithdrawalPhaseView({
         </ResponsiveContainer>
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b">
-              <th className="py-3 px-4 text-left font-medium text-muted-foreground">Age</th>
-              <th className="py-3 px-4 text-right font-medium text-muted-foreground">Monthly Withdrawal</th>
-              <th className="py-3 px-4 text-right font-medium text-muted-foreground">Annual Withdrawal</th>
-              <th className="py-3 px-4 text-right font-medium text-muted-foreground">Remaining Corpus</th>
-            </tr>
-          </thead>
-          <tbody>
-            {withdrawalYears.map((y, index) => (
-              <tr 
-                key={y.year}
-                className={`border-b hover:bg-muted/50 ${index === 0 ? 'bg-green-50/50 dark:bg-green-950/20' : ''}`}
-                data-testid={`row-withdrawal-${y.year}`}
-              >
-                <td className="py-3 px-4 font-medium">
-                  Age {y.year}
-                  {index === 0 && (
-                    <span className="ml-2 text-xs text-green-600 dark:text-green-400">(Retirement)</span>
-                  )}
-                </td>
-                <td className="py-3 px-4 text-right">{formatCurrency(y.withdrawal)}</td>
-                <td className="py-3 px-4 text-right">{formatCurrency(y.withdrawal * 12)}</td>
-                <td className="py-3 px-4 text-right font-bold text-chart-2">
-                  {formatCurrency(y.balance)}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <CollapsibleBreakdown
+        title="View Detailed SWP Breakdown"
+        icon={<Wallet className="h-5 w-5 text-green-400" />}
+        testId="dropdown-swp-breakdown"
+      >
+        <div className="p-6">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+            <div className="p-4 bg-green-500/10 rounded-lg text-center border border-green-500/20">
+              <p className="text-sm text-gray-400 mb-1">Starting SWP</p>
+              <p className="text-2xl font-bold text-green-400" data-testid="text-starting-swp">
+                {formatCurrency(swpMonthlyWithdrawal)}
+              </p>
+              <p className="text-xs text-gray-500">/month</p>
+            </div>
+            <div className="p-4 bg-orange-500/10 rounded-lg text-center border border-orange-500/20">
+              <p className="text-sm text-gray-400 mb-1">Inflation Adjusted</p>
+              <p className="text-2xl font-bold text-orange-400">
+                +6%
+              </p>
+              <p className="text-xs text-gray-500">yearly increase</p>
+            </div>
+            <div className="p-4 bg-purple-500/10 rounded-lg text-center border border-purple-500/20">
+              <p className="text-sm text-gray-400 mb-1">Final Year SWP</p>
+              <p className="text-2xl font-bold text-purple-400" data-testid="text-final-swp">
+                {formatCurrency(withdrawalYears[withdrawalYears.length - 1]?.withdrawal || 0)}
+              </p>
+              <p className="text-xs text-gray-500">/month</p>
+            </div>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-gray-700">
+                  <th className="py-3 px-4 text-left font-medium text-gray-400">Age</th>
+                  <th className="py-3 px-4 text-right font-medium text-gray-400">Monthly Withdrawal</th>
+                  <th className="py-3 px-4 text-right font-medium text-gray-400">Annual Withdrawal</th>
+                  <th className="py-3 px-4 text-right font-medium text-gray-400">Remaining Corpus</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-700">
+                {withdrawalYears.map((y, index) => (
+                  <tr 
+                    key={y.year}
+                    className={`hover:bg-gray-750/50 transition-colors ${index === 0 ? 'bg-green-900/20' : ''}`}
+                    data-testid={`row-withdrawal-${y.year}`}
+                  >
+                    <td className="py-3 px-4">
+                      <span className="font-medium text-white">Age {y.year}</span>
+                      {index === 0 && (
+                        <span className="ml-2 text-xs text-green-400">(Retirement)</span>
+                      )}
+                    </td>
+                    <td className="py-3 px-4 text-right text-green-400 font-medium">
+                      {formatCurrency(y.withdrawal)}
+                    </td>
+                    <td className="py-3 px-4 text-right text-orange-400">
+                      {formatCurrency(y.withdrawal * 12)}
+                    </td>
+                    <td className="py-3 px-4 text-right text-purple-400 font-bold">
+                      {formatCurrency(y.balance)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="mt-4 p-3 bg-gray-900/50 rounded-lg">
+            <p className="text-sm text-gray-400">
+              <strong className="text-orange-400">Inflation Protection:</strong> Your monthly withdrawal increases by 
+              6% each year to maintain your purchasing power throughout retirement. The remaining corpus continues 
+              to generate returns at 6.5% annually.
+            </p>
+          </div>
+        </div>
+      </CollapsibleBreakdown>
 
       <div className="mt-6 p-4 bg-muted/50 rounded-lg">
         <div className="flex items-start gap-2">

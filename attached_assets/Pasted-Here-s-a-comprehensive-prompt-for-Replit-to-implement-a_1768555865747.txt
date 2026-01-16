@@ -1,0 +1,116 @@
+Here's a comprehensive prompt for Replit to implement all the changes:
+
+PROMPT FOR REPLIT:
+I need to add collapsible "View Detailed Breakdown" dropdowns to both the Growth tab and Withdrawal tab in the retirement roadmap. Here are the exact requirements:
+1. GROWTH TAB - SIP Breakdown Dropdown
+Location: Below the "Corpus Growth Over Time" chart and the "Understanding the Chart" info box
+Button Design:
+
+Full-width button with dark background (bg-gray-800 hover bg-gray-750)
+Left side: Icon (PieChart from lucide-react) in a blue circle + text "View Detailed Breakdown"
+Right side: ChevronDown icon (switches to ChevronUp when expanded)
+Smooth hover transition
+
+Dropdown Content (when expanded):
+
+Header section with 3 stat cards in a row:
+
+"Starting SIP" - value in large blue text
+"Annual Step-up" - value in large teal text (7%)
+"Final Year SIP" - value in large purple text
+
+
+Data table with these columns:
+
+Year/Age - "Age XX (Year Y)" format
+Monthly SIP - formatted currency in blue
+Yearly Investment - formatted currency in teal
+Corpus at Year End - formatted currency in purple (bold)
+
+
+Footer note explaining the 7% step-up strategy
+
+Animation: Smooth slide-down animation when expanding (0.3s ease-out)
+Data Source: Pull from the existing SIP calculation results in retirementCalculations.ts
+2. WITHDRAWAL TAB - SWP Breakdown Dropdown
+Location: Below the "Post-Retirement Withdrawal Plan" chart
+Button Design:
+
+Identical to Growth tab button
+Text: "View Detailed Breakdown"
+Same icon and interaction pattern
+
+Dropdown Content (when expanded):
+
+Header section with 3 stat cards:
+
+"Starting SWP" - monthly withdrawal amount at retirement in green
+"Inflation Adjusted" - text showing withdrawal increases with inflation (orange)
+"Final Year SWP" - monthly withdrawal at longevity age in purple
+
+
+Data table with these columns:
+
+Age - with "(Retirement)" label on first row
+Monthly Withdrawal - inflation-adjusted amount in green
+Annual Withdrawal - yearly total in orange
+Remaining Corpus - balance after withdrawal in purple (bold)
+
+
+Footer note explaining inflation-adjusted withdrawals and corpus sustainability
+
+Animation: Same as Growth tab
+Data Source: Pull from withdrawal calculations in retirementCalculations.ts
+3. SHARED STYLING REQUIREMENTS
+Currency Formatting Function:
+javascriptconst formatCurrency = (value) => {
+  if (value >= 10000000) return `₹${(value / 10000000).toFixed(2)}Cr`;
+  if (value >= 100000) return `₹${(value / 100000).toFixed(2)}L`;
+  return `₹${value.toLocaleString('en-IN')}`;
+};
+Color Scheme:
+
+SIP amounts: text-blue-400
+Investment totals: text-teal-400
+Corpus values: text-purple-400
+Withdrawal amounts: text-green-400
+Inflation adjustments: text-orange-400
+
+Table Styling:
+
+Dark theme (bg-gray-800, bg-gray-750)
+Hover effect on rows (hover:bg-gray-750/50)
+Border between rows (divide-y divide-gray-700)
+Responsive padding (px-6 py-4)
+
+4. STATE MANAGEMENT
+
+Use useState to track whether each dropdown is expanded
+Independent state for Growth tab and Withdrawal tab dropdowns
+Default: both collapsed on page load
+
+5. RESPONSIVE DESIGN
+
+Tables should be horizontally scrollable on mobile (overflow-x-auto)
+Stack stat cards vertically on small screens
+Maintain readability at all breakpoints
+
+6. INTEGRATION POINTS
+Files to modify:
+
+client/src/pages/RetirementRoadmap.tsx (or wherever the tabs are rendered)
+Ensure data is passed from backend calculations to the frontend components
+
+Backend data needed:
+
+For Growth: year-by-year SIP breakdown array
+For Withdrawal: year-by-year withdrawal breakdown array
+Both should include all calculated values (monthly, yearly, corpus/remaining)
+
+7. ACCESSIBILITY
+
+Button should have proper ARIA labels
+Keyboard navigation support (Enter/Space to toggle)
+Screen reader announcements when expanding/collapsing
+
+Make sure the dropdowns match the existing Snowball dark theme aesthetic and feel native to the current UI. The implementation should be clean, performant, and reusable.

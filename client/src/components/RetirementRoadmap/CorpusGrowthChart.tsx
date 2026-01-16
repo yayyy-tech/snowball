@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { TrendingUp, Info } from "lucide-react";
+import { TrendingUp, Info, PieChart } from "lucide-react";
 import { 
   AreaChart, 
   Area, 
@@ -15,6 +15,7 @@ import {
   ReferenceLine
 } from "recharts";
 import { AIExplanationCard } from "./AIExplanationCard";
+import { CollapsibleBreakdown } from "./CollapsibleBreakdown";
 
 interface CorpusGrowthChartProps {
   accumulationYears: Array<{ year: number; sipAmount: number; yearEndValue: number }>;
@@ -30,6 +31,8 @@ interface CorpusGrowthChartProps {
   }>;
   targetCorpus: number;
   planId: string;
+  initialSip?: number;
+  sipStepUp?: number;
 }
 
 export function CorpusGrowthChart({
@@ -37,9 +40,23 @@ export function CorpusGrowthChart({
   withdrawalYears,
   monthlyProjections,
   targetCorpus,
-  planId
+  planId,
+  initialSip = 0,
+  sipStepUp = 7
 }: CorpusGrowthChartProps) {
   const [viewMode, setViewMode] = useState<'yearly' | 'quarterly'>('yearly');
+
+  const formatCurrency = (value: number) => {
+    if (value >= 10000000) {
+      return `₹${(value / 10000000).toFixed(2)}Cr`;
+    }
+    if (value >= 100000) {
+      return `₹${(value / 100000).toFixed(2)}L`;
+    }
+    return `₹${value.toLocaleString('en-IN')}`;
+  };
+
+  const finalYearSip = accumulationYears[accumulationYears.length - 1]?.sipAmount || 0;
   
   const yearlyData = [
     ...accumulationYears.map((y, i) => {
@@ -194,6 +211,81 @@ export function CorpusGrowthChart({
         section="compound_growth" 
         title="Why does the gap keep growing?"
       />
+
+      <CollapsibleBreakdown
+        title="View Detailed SIP Breakdown"
+        icon={<PieChart className="h-5 w-5 text-blue-400" />}
+        testId="dropdown-sip-breakdown"
+      >
+        <div className="p-6">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+            <div className="p-4 bg-blue-500/10 rounded-lg text-center border border-blue-500/20">
+              <p className="text-sm text-gray-400 mb-1">Starting SIP</p>
+              <p className="text-2xl font-bold text-blue-400" data-testid="text-starting-sip">
+                {formatCurrency(initialSip || accumulationYears[0]?.sipAmount || 0)}
+              </p>
+              <p className="text-xs text-gray-500">/month</p>
+            </div>
+            <div className="p-4 bg-teal-500/10 rounded-lg text-center border border-teal-500/20">
+              <p className="text-sm text-gray-400 mb-1">Annual Step-up</p>
+              <p className="text-2xl font-bold text-teal-400" data-testid="text-step-up">
+                {sipStepUp}%
+              </p>
+              <p className="text-xs text-gray-500">yearly increase</p>
+            </div>
+            <div className="p-4 bg-purple-500/10 rounded-lg text-center border border-purple-500/20">
+              <p className="text-sm text-gray-400 mb-1">Final Year SIP</p>
+              <p className="text-2xl font-bold text-purple-400" data-testid="text-final-sip">
+                {formatCurrency(finalYearSip)}
+              </p>
+              <p className="text-xs text-gray-500">/month</p>
+            </div>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-gray-700">
+                  <th className="py-3 px-4 text-left font-medium text-gray-400">Year/Age</th>
+                  <th className="py-3 px-4 text-right font-medium text-gray-400">Monthly SIP</th>
+                  <th className="py-3 px-4 text-right font-medium text-gray-400">Yearly Investment</th>
+                  <th className="py-3 px-4 text-right font-medium text-gray-400">Corpus at Year End</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-700">
+                {accumulationYears.map((yearData, index) => (
+                  <tr 
+                    key={yearData.year}
+                    className="hover:bg-gray-750/50 transition-colors"
+                    data-testid={`row-sip-${yearData.year}`}
+                  >
+                    <td className="py-3 px-4">
+                      <span className="font-medium text-white">Age {yearData.year}</span>
+                      <span className="text-xs text-gray-500 ml-2">(Year {index + 1})</span>
+                    </td>
+                    <td className="py-3 px-4 text-right text-blue-400 font-medium">
+                      {formatCurrency(yearData.sipAmount)}
+                    </td>
+                    <td className="py-3 px-4 text-right text-teal-400">
+                      {formatCurrency(yearData.sipAmount * 12)}
+                    </td>
+                    <td className="py-3 px-4 text-right text-purple-400 font-bold">
+                      {formatCurrency(yearData.yearEndValue)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="mt-4 p-3 bg-gray-900/50 rounded-lg">
+            <p className="text-sm text-gray-400">
+              <strong className="text-teal-400">7% Annual Step-up:</strong> Your SIP increases by 7% each year to 
+              keep pace with your salary growth, accelerating wealth building through the power of compounding.
+            </p>
+          </div>
+        </div>
+      </CollapsibleBreakdown>
     </Card>
   );
 }

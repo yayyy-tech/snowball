@@ -6,7 +6,6 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { ArrowLeft, Map, TrendingUp, PieChart, Wallet } from "lucide-react";
 import { CorpusGrowthChart } from "@/components/RetirementRoadmap/CorpusGrowthChart";
-import { SIPBreakdownDrilldown } from "@/components/RetirementRoadmap/SIPBreakdownDrilldown";
 import { AssetAllocationTimeline } from "@/components/RetirementRoadmap/AssetAllocationTimeline";
 import { WithdrawalPhaseView } from "@/components/RetirementRoadmap/WithdrawalPhaseView";
 import type { RetirementPlan } from "@shared/schema";
@@ -186,12 +185,8 @@ export default function RetirementRoadmap() {
               monthlyProjections={timeline.monthlyProjections}
               targetCorpus={timeline.targetCorpus}
               planId={planId}
-            />
-            <SIPBreakdownDrilldown 
-              accumulationYears={timeline.accumulationYears}
               initialSip={timeline.initialSip}
               sipStepUp={timeline.sipStepUp}
-              planId={planId}
             />
           </TabsContent>
 
